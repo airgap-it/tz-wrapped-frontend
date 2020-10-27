@@ -1,0 +1,89 @@
+<div class="card">
+    <div class="card-body">
+      <div>
+        <tabset>
+          <tab heading="Mint" id="tab1">
+            <div class="my-5">
+            <label>Enter amount to mint</label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text">
+                  <img src="/assets/img/tzeth.svg" class="mr-2"/>
+                  tzETH</span>
+              </div>
+              <input type="text" class="form-control" placeholder="0.0" aria-label="Amount">
+            </div>
+          </div>
+            <button type="button" class="btn btn-primary btn-block">
+              Connect Wallet
+            </button>
+          </tab>
+          <tab heading="Burn">
+            <div class="my-5">
+              <label>Enter amount to burn</label>
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">
+                    <img src="/assets/img/tzeth.svg" class="mr-2"/>
+                    tzETH</span>
+                </div>
+                <input type="text" class="form-control" placeholder="0.0" aria-label="Amount">
+              </div>
+            </div>
+            <button type="button" class="btn btn-primary btn-block">
+              Connect Wallet
+            </button>
+          </tab>
+          <tab heading="Transfer">
+            <div class="my-5">
+              <label>Receiving Address</label>
+              <div class="input-group mb-3">
+                <input type="text" class="form-control" placeholder="tz1.." aria-label="Address">
+              </div>
+              <label>Amount</label>
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">
+                    <img src="/assets/img/tzeth.svg" class="mr-2"/>
+                    tzETH</span>
+                </div>
+                <input type="text" class="form-control" placeholder="0.0" aria-label="Amount">
+              </div>
+            </div>
+          <button type="button" class="btn btn-primary btn-block">
+            Connect Wallet
+          </button>
+        </tab>
+        </tabset>
+      </div>          
+    </div>
+  </div>
+  <!-- TODO: show only if Gatekeeper/Keyholder-->
+  <div class="card mt-5">
+    <div class="card-body">
+      <h5>Open minting request</h5>
+      <div class="row py-3 align-items-center">
+        <div class="col col-md-6">
+          <!-- TODO: requested minting amount -->
+          <h5 class="m-0"><strong>5000 ETH</strong></h5>
+          <!-- TODO: human readable name of requestee -->
+          <p class="m-0">Bitcoin Suisse</p>
+          <!-- TODO: requestee address -->
+          <p class="text-muted">tz12M…214x</p>
+        </div>
+        <div class="col col-md-6">
+          <p class="text-right">10.10.20 15:30</p>
+        </div>
+      </div>
+      <div>
+        <!-- TODO: number of confirmations and required confirmations -->
+        <p><strong>3/4 Confirmations</strong></p>
+      </div>
+      <div class="signature--container">
+        <app-multi-signature-item></app-multi-signature-item>
+        <app-multi-signature-item></app-multi-signature-item>
+        <app-multi-signature-item></app-multi-signature-item>
+        <app-multi-signature-item></app-multi-signature-item>
+      </div>
+    </div>
+  </div>
