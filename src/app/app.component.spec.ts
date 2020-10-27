@@ -1,20 +1,26 @@
-import { TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
-import { AppComponent } from './app.component';
+import { TestBed } from "@angular/core/testing";
+import { RouterTestingModule } from "@angular/router/testing";
+import { AppComponent } from "./app.component";
+import { HeaderItemComponent } from "./components/header-item/header-item.component";
+import { MultiSignatureItemComponent } from "./components/multi-signature-item/multi-signature-item.component";
+import { DashboardComponent } from "./pages/dashboard/dashboard.component";
+import { SettingsComponent } from "./pages/settings/settings.component";
 
-describe('AppComponent', () => {
+describe("AppComponent", () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [
-        RouterTestingModule
-      ],
+      imports: [RouterTestingModule],
       declarations: [
-        AppComponent
+        AppComponent,
+        HeaderItemComponent,
+        MultiSignatureItemComponent,
+        SettingsComponent,
+        DashboardComponent,
       ],
     }).compileComponents();
   });
 
-  it('should create the app', () => {
+  it("should create the app", () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
@@ -23,13 +29,6 @@ describe('AppComponent', () => {
   it(`should have as title 'dapp-frontend'`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('dapp-frontend');
-  });
-
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement;
-    expect(compiled.querySelector('.content span').textContent).toContain('dapp-frontend app is running!');
+    expect(app.title).toEqual("dapp-frontend");
   });
 });
