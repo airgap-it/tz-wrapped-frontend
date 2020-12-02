@@ -1,33 +1,55 @@
 <nav class="navbar navbar-expand-lg navbar-light">
-    <a class="navbar-brand" href="#" routerLink="">Foundry</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-  
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav mr-auto">
-        <div class="btn-group" dropdown>
-           <button id="button-animated" dropdownToggle type="button" class="btn btn-light dropdown-toggle"
-                  aria-controls="dropdown-animated">
-                  <img src="/assets/img/tzeth.svg" class="mr-2"/>
-              tzETH <span class="caret"></span>
-          </button>
-          <ul id="dropdown-animated" *dropdownMenu class="dropdown-menu"
-              role="menu" aria-labelledby="button-animated">
-            <li role="menuitem"><a class="dropdown-item" href="#"> <img src="/assets/img/tzeth.svg" class="mr-2"/>
-              tzBTC </a></li>
-          </ul>
-        </div>
-      </ul>
-      <div class="my-2 my-lg-0">
-        <!-- TODO: show only if wallet is connected -->
-        <button class="btn btn-light btn-rounded mr-3">
-          <img src="/assets/img/identity.svg" class="mr-2"/>
-          <span>tz12M…214x</span>
+  <a class="navbar-brand" href="#" routerLink="">Foundry</a>
+  <button
+    class="navbar-toggler"
+    type="button"
+    data-toggle="collapse"
+    data-target="#navbarSupportedContent"
+    aria-controls="navbarSupportedContent"
+    aria-expanded="false"
+    aria-label="Toggle navigation"
+  >
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <div class="btn-group" dropdown>
+        <button
+          id="button-animated"
+          dropdownToggle
+          type="button"
+          class="btn btn-light dropdown-toggle"
+          aria-controls="dropdown-animated"
+        >
+          <img src="/assets/img/tzeth.svg" class="mr-2" />
+          tzETH <span class="caret"></span>
         </button>
-        <button class="btn btn-light btn-rounded" routerLink="/settings">
-          <img src="/assets/img/settings.svg"/>
-        </button>
+        <ul
+          id="dropdown-animated"
+          *dropdownMenu
+          class="dropdown-menu"
+          role="menu"
+          aria-labelledby="button-animated"
+        >
+          <li role="menuitem">
+            <a class="dropdown-item" href="#">
+              <img src="/assets/img/tzeth.svg" class="mr-2" /> tzBTC
+            </a>
+          </li>
+        </ul>
       </div>
+    </ul>
+    <div class="my-2 my-lg-0">
+      <span></span>
+      <!-- TODO: show only if wallet is connected -->
+      <button class="btn btn-light btn-rounded mr-3">
+        <img src="/assets/img/identity.svg" class="mr-2" />
+        <span> {{ address$ | async }}</span>
+      </button>
+      <button class="btn btn-light btn-rounded" routerLink="/settings">
+        <img src="/assets/img/settings.svg" />
+      </button>
     </div>
-  </nav>
+  </div>
+</nav>

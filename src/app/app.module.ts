@@ -11,6 +11,10 @@ import { HeaderItemComponent } from "./components/header-item/header-item.compon
 import { MultiSignatureItemComponent } from "./components/multi-signature-item/multi-signature-item.component";
 import { SettingsComponent } from "./pages/settings/settings.component";
 import { DashboardComponent } from "./pages/dashboard/dashboard.component";
+import { BeaconService } from "./services/beacon/beacon.service";
+import { EffectsModule } from "@ngrx/effects";
+import { AppEffects } from "./app.effects";
+import { metaReducers, ROOT_REDUCERS } from "./reducers";
 
 @NgModule({
   declarations: [
@@ -27,8 +31,16 @@ import { DashboardComponent } from "./pages/dashboard/dashboard.component";
     TabsModule.forRoot(),
     AppRoutingModule,
     StoreModule.forRoot({}, {}),
+    EffectsModule.forRoot([AppEffects]),
+    StoreModule.forRoot(ROOT_REDUCERS, {
+      metaReducers,
+      runtimeChecks: {
+        strictStateImmutability: true,
+        strictActionImmutability: false, // true is default (see comment in baker-table)
+      },
+    }),
   ],
-  providers: [],
+  providers: [BeaconService],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
