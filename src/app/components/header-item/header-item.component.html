@@ -40,16 +40,17 @@
         </ul>
       </div>
     </ul>
-    <div class="my-2 my-lg-0">
-      <span></span>
-      <!-- TODO: show only if wallet is connected -->
-      <button class="btn btn-light btn-rounded mr-3">
-        <img src="/assets/img/identity.svg" class="mr-2" />
-        <span> {{ address$ | async }}</span>
-      </button>
-      <button class="btn btn-light btn-rounded" routerLink="/settings">
-        <img src="/assets/img/settings.svg" />
-      </button>
+    <div *ngIf="address$ | async as address">
+      <div *ngIf="address !== null" class="my-2 my-lg-0">
+        <span></span>
+        <button class="btn btn-light btn-rounded mr-3">
+          <img src="/assets/img/identity.svg" class="mr-2" />
+          <span> {{ address }} </span>
+        </button>
+        <button class="btn btn-light btn-rounded" routerLink="/settings">
+          <img src="/assets/img/settings.svg" />
+        </button>
+      </div>
     </div>
   </div>
 </nav>

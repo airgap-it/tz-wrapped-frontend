@@ -49,11 +49,11 @@ export const metaReducers: MetaReducer<State>[] = !environment.production
   : [];
 
 export const getState = (store: Store<State>): State => {
-  let state: State;
+  let state: State | undefined = undefined;
 
   store.pipe(take(1)).subscribe((s) => (state = s));
 
-  return state;
+  return state as any; // TODO: does this make sense because subscribe is always async?
 };
 
 export const selectGlobal = (state: State) => state;

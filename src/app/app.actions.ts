@@ -29,3 +29,15 @@ export const loadAddressFailed = createAction(
   `[${featureName}] Load Address of Connected Wallet Failed`,
   props<{ error: any }>()
 );
+
+export const transferOperation = createAction(
+  `[${featureName}] Starting Transfer Operation`,
+  props<{ transferAmount: number; receivingAddress: string }>()
+);
+export const transferOperationSucceeded = createAction(
+  `[${featureName}] Transferring Succeeded`
+);
+export const transferOperationFailed = createAction(
+  `[${featureName}] Transferring Failed`,
+  props<{ error: any }>()
+);
