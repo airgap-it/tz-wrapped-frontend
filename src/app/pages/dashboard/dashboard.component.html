@@ -23,9 +23,9 @@
           <button
             type="button"
             class="btn btn-primary btn-block"
-            (click)="connectWallet()"
+            (click)="address$ ? mint() : connectWallet()"
           >
-            Connect Wallet
+            {{ (address$ | async) ? "Mint" : "Connect Wallet" }}
           </button>
         </tab>
         <tab heading="Burn">
@@ -46,8 +46,12 @@
               />
             </div>
           </div>
-          <button type="button" class="btn btn-primary btn-block">
-            Connect Wallet
+          <button
+            type="button"
+            class="btn btn-primary btn-block"
+            (click)="address$ ? burn() : connectWallet()"
+          >
+            {{ (address$ | async) ? "Burn" : "Connect Wallet" }}
           </button>
         </tab>
         <tab heading="Transfer">
@@ -55,6 +59,7 @@
             <label>Receiving Address</label>
             <div class="input-group mb-3">
               <input
+                [formControl]="receivingAddressControl"
                 type="text"
                 class="form-control"
                 placeholder="tz1.."
@@ -70,6 +75,7 @@
                 >
               </div>
               <input
+                [formControl]="amountControl"
                 type="text"
                 class="form-control"
                 placeholder="0.0"
@@ -77,8 +83,12 @@
               />
             </div>
           </div>
-          <button type="button" class="btn btn-primary btn-block">
-            Connect Wallet
+          <button
+            type="button"
+            class="btn btn-primary btn-block"
+            (click)="address$ ? transfer() : connectWallet()"
+          >
+            {{ (address$ | async) ? "Transfer" : "Connect Wallet" }}
           </button>
         </tab>
       </tabset>

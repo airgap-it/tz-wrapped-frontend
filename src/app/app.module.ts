@@ -15,7 +15,11 @@ import { BeaconService } from "./services/beacon/beacon.service";
 import { EffectsModule } from "@ngrx/effects";
 import { AppEffects } from "./app.effects";
 import { metaReducers, ROOT_REDUCERS } from "./reducers";
+import { CommonModule } from "@angular/common";
+import { ReactiveFormsModule } from "@angular/forms";
 
+export const rpcURLMainnet = "https://tezos-node.prod.gke.papers.tech";
+export const rpcURLDelphinet = "https://delphinet-tezos.giganode.io";
 @NgModule({
   declarations: [
     AppComponent,
@@ -28,6 +32,7 @@ import { metaReducers, ROOT_REDUCERS } from "./reducers";
     BrowserAnimationsModule,
     BsDropdownModule.forRoot(),
     BrowserModule,
+    CommonModule,
     TabsModule.forRoot(),
     AppRoutingModule,
     StoreModule.forRoot({}, {}),
@@ -36,9 +41,10 @@ import { metaReducers, ROOT_REDUCERS } from "./reducers";
       metaReducers,
       runtimeChecks: {
         strictStateImmutability: true,
-        strictActionImmutability: false, // true is default (see comment in baker-table)
+        strictActionImmutability: true,
       },
     }),
+    ReactiveFormsModule,
   ],
   providers: [BeaconService],
   bootstrap: [AppComponent],

@@ -41,6 +41,17 @@ export class AppEffects {
     )
   );
 
+  transferOperation$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.transferOperation),
+      switchMap(({ receivingAddress, transferAmount }) => {
+        return this.beaconService
+          .transferOperation(transferAmount, receivingAddress)
+          .then((response) => actions.transferOperationSucceeded())
+          .catch((error) => actions.transferOperationFailed({ error }));
+      })
+    )
+  );
   constructor(
     private readonly actions$: Actions,
     private readonly beaconService: BeaconService
