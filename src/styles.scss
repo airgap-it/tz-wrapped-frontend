@@ -84,4 +84,8 @@ tabset {
   height: 32px;
 }
 
+app-multi-signature-item:last-of-type .multi-signature__border {
+  display: none !important;
+}
+
 @import "../node_modules/bootstrap/scss/bootstrap";
