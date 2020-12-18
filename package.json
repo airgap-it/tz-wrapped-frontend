@@ -16,7 +16,8 @@
     "disable-pure-getters": "replace 'pure_getters: buildOptions.buildOptimizer' 'pure_getters: false' ./node_modules/@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/common.js ",
     "configure-mangle": "replace 'safari10: true' 'safari10: true, keep_fnames: true' ./node_modules/@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/common.js ",
     "sonar-scanner": "sonar-scanner",
-    "render": "ts-node prerender.ts"
+    "render": "ts-node prerender.ts",
+    "prettier": "prettier --write 'src/**/*' 'e2e/**/*' 'config/**/*' 'README.md'"
   },
   "private": true,
   "dependencies": {
@@ -48,6 +49,7 @@
     "@types/jasminewd2": "~2.0.3",
     "@types/node": "^12.11.1",
     "codelyzer": "^6.0.0",
+    "husky": "^4.3.6",
     "jasmine-core": "~3.6.0",
     "jasmine-spec-reporter": "~5.0.0",
     "karma": "~5.0.0",
@@ -55,11 +57,22 @@
     "karma-coverage-istanbul-reporter": "~3.0.2",
     "karma-jasmine": "~4.0.0",
     "karma-jasmine-html-reporter": "^1.5.0",
+    "prettier": "^2.2.1",
+    "pretty-quick": "^3.1.0",
     "protractor": "~7.0.0",
     "sonarqube-scanner": "^2.7.0",
     "ts-node": "~8.3.0",
     "tslib": "^2.0.3",
     "tslint": "~6.1.0",
     "typescript": "~4.0.2"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
   }
 }
