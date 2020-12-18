@@ -25,6 +25,7 @@ $theme-colors: (
   "primary": #2c7df7,
 );
 $border-radius: 8px;
+$body-bg: map_get($theme-colors, "primary");
 
 $card-border-color: rgba(0, 0, 0, 0.04);
 $box-shadow: 0 40px 60px 0 rgba(0, 0, 0, 0.08),
@@ -45,6 +46,7 @@ $input-btn-focus-box-shadow: none;
 $btn-line-height: 2.5;
 $btn-border-radius: $border-radius;
 $card-spacer-x: 1.5rem;
+$dropdown-link-active-bg: rgba(map_get($theme-colors, "primary"), 0.54);
 
 .card,
 .dropdown-menu {
@@ -57,6 +59,11 @@ $card-spacer-x: 1.5rem;
 
 .input-group {
   border-radius: $border-radius;
+}
+
+.input-group-prepend .btn {
+  border-top-right-radius: $border-radius !important;
+  border-bottom-right-radius: $border-radius !important;
 }
 
 tabset {
@@ -75,6 +82,10 @@ tabset {
 .status--container {
   width: 32px;
   height: 32px;
+}
+
+app-multi-signature-item:last-of-type .multi-signature__border {
+  display: none !important;
 }
 
 @import "../node_modules/bootstrap/scss/bootstrap";

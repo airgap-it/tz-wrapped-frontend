@@ -2,6 +2,51 @@
   <div class="card-body">
     <div>
       <tabset>
+        <tab heading="Transfer">
+          <div class="my-5">
+            <label>Receiving Address</label>
+            <div class="input-group mb-3">
+              <input
+                [formControl]="receivingAddressControl"
+                type="text"
+                class="form-control"
+                placeholder="tz1.."
+                aria-label="Address"
+              />
+            </div>
+            <label class="d-flex justify-content-between"
+              >Amount
+              <!--TODO: add balance & token symbol-->
+              <span>Balance: 124 tzETH</span>
+            </label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text">
+                  <img src="/assets/img/tzeth.svg" class="mr-2" />
+                  tzETH</span
+                >
+              </div>
+              <input
+                [formControl]="amountControl"
+                type="text"
+                class="form-control"
+                placeholder="0.0"
+                aria-label="Amount"
+              />
+              <span class="input-group-prepend">
+                <!--TODO: input max balance -->
+                <button type="button" class="btn btn-primary">Max</button>
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="btn btn-primary btn-block"
+            (click)="address$ ? transfer() : connectWallet()"
+          >
+            {{ (address$ | async) ? "Transfer" : "Connect Wallet" }}
+          </button>
+        </tab>
         <tab heading="Mint" id="tab1">
           <div class="my-5">
             <label>Enter amount to mint</label>
@@ -52,43 +97,6 @@
             (click)="address$ ? burn() : connectWallet()"
           >
             {{ (address$ | async) ? "Burn" : "Connect Wallet" }}
-          </button>
-        </tab>
-        <tab heading="Transfer">
-          <div class="my-5">
-            <label>Receiving Address</label>
-            <div class="input-group mb-3">
-              <input
-                [formControl]="receivingAddressControl"
-                type="text"
-                class="form-control"
-                placeholder="tz1.."
-                aria-label="Address"
-              />
-            </div>
-            <label>Amount</label>
-            <div class="input-group">
-              <div class="input-group-prepend">
-                <span class="input-group-text">
-                  <img src="/assets/img/tzeth.svg" class="mr-2" />
-                  tzETH</span
-                >
-              </div>
-              <input
-                [formControl]="amountControl"
-                type="text"
-                class="form-control"
-                placeholder="0.0"
-                aria-label="Amount"
-              />
-            </div>
-          </div>
-          <button
-            type="button"
-            class="btn btn-primary btn-block"
-            (click)="address$ ? transfer() : connectWallet()"
-          >
-            {{ (address$ | async) ? "Transfer" : "Connect Wallet" }}
           </button>
         </tab>
       </tabset>

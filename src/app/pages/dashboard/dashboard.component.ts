@@ -29,13 +29,11 @@ export class DashboardComponent implements OnInit {
     this.receivingAddressControl = new FormControl("");
     this.amountControl = new FormControl(null);
     this.beaconService.setupBeaconWallet().then(() => {
-      this.address$ = this.store$.select((state) => state.app.address)
-    })
+      this.address$ = this.store$.select((state) => state.app.address);
+    });
   }
 
-  ngOnInit(): void {
-
-  }
+  ngOnInit(): void {}
 
   connectWallet() {
     this.store$.dispatch(actions.connectWallet());
