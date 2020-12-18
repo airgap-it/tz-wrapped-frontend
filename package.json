@@ -2,6 +2,7 @@
   "name": "dapp-frontend",
   "version": "0.0.0",
   "scripts": {
+    "postinstall": "node config/patch_crypto.js && npm run prepare-prod-build",
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
@@ -13,8 +14,8 @@
     "e2e": "ng e2e",
     "build:prod": "ng build --prod",
     "prepare-prod-build": "npm run disable-pure-getters && npm run configure-mangle",
-    "disable-pure-getters": "replace 'pure_getters: buildOptions.buildOptimizer' 'pure_getters: false' ./node_modules/@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/common.js ",
-    "configure-mangle": "replace 'safari10: true' 'safari10: true, keep_fnames: true' ./node_modules/@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/common.js ",
+    "disable-pure-getters": "replace 'pure_getters: buildOptions.buildOptimizer' 'pure_getters: false' ./node_modules/@angular-devkit/build-angular/src/webpack/configs/common.js ",
+    "configure-mangle": "replace 'safari10: true' 'safari10: true, keep_fnames: true' ./node_modules/@angular-devkit/build-angular/src/webpack/configs/common.js ",
     "sonar-scanner": "sonar-scanner",
     "render": "ts-node prerender.ts",
     "prettier": "prettier --write 'src/**/*' 'e2e/**/*' 'config/**/*' 'README.md'"
@@ -60,6 +61,7 @@
     "prettier": "^2.2.1",
     "pretty-quick": "^3.1.0",
     "protractor": "~7.0.0",
+    "replace": "^1.2.0",
     "sonarqube-scanner": "^2.7.0",
     "ts-node": "~8.3.0",
     "tslib": "^2.0.0",

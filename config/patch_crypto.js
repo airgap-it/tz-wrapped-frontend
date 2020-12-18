@@ -1,6 +1,6 @@
 const fs = require('fs')
 const f =
-  'node_modules/@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/browser.js'
+  'node_modules/@angular-devkit/build-angular/src/webpack/configs/browser.js'
 
 fs.readFile(f, 'utf8', function (err, data) {
   if (err) {
@@ -8,7 +8,7 @@ fs.readFile(f, 'utf8', function (err, data) {
   }
   var result = data.replace(
     /node: false/g,
-    `node: {crypto: true, stream: true}`
+    'node: {crypto: true, stream: true, fs: "empty"}'
   )
 
   fs.writeFile(f, result, 'utf8', function (err) {
