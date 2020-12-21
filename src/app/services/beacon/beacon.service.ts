@@ -2,7 +2,9 @@ import { Injectable } from '@angular/core'
 import {
   Network,
   NetworkType,
+  OperationResponseOutput,
   PermissionScope,
+  RequestOperationInput,
   SignPayloadResponseOutput,
 } from '@airgap/beacon-sdk'
 import { TezosToolkit, WalletContract } from '@taquito/taquito'
@@ -114,6 +116,12 @@ export class BeaconService {
     return this.wallet.client.requestSignPayload({
       payload: message,
     })
+  }
+
+  async operation(
+    input: RequestOperationInput
+  ): Promise<OperationResponseOutput> {
+    return this.wallet.client.requestOperation(input)
   }
 
   getAddress(): Observable<string> {

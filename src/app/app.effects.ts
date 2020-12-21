@@ -1,3 +1,4 @@
+import { TezosOperationType } from '@airgap/beacon-sdk'
 import { Injectable } from '@angular/core'
 import { Actions, createEffect, ofType } from '@ngrx/effects'
 import { of } from 'rxjs'
@@ -264,6 +265,60 @@ export class AppEffects {
         return actions.loadApprovals({
           requestId: request.operation_approval.request,
         })
+      })
+    )
+  )
+
+  getApprovedMintParameters$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.getApprovedMintParameters),
+      switchMap(({ operationId }) => {
+        return this.apiService
+          .getParameters(operationId)
+          .toPromise()
+          .then((response) =>
+            actions.getApprovedMintParametersSucceeded({
+              parameters: response,
+            })
+          )
+          .catch((error) => actions.getApprovedMintParametersFailed({ error }))
+      })
+    )
+  )
+
+  getApprovedMintParametersSucceeded$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.getApprovedMintParametersSucceeded),
+      map(({ parameters }) => {
+        console.log('submit done, now refreshing approvals')
+        return actions.signApprovedMint({
+          operation: {
+            operationDetails: [
+              {
+                kind: TezosOperationType.TRANSACTION,
+                amount: '0',
+                destination: 'KT1BYMvJoM75JyqFbsLKouqkAv8dgEvViioP',
+                parameters,
+              },
+            ],
+          },
+        })
+      })
+    )
+  )
+
+  signApprovedMint$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.signApprovedMint),
+      switchMap(({ operation }) => {
+        return this.beaconService
+          .operation(operation)
+          .then((response) =>
+            actions.signApprovedMintSucceeded({
+              response,
+            })
+          )
+          .catch((error) => actions.signApprovedMintFailed({ error }))
       })
     )
   )

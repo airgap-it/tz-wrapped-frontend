@@ -1,4 +1,4 @@
-<ng-container *ngIf="multisigItems">
+<ng-container *ngIf="mintRequest && multisigItems">
   <div class="row py-3 align-items-center">
     <div class="col col-md-6">
       <!-- TODO: requested minting amount -->
@@ -25,6 +25,16 @@
       *ngFor="let multisigItem of multisigItems"
       [multisigItem]="multisigItem"
     ></app-multi-signature-item>
+  </div>
+  <div>
+    <button
+      *ngIf="mintRequest.state === 'approved' && isKeyholder"
+      type="button"
+      class="btn btn-primary btn-block"
+      (click)="submitApprovedMint()"
+    >
+      Submit Mint Operation
+    </button>
   </div>
   <hr />
 </ng-container>

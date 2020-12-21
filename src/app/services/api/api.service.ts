@@ -136,8 +136,8 @@ export class ApiService {
     return this.http.get<SignableMessageRequest>(this.getUrl(path))
   }
 
-  getParameters(contractId: string): Observable<any> {
-    const path = `operations/${contractId}/parameters`
+  getParameters(operationId: string): Observable<any> {
+    const path = `operations/${operationId}/parameters`
     return this.http.get<any>(this.getUrl(path))
   }
 

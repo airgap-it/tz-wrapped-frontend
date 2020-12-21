@@ -1,5 +1,8 @@
 import { Component, Input } from '@angular/core'
 import { Approval, Operation, User } from 'src/app/services/api/api.service'
+import * as fromRoot from '../../app.reducer'
+import * as actions from '../../app.actions'
+import { Store } from '@ngrx/store'
 
 export interface UserWithApproval extends User {
   requestId: string
@@ -25,8 +28,9 @@ export class OpenMintingRequestComponent {
   @Input()
   address: string | undefined
 
-  constructor() {}
+  constructor(private readonly store$: Store<fromRoot.State>) {}
 
+  public isKeyholder: boolean = false
   public multisigItems: UserWithApproval[] = []
 
   ngOnChanges(): void {
@@ -38,6 +42,10 @@ export class OpenMintingRequestComponent {
     if (!this.users) {
       throw new Error('Users not loaded')
     }
+
+    this.isKeyholder = this.users
+      .filter((user) => user.address === this.address)
+      .some((user) => user.kind === 'keyholder')
 
     if (!this.approvals) {
       throw new Error('Approvals not loaded')
@@ -62,5 +70,16 @@ export class OpenMintingRequestComponent {
           ),
         })),
     ]
+  }
+
+  public submitApprovedMint() {
+    if (this.mintRequest) {
+      const requestId = this.mintRequest.id
+      this.store$.dispatch(
+        actions.getApprovedMintParameters({
+          operationId: requestId,
+        })
+      )
+    }
   }
 }

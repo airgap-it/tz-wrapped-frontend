@@ -11,6 +11,11 @@ import {
   SignableMessageRequest,
   User,
 } from './services/api/api.service'
+import {
+  OperationRequestInput,
+  OperationResponseOutput,
+  RequestOperationInput,
+} from '@airgap/beacon-sdk'
 
 const featureName = 'App'
 
@@ -176,5 +181,31 @@ export const submitSignedApproveMintOperationRequestSucceeded = createAction(
 )
 export const submitSignedApproveMintOperationRequestFailed = createAction(
   `[${featureName}] Submit Signed Approve Mint Operation RequestFailed`,
+  props<{ error: any }>()
+)
+
+export const getApprovedMintParameters = createAction(
+  `[${featureName}] Get Approved Mint Parameters`,
+  props<{ operationId: string }>()
+)
+export const getApprovedMintParametersSucceeded = createAction(
+  `[${featureName}] Get Approved Mint ParametersSucceeded`,
+  props<{ parameters: any }>()
+)
+export const getApprovedMintParametersFailed = createAction(
+  `[${featureName}] Get Approved Mint ParametersFailed`,
+  props<{ error: any }>()
+)
+
+export const signApprovedMint = createAction(
+  `[${featureName}] Sign Approved Mint`,
+  props<{ operation: RequestOperationInput }>()
+)
+export const signApprovedMintSucceeded = createAction(
+  `[${featureName}] Sign Approved MintSucceeded`,
+  props<{ response: OperationResponseOutput }>()
+)
+export const signApprovedMintFailed = createAction(
+  `[${featureName}] Sign Approved MintFailed`,
   props<{ error: any }>()
 )
