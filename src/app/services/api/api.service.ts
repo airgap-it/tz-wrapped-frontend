@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core'
 import { HttpClient } from '@angular/common/http'
 import { Observable } from 'rxjs'
 
-const URL = 'http://tz-wrapped.dev.gke.papers.tech'
+const URL = 'https://tz-wrapped.dev.gke.papers.tech'
 
 export enum State {
   OPEN = 'open',
@@ -147,6 +147,7 @@ export class ApiService {
     amount: string
   ): Observable<MintResponse> {
     const path = `contracts/${contractId}/signable-message?kind=${OperationKind.MINT}&target_address=${address}&amount=${amount}`
+    console.log('starting mint', path)
     return this.http.get<MintResponse>(this.getUrl(path))
   }
 

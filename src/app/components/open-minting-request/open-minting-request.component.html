@@ -1,0 +1,29 @@
+<span *ngIf="multisigItems">
+  <div class="row py-3 align-items-center">
+    <div class="col col-md-6">
+      <!-- TODO: requested minting amount -->
+      <h5 class="m-0">
+        <strong>{{ mintRequest.amount }} ETH</strong>
+      </h5>
+      <!-- TODO: human readable name of requestee -->
+      <p class="m-0">{{ mintRequest.requester.display_name }}</p>
+      <!-- TODO: requestee address -->
+      <p class="text-muted">{{ mintRequest.requester.address }}</p>
+      <!-- TODO: status -->
+      <p class="text-muted">{{ mintRequest.state }}</p>
+    </div>
+    <div class="col col-md-6">
+      <p class="text-right">{{ mintRequest.created_at }}</p>
+    </div>
+  </div>
+  <div>
+    <!-- TODO: number of confirmations and required confirmations -->
+    <p><strong>3/4 Confirmations TODO</strong></p>
+  </div>
+  <div class="signature--container">
+    <app-multi-signature-item
+      *ngFor="let multisigItem of multisigItems"
+      [multisigItem]="multisigItem"
+    ></app-multi-signature-item>
+  </div>
+</span>

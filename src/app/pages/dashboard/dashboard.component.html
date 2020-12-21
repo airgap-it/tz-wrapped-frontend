@@ -42,13 +42,24 @@
           <button
             type="button"
             class="btn btn-primary btn-block"
-            (click)="address$ ? transfer() : connectWallet()"
+            (click)="address ? transfer() : connectWallet()"
           >
-            {{ (address$ | async) ? 'Transfer' : 'Connect Wallet' }}
+            {{ address ? 'Transfer' : 'Connect Wallet' }}
           </button>
         </tab>
         <tab heading="Mint" id="tab1">
           <div class="my-5">
+            <label>Receiving Address</label>
+            <div class="input-group mb-3">
+              <input
+                [formControl]="receivingAddressControl"
+                type="text"
+                class="form-control"
+                placeholder="tz1.."
+                aria-label="Address"
+              />
+            </div>
+
             <label>Enter amount to mint</label>
             <div class="input-group">
               <div class="input-group-prepend">
@@ -58,6 +69,7 @@
                 >
               </div>
               <input
+                [formControl]="amountControl"
                 type="text"
                 class="form-control"
                 placeholder="0.0"
@@ -68,9 +80,9 @@
           <button
             type="button"
             class="btn btn-primary btn-block"
-            (click)="address$ ? mint() : connectWallet()"
+            (click)="address ? mint() : connectWallet()"
           >
-            {{ (address$ | async) ? 'Mint' : 'Connect Wallet' }}
+            {{ address ? 'Mint' : 'Connect Wallet' }}
           </button>
         </tab>
         <tab heading="Burn">
@@ -94,9 +106,9 @@
           <button
             type="button"
             class="btn btn-primary btn-block"
-            (click)="address$ ? burn() : connectWallet()"
+            (click)="address ? burn() : connectWallet()"
           >
-            {{ (address$ | async) ? 'Burn' : 'Connect Wallet' }}
+            {{ address ? 'Burn' : 'Connect Wallet' }}
           </button>
         </tab>
       </tabset>
@@ -107,28 +119,12 @@
 <div class="card mt-5">
   <div class="card-body">
     <h5>Open minting request</h5>
-    <div class="row py-3 align-items-center">
-      <div class="col col-md-6">
-        <!-- TODO: requested minting amount -->
-        <h5 class="m-0"><strong>5000 ETH</strong></h5>
-        <!-- TODO: human readable name of requestee -->
-        <p class="m-0">Bitcoin Suisse</p>
-        <!-- TODO: requestee address -->
-        <p class="text-muted">tz12M…214x</p>
-      </div>
-      <div class="col col-md-6">
-        <p class="text-right">10.10.20 15:30</p>
-      </div>
-    </div>
-    <div>
-      <!-- TODO: number of confirmations and required confirmations -->
-      <p><strong>3/4 Confirmations</strong></p>
-    </div>
-    <div class="signature--container">
-      <app-multi-signature-item></app-multi-signature-item>
-      <app-multi-signature-item></app-multi-signature-item>
-      <app-multi-signature-item></app-multi-signature-item>
-      <app-multi-signature-item></app-multi-signature-item>
-    </div>
+    <app-open-minting-request
+      *ngFor="let request of mintingRequests"
+      [mintRequest]="request"
+      [users]="users"
+      [approvals]="approvals"
+      [address]="address"
+    ></app-open-minting-request>
   </div>
 </div>

@@ -1,5 +1,10 @@
 import { Injectable } from '@angular/core'
-import { Network, NetworkType, PermissionScope } from '@airgap/beacon-sdk'
+import {
+  Network,
+  NetworkType,
+  PermissionScope,
+  SignPayloadResponseOutput,
+} from '@airgap/beacon-sdk'
 import { TezosToolkit, WalletContract } from '@taquito/taquito'
 import { Observable, of } from 'rxjs'
 import BigNumber from 'bignumber.js'
@@ -50,7 +55,7 @@ export class BeaconService {
       tezos.setWalletProvider(this.wallet)
       const activeAccount = await this.wallet.client.getActiveAccount()
       if (activeAccount) {
-        this.userAddress = await this.wallet.getPKH()
+        this.userAddress = await activeAccount.address
         this.store$.dispatch(actions.loadAddress())
       }
     } catch (error) {
@@ -89,7 +94,7 @@ export class BeaconService {
           .transfer(
             pkhSrc,
             receivingAddress,
-            new BigNumber(amount).shiftedBy(8).toFixed()
+            new BigNumber(amount).shiftedBy(6).toFixed()
           )
           .send()
         await operation.confirmation()
@@ -105,11 +110,13 @@ export class BeaconService {
     }
   }
 
+  async sign(message: string): Promise<SignPayloadResponseOutput> {
+    return this.wallet.client.requestSignPayload({
+      payload: message,
+    })
+  }
+
   getAddress(): Observable<string> {
-    if (this.userAddress) {
-      return of(this.userAddress)
-    } else {
-      throw new Error('no address set')
-    }
+    return of(this.userAddress ?? '')
   }
 }
