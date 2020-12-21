@@ -2,7 +2,6 @@
   "name": "dapp-frontend",
   "version": "0.0.0",
   "scripts": {
-    "postinstall": "node config/patch_crypto.js && npm run prepare-prod-build",
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
@@ -13,6 +12,7 @@
     "lint-fix": "ng lint --fix",
     "e2e": "ng e2e",
     "build:prod": "ng build --prod",
+    "fix-crypto": "node config/patch_crypto.js && npm run prepare-prod-build",
     "prepare-prod-build": "npm run disable-pure-getters && npm run configure-mangle",
     "disable-pure-getters": "replace 'pure_getters: buildOptions.buildOptimizer' 'pure_getters: false' ./node_modules/@angular-devkit/build-angular/src/webpack/configs/common.js ",
     "configure-mangle": "replace 'safari10: true' 'safari10: true, keep_fnames: true' ./node_modules/@angular-devkit/build-angular/src/webpack/configs/common.js ",
