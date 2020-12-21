@@ -17,6 +17,8 @@ import { AppEffects } from './app.effects'
 import { metaReducers, ROOT_REDUCERS } from './reducers'
 import { CommonModule } from '@angular/common'
 import { ReactiveFormsModule } from '@angular/forms'
+import { HttpClientModule } from '@angular/common/http'
+import { OpenMintingRequestComponent } from './components/open-minting-request/open-minting-request.component'
 
 export const rpcURLMainnet = 'https://tezos-node.prod.gke.papers.tech'
 export const rpcURLDelphinet = 'https://delphinet-tezos.giganode.io'
@@ -27,6 +29,7 @@ export const rpcURLDelphinet = 'https://delphinet-tezos.giganode.io'
     MultiSignatureItemComponent,
     SettingsComponent,
     DashboardComponent,
+    OpenMintingRequestComponent,
   ],
   imports: [
     BrowserAnimationsModule,
@@ -44,6 +47,7 @@ export const rpcURLDelphinet = 'https://delphinet-tezos.giganode.io'
         strictActionImmutability: true,
       },
     }),
+    HttpClientModule,
     ReactiveFormsModule,
   ],
   providers: [BeaconService],
