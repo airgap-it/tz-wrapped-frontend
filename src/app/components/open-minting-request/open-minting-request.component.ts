@@ -37,6 +37,9 @@ export class OpenMintingRequestComponent {
     private readonly apiService: ApiService
   ) {}
 
+  public currentConfirmations: number = 0
+  public maxConfirmations: number = 3
+
   public isKeyholder: boolean = false
   public multisigItems: UserWithApproval[] = []
 
@@ -52,6 +55,10 @@ export class OpenMintingRequestComponent {
       throw new Error('Users not loaded')
     }
 
+    this.maxConfirmations = this.users.filter(
+      (user) => user.kind === 'keyholder'
+    ).length
+
     this.isKeyholder = this.users
       .filter((user) => user.address === this.address)
       .some((user) => user.kind === 'keyholder')
@@ -63,11 +70,13 @@ export class OpenMintingRequestComponent {
     const mintRequest = this.mintRequest
 
     if (!this.hasRequestedApprovals) {
+      this.hasRequestedApprovals = true
+
       // TODO: This is a workaround. We should probably use the global store
       this.approvals = (
         await this.apiService.getApprovals(mintRequest.id).toPromise()
       ).results
-      this.hasRequestedApprovals = true
+      this.currentConfirmations = this.approvals.length
     }
 
     if (!this.approvals) {

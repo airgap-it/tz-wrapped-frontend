@@ -4,7 +4,6 @@
       <div
         class="border rounded-circle border-primary bg-white status--container d-flex align-items-center justify-content-center"
       >
-        <!-- TODO: show if confirmed -->
         <img *ngIf="multisigItem.hasApproval" src="/assets/img/check.svg" />
         <button
           *ngIf="!multisigItem.hasApproval && multisigItem.isCurrentUser"
@@ -15,14 +14,13 @@
       </div>
     </div>
     <div class="col col-md-6">
-      <!-- TODO: show human readable multi sig name -->
       <p class="m-0">{{ multisigItem.display_name }}</p>
-      <!-- TODO show multi sig address -->
-      <p class="text-muted m-0">{{ multisigItem.address }}</p>
+      <p class="text-muted m-0">{{ multisigItem.address | shorten }}</p>
     </div>
     <div class="col col-md-4">
-      <!-- TODO: display timestamp if confirmed otherwise 'pending' -->
-      <p class="text-right m-0">{{ multisigItem.created_at }}</p>
+      <p class="text-right m-0">
+        {{ multisigItem.created_at | date: 'MMMM-d-y HH:mm:ss' }}
+      </p>
     </div>
   </div>
   <div class="multi-signature__border d-none d-sm-block"></div>
