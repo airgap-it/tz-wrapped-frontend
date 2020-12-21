@@ -44,7 +44,7 @@
             class="btn btn-primary btn-block"
             (click)="address$ ? transfer() : connectWallet()"
           >
-            {{ (address$ | async) ? "Transfer" : "Connect Wallet" }}
+            {{ (address$ | async) ? 'Transfer' : 'Connect Wallet' }}
           </button>
         </tab>
         <tab heading="Mint" id="tab1">
@@ -70,7 +70,7 @@
             class="btn btn-primary btn-block"
             (click)="address$ ? mint() : connectWallet()"
           >
-            {{ (address$ | async) ? "Mint" : "Connect Wallet" }}
+            {{ (address$ | async) ? 'Mint' : 'Connect Wallet' }}
           </button>
         </tab>
         <tab heading="Burn">
@@ -96,7 +96,7 @@
             class="btn btn-primary btn-block"
             (click)="address$ ? burn() : connectWallet()"
           >
-            {{ (address$ | async) ? "Burn" : "Connect Wallet" }}
+            {{ (address$ | async) ? 'Burn' : 'Connect Wallet' }}
           </button>
         </tab>
       </tabset>

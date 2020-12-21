@@ -1,22 +1,22 @@
-import { createReducer, on } from "@ngrx/store";
+import { createReducer, on } from '@ngrx/store'
 
-import * as actions from "./app.actions";
+import * as actions from './app.actions'
 
 interface Busy {
-  address: boolean;
-  transferAmount: boolean;
-  receivingAddress: boolean;
+  address: boolean
+  transferAmount: boolean
+  receivingAddress: boolean
 }
 
 interface App {
-  address: string;
-  transferAmount: number;
-  receivingAddress: string;
+  address: string
+  transferAmount: number
+  receivingAddress: string
 }
 
 export interface State {
-  app: App;
-  busy: Busy;
+  app: App
+  busy: Busy
 }
 
 export const initialState: State = {
@@ -26,7 +26,7 @@ export const initialState: State = {
     receivingAddress: false,
     transferAmount: false,
   },
-};
+}
 
 export const reducer = createReducer(
   initialState,
@@ -88,4 +88,4 @@ export const reducer = createReducer(
       transferAmount: false,
     },
   }))
-);
+)

@@ -1,10 +1,10 @@
-import { Injectable } from "@angular/core";
-import { Actions, createEffect, ofType } from "@ngrx/effects";
-import { of } from "rxjs";
-import { map, catchError, switchMap } from "rxjs/operators";
+import { Injectable } from '@angular/core'
+import { Actions, createEffect, ofType } from '@ngrx/effects'
+import { of } from 'rxjs'
+import { map, catchError, switchMap } from 'rxjs/operators'
 
-import * as actions from "./app.actions";
-import { BeaconService } from "./services/beacon/beacon.service";
+import * as actions from './app.actions'
+import { BeaconService } from './services/beacon/beacon.service'
 
 @Injectable()
 export class AppEffects {
@@ -15,19 +15,19 @@ export class AppEffects {
         return this.beaconService
           .requestPermission()
           .then((response) => actions.connectWalletSucceeded())
-          .catch((error) => actions.connectWalletFailed({ error }));
+          .catch((error) => actions.connectWalletFailed({ error }))
       })
     )
-  );
+  )
 
   connectWalletSucceeded$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.connectWalletSucceeded),
       map(() => {
-        return actions.loadAddress();
+        return actions.loadAddress()
       })
     )
-  );
+  )
 
   loadAddress$ = createEffect(() =>
     this.actions$.pipe(
@@ -36,10 +36,10 @@ export class AppEffects {
         return this.beaconService.getAddress().pipe(
           map((address) => actions.loadAddressSucceeded({ address })),
           catchError((error) => of(actions.loadAddressFailed({ error })))
-        );
+        )
       })
     )
-  );
+  )
 
   transferOperation$ = createEffect(() =>
     this.actions$.pipe(
@@ -48,10 +48,10 @@ export class AppEffects {
         return this.beaconService
           .transferOperation(transferAmount, receivingAddress)
           .then((response) => actions.transferOperationSucceeded())
-          .catch((error) => actions.transferOperationFailed({ error }));
+          .catch((error) => actions.transferOperationFailed({ error }))
       })
     )
-  );
+  )
   constructor(
     private readonly actions$: Actions,
     private readonly beaconService: BeaconService
