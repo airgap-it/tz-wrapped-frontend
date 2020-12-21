@@ -19,6 +19,7 @@ import { CommonModule } from '@angular/common'
 import { ReactiveFormsModule } from '@angular/forms'
 import { HttpClientModule } from '@angular/common/http'
 import { OpenMintingRequestComponent } from './components/open-minting-request/open-minting-request.component'
+import { ShortenPipe } from './shorten.pipe'
 
 export const rpcURLMainnet = 'https://tezos-node.prod.gke.papers.tech'
 export const rpcURLDelphinet = 'https://delphinet-tezos.giganode.io'
@@ -30,6 +31,7 @@ export const rpcURLDelphinet = 'https://delphinet-tezos.giganode.io'
     SettingsComponent,
     DashboardComponent,
     OpenMintingRequestComponent,
+    ShortenPipe,
   ],
   imports: [
     BrowserAnimationsModule,
