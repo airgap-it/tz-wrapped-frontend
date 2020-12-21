@@ -118,12 +118,24 @@
 <!-- TODO: show only if Gatekeeper/Keyholder-->
 <div class="card mt-5">
   <div class="card-body">
-    <h5>Open minting request</h5>
+    <h5>Open Minting Request</h5>
     <app-open-minting-request
-      *ngFor="let request of mintingRequests"
+      *ngFor="let request of pendingMintingRequests"
       [mintRequest]="request"
       [users]="users"
       [approvals]="approvals"
+      [address]="address"
+    ></app-open-minting-request>
+  </div>
+</div>
+
+<div class="card mt-5">
+  <div class="card-body">
+    <h5>Completed Minting Requests</h5>
+    <app-open-minting-request
+      *ngFor="let request of approvedMintingRequests"
+      [mintRequest]="request"
+      [users]="users"
       [address]="address"
     ></app-open-minting-request>
   </div>

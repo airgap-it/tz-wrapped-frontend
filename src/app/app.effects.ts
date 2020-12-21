@@ -91,7 +91,9 @@ export class AppEffects {
       ofType(actions.loadApprovals),
       switchMap(({ requestId }) => {
         return this.apiService.getApprovals(requestId).pipe(
-          map((response) => actions.loadApprovalsSucceeded({ response })),
+          map((response) =>
+            actions.loadApprovalsSucceeded({ requestId, response })
+          ),
           catchError((error) => of(actions.loadApprovalsFailed({ error })))
         )
       })

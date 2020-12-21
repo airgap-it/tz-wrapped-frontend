@@ -198,11 +198,14 @@ export const reducer = createReducer(
       approvals: true,
     },
   })),
-  on(actions.loadApprovalsSucceeded, (state, { response }) => ({
+  on(actions.loadApprovalsSucceeded, (state, { requestId, response }) => ({
     ...state,
     app: {
       ...state.app,
-      approvals: response.results,
+      approvals: response.results.map((result) => ({
+        ...result,
+        request_id: requestId,
+      })),
     },
     busy: {
       ...state.busy,

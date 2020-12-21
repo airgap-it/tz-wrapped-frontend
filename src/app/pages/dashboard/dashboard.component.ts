@@ -8,6 +8,8 @@ import { BeaconService } from '../../services/beacon/beacon.service'
 import { Approval, Operation, User } from 'src/app/services/api/api.service'
 // import { BeaconService } from "src/app/services/beacon/beacon.service";
 
+const CONTRACT_ID = '73ec5d6c-2a68-45e0-9d6c-5b02d025426e'
+
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
@@ -21,7 +23,8 @@ export class DashboardComponent implements OnInit {
   // receivingAddress$: Observable<string>;
   dataEmitter: EventEmitter<any[]> = new EventEmitter<any[]>()
   public address: string | null = null
-  public mintingRequests: Operation[] | null = null
+  public pendingMintingRequests: Operation[] | null = null
+  public approvedMintingRequests: Operation[] | null = null
   public users: User[] | null = null
   public approvals: Approval[] | null = null
 
@@ -38,7 +41,12 @@ export class DashboardComponent implements OnInit {
     s.subscribe((res) => {
       // TODO: Why is res not "App"?
       console.log('app', res)
-      this.mintingRequests = (res as any).app.mintingOperations
+      this.pendingMintingRequests = (res as any).app.mintingOperations.filter(
+        (request: any) => request.state !== 'approved'
+      )
+      this.approvedMintingRequests = (res as any).app.mintingOperations.filter(
+        (request: any) => request.state === 'approved'
+      )
       this.users = (res as any).app.users
       this.approvals = (res as any).app.approvals
       this.address = (res as any).app.address
@@ -49,17 +57,10 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.store$.dispatch(actions.loadContracts()) // TODO: Load this in a higher component?
-    this.store$.dispatch(
-      actions.loadUsers({ contractId: '73ec5d6c-2a68-45e0-9d6c-5b02d025426e' })
-    )
-    this.store$.dispatch(
-      actions.loadApprovals({
-        requestId: '77b3649c-2987-4db5-a9cc-6858ccbb3bac',
-      })
-    )
+    this.store$.dispatch(actions.loadUsers({ contractId: CONTRACT_ID }))
     this.store$.dispatch(
       actions.loadMintingRequests({
-        contractId: '73ec5d6c-2a68-45e0-9d6c-5b02d025426e',
+        contractId: CONTRACT_ID,
       })
     )
   }
@@ -87,7 +88,7 @@ export class DashboardComponent implements OnInit {
 
     this.store$.dispatch(
       actions.requestMintOperation({
-        contractId: '73ec5d6c-2a68-45e0-9d6c-5b02d025426e',
+        contractId: CONTRACT_ID,
         mintAmount: this.amountControl.value,
         receivingAddress: this.receivingAddressControl.value,
       })

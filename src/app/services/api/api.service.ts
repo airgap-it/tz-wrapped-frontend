@@ -65,6 +65,7 @@ export interface MintResponse {
 
 export interface Operation {
   id: string
+  request_id: string // TODO: This does currently not exist, but probably should?
   created_at: string
   updated_at: string
   requester: User

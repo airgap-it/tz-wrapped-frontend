@@ -1,5 +1,10 @@
 import { Component, Input } from '@angular/core'
-import { Approval, Operation, User } from 'src/app/services/api/api.service'
+import {
+  ApiService,
+  Approval,
+  Operation,
+  User,
+} from 'src/app/services/api/api.service'
 import * as fromRoot from '../../app.reducer'
 import * as actions from '../../app.actions'
 import { Store } from '@ngrx/store'
@@ -22,18 +27,22 @@ export class OpenMintingRequestComponent {
   @Input()
   users: User[] | undefined
 
-  @Input()
   approvals: Approval[] | undefined
 
   @Input()
   address: string | undefined
 
-  constructor(private readonly store$: Store<fromRoot.State>) {}
+  constructor(
+    private readonly store$: Store<fromRoot.State>,
+    private readonly apiService: ApiService
+  ) {}
 
   public isKeyholder: boolean = false
   public multisigItems: UserWithApproval[] = []
 
-  ngOnChanges(): void {
+  private hasRequestedApprovals: boolean = false
+
+  async ngOnChanges(): Promise<void> {
     console.log(this.mintRequest)
     console.log(this.users)
     console.log(this.approvals)
@@ -47,16 +56,27 @@ export class OpenMintingRequestComponent {
       .filter((user) => user.address === this.address)
       .some((user) => user.kind === 'keyholder')
 
-    if (!this.approvals) {
-      throw new Error('Approvals not loaded')
-    }
-
     if (!this.mintRequest) {
       throw new Error('Mint Request not loaded')
     }
 
     const mintRequest = this.mintRequest
-    const approvals = this.approvals
+
+    if (!this.hasRequestedApprovals) {
+      // TODO: This is a workaround. We should probably use the global store
+      this.approvals = (
+        await this.apiService.getApprovals(mintRequest.id).toPromise()
+      ).results
+      this.hasRequestedApprovals = true
+    }
+
+    if (!this.approvals) {
+      throw new Error('Approvals not loaded')
+    }
+
+    const approvals = this.approvals.filter(
+      (approval) => approval.request_id === mintRequest.id
+    )
 
     this.multisigItems = [
       ...this.users

@@ -88,7 +88,7 @@ export const loadApprovals = createAction(
 )
 export const loadApprovalsSucceeded = createAction(
   `[${featureName}] Load Approvals Succeeded`,
-  props<{ response: PagedResponse<Approval> }>()
+  props<{ requestId: string; response: PagedResponse<Approval> }>()
 )
 export const loadApprovalsFailed = createAction(
   `[${featureName}] Load Approvals Failed`,
