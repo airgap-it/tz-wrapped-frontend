@@ -1,4 +1,4 @@
-<span *ngIf="multisigItems">
+<ng-container *ngIf="multisigItems">
   <div class="row py-3 align-items-center">
     <div class="col col-md-6">
       <!-- TODO: requested minting amount -->
@@ -26,4 +26,5 @@
       [multisigItem]="multisigItem"
     ></app-multi-signature-item>
   </div>
-</span>
+  <hr />
+</ng-container>
