@@ -84,7 +84,8 @@ tabset {
   height: 32px;
 }
 
-app-multi-signature-item:last-of-type .multi-signature__border {
+app-multi-signature-item:last-of-type .multi-signature__border,
+app-open-minting-request:last-of-type hr {
   display: none !important;
 }
 
