@@ -1,31 +1,31 @@
 /* Manrope font imports*/
 @font-face {
-  font-family: "Manrope";
-  src: url(/assets/fonts/Manrope/manrope-regular.woff) format("truetype");
+  font-family: 'Manrope';
+  src: url(/assets/fonts/Manrope/manrope-regular.woff) format('truetype');
   font-weight: 400;
 }
 
 @font-face {
-  font-family: "Manrope";
-  src: url(/assets/fonts/Manrope/manrope-light.woff) format("truetype");
+  font-family: 'Manrope';
+  src: url(/assets/fonts/Manrope/manrope-light.woff) format('truetype');
   font-weight: 200;
 }
 
 @font-face {
-  font-family: "Manrope";
-  src: url(/assets/fonts/Manrope/manrope-bold.woff) format("truetype");
+  font-family: 'Manrope';
+  src: url(/assets/fonts/Manrope/manrope-bold.woff) format('truetype');
   font-weight: 600;
 }
 
-$font-family-sans-serif: "Manrope", sans-serif;
+$font-family-sans-serif: 'Manrope', sans-serif;
 $font-size-base: 14;
 
 /* custom colors */
 $theme-colors: (
-  "primary": #2c7df7,
+  'primary': #2c7df7,
 );
 $border-radius: 8px;
-$body-bg: map_get($theme-colors, "primary");
+$body-bg: map_get($theme-colors, 'primary');
 
 $card-border-color: rgba(0, 0, 0, 0.04);
 $box-shadow: 0 40px 60px 0 rgba(0, 0, 0, 0.08),
@@ -34,7 +34,7 @@ $btn-box-shadow: 0 2px 4px 0 rgba(44, 39, 56, 0.08),
   0 4px 8px 0 rgba(44, 39, 56, 0.08);
 $card-border-radius: 24px;
 $nav-tabs-border-width: 0;
-$nav-tabs-link-active-color: map_get($theme-colors, "primary");
+$nav-tabs-link-active-color: map_get($theme-colors, 'primary');
 $nav-tabs-link-active-bg: none;
 $input-line-height: 2;
 $input-font-weight: 600;
@@ -46,7 +46,7 @@ $input-btn-focus-box-shadow: none;
 $btn-line-height: 2.5;
 $btn-border-radius: $border-radius;
 $card-spacer-x: 1.5rem;
-$dropdown-link-active-bg: rgba(map_get($theme-colors, "primary"), 0.54);
+$dropdown-link-active-bg: rgba(map_get($theme-colors, 'primary'), 0.54);
 
 .card,
 .dropdown-menu {
@@ -88,4 +88,4 @@ app-multi-signature-item:last-of-type .multi-signature__border {
   display: none !important;
 }
 
-@import "../node_modules/bootstrap/scss/bootstrap";
+@import '../node_modules/bootstrap/scss/bootstrap';
