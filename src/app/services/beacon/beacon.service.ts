@@ -124,6 +124,10 @@ export class BeaconService {
     return this.wallet.client.requestOperation(input)
   }
 
+  async reset(): Promise<void> {
+    return this.wallet.clearActiveAccount()
+  }
+
   getAddress(): Observable<string> {
     return of(this.userAddress ?? '')
   }

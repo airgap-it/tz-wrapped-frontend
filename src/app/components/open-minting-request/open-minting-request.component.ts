@@ -40,7 +40,9 @@ export class OpenMintingRequestComponent {
   public currentConfirmations: number = 0
   public maxConfirmations: number = 3
 
-  public isKeyholder: boolean = false
+  @Input()
+  public currentUserType: 'keyholder' | 'gatekeeper' | undefined
+  public currentUserApproved: boolean = false
   public multisigItems: UserWithApproval[] = []
 
   private hasRequestedApprovals: boolean = false
@@ -59,12 +61,20 @@ export class OpenMintingRequestComponent {
       (user) => user.kind === 'keyholder'
     ).length
 
-    this.isKeyholder = this.users
-      .filter((user) => user.address === this.address)
-      .some((user) => user.kind === 'keyholder')
-
     if (!this.mintRequest) {
       throw new Error('Mint Request not loaded')
+    }
+
+    this.mintRequest = {
+      // TODO: Temporary workaround, remove after demo
+      ...this.mintRequest,
+      requester: {
+        ...this.mintRequest.requester,
+        display_name:
+          this.mintRequest.requester.display_name === 'Ugly Release'
+            ? 'Bitcoin Suisse'
+            : this.mintRequest.requester.display_name,
+      },
     }
 
     const mintRequest = this.mintRequest
@@ -76,6 +86,7 @@ export class OpenMintingRequestComponent {
       this.approvals = (
         await this.apiService.getApprovals(mintRequest.id).toPromise()
       ).results
+      console.log('approvals', this.approvals)
       this.currentConfirmations = this.approvals.length
     }
 
@@ -87,16 +98,27 @@ export class OpenMintingRequestComponent {
       (approval) => approval.request_id === mintRequest.id
     )
 
+    this.currentUserApproved = approvals.some(
+      (approval) => approval.approver.address === this.address
+    )
+
     this.multisigItems = [
       ...this.users
         .filter((user) => user.kind === 'keyholder')
         .map((user) => ({
           ...user,
+          display_name:
+            user.display_name === 'Ugly Release'
+              ? 'Bitcoin Suisse'
+              : user.display_name,
           requestId: mintRequest.id,
           isCurrentUser: user.address === this.address,
           hasApproval: approvals.some(
             (approval) => approval.approver.id === user.id
           ),
+          updated_at:
+            approvals.find((approval) => approval.approver.id === user.id)
+              ?.created_at ?? '',
         })),
     ]
   }
@@ -107,6 +129,16 @@ export class OpenMintingRequestComponent {
       this.store$.dispatch(
         actions.getApprovedMintParameters({
           operationId: requestId,
+        })
+      )
+    }
+  }
+
+  public confirmRequest() {
+    if (this.mintRequest) {
+      this.store$.dispatch(
+        actions.requestApproveMintOperation({
+          requestId: this.mintRequest.id,
         })
       )
     }
