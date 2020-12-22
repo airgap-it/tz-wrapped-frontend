@@ -2,7 +2,6 @@ import { Component, EventEmitter, Input, OnInit } from '@angular/core'
 import { Store } from '@ngrx/store'
 import * as fromRoot from '../../app.reducer'
 import * as actions from '../../app.actions'
-import { Observable } from 'rxjs'
 import { FormControl } from '@angular/forms'
 import { BeaconService } from '../../services/beacon/beacon.service'
 import { Approval, Operation, User } from 'src/app/services/api/api.service'
@@ -18,7 +17,7 @@ const CONTRACT_ID = '73ec5d6c-2a68-45e0-9d6c-5b02d025426e'
 export class DashboardComponent implements OnInit {
   @Input() buttonLabel: string | undefined
 
-  public selectedTab: 'tab0' | 'tab1' | 'tab2' = 'tab0'
+  public selectedTab: 'tab0' | 'tab1' | 'tab2' = 'tab0' // Rename to "tab-mint", etc.
 
   receivingAddressControl: FormControl
   amountControl: FormControl
@@ -30,7 +29,7 @@ export class DashboardComponent implements OnInit {
   public users: User[] | null = null
   public approvals: Approval[] | null = null
 
-  public currentUserType: 'keyholder' | 'gatekeeper' | undefined
+  public currentUserType: 'keyholder' | 'gatekeeper' | undefined // TODO: Create proper type and use it everywhere
 
   constructor(
     private readonly store$: Store<fromRoot.State>, // private readonly beaconService: BeaconService
@@ -44,6 +43,7 @@ export class DashboardComponent implements OnInit {
     const s = this.store$.select((state) => state.app)
     s.subscribe((res) => {
       // TODO: Why is res not "App"?
+      // TODO: Refactor this to use individual selectors
       console.log('app', res)
       this.pendingMintingRequests = (res as any).app.mintingOperations.filter(
         (request: any) => request.state !== 'approved'
@@ -66,6 +66,7 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.store$.dispatch(actions.loadContracts()) // TODO: Load this in a higher component?
+    // TODO: Use active contract (dependent on the selection)
     this.store$.dispatch(actions.loadUsers({ contractId: CONTRACT_ID }))
     this.store$.dispatch(
       actions.loadMintingRequests({
@@ -110,7 +111,6 @@ export class DashboardComponent implements OnInit {
 
   burn() {
     console.log('burn')
-    this.connectWallet()
   }
 
   transfer() {
