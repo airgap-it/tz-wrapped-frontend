@@ -67,6 +67,18 @@ export class OpenMintingRequestComponent {
       throw new Error('Mint Request not loaded')
     }
 
+    this.mintRequest = {
+      // TODO: Temporary workaround, remove after demo
+      ...this.mintRequest,
+      requester: {
+        ...this.mintRequest.requester,
+        display_name:
+          this.mintRequest.requester.display_name === 'Ugly Release'
+            ? 'Bitcoin Suisse'
+            : this.mintRequest.requester.display_name,
+      },
+    }
+
     const mintRequest = this.mintRequest
 
     if (!this.hasRequestedApprovals) {
@@ -93,6 +105,10 @@ export class OpenMintingRequestComponent {
         .filter((user) => user.kind === 'keyholder')
         .map((user) => ({
           ...user,
+          display_name:
+            user.display_name === 'Ugly Release'
+              ? 'Bitcoin Suisse'
+              : user.display_name,
           requestId: mintRequest.id,
           isCurrentUser: user.address === this.address,
           hasApproval: approvals.some(

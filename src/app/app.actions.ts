@@ -34,6 +34,17 @@ export const connectWalletFailed = createAction(
   props<{ error: any }>()
 )
 
+export const disconnectWallet = createAction(
+  `[${featureName}] Disconnect Wallet`
+)
+export const disconnectWalletSucceeded = createAction(
+  `[${featureName}] Disconnect Wallet Succeeded`
+)
+export const disconnectWalletFailed = createAction(
+  `[${featureName}] Disconnect Wallet Failed`,
+  props<{ error: any }>()
+)
+
 export const loadAddress = createAction(
   `[${featureName}] Load Address of Connected Wallet`
 )

@@ -18,6 +18,8 @@ const CONTRACT_ID = '73ec5d6c-2a68-45e0-9d6c-5b02d025426e'
 export class DashboardComponent implements OnInit {
   @Input() buttonLabel: string | undefined
 
+  public selectedTab: 'tab0' | 'tab1' | 'tab2' = 'tab0'
+
   receivingAddressControl: FormControl
   amountControl: FormControl
   // receivingAddress$: Observable<string>;
@@ -129,5 +131,9 @@ export class DashboardComponent implements OnInit {
     } else {
       console.log('invalid inputs')
     }
+  }
+
+  onSelect(event: any): void {
+    this.selectedTab = event.id
   }
 }

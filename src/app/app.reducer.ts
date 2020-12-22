@@ -58,6 +58,18 @@ export const reducer = createReducer(
       address: true,
     },
   })),
+  on(actions.disconnectWallet, (state) => ({
+    ...state,
+    address: undefined, // TODO: Why is it on this level? It doesn't work if we remove it, but I it shouldn't be here
+    app: {
+      ...state.app,
+      address: '',
+    },
+    busy: {
+      ...state.busy,
+      address: false,
+    },
+  })),
   on(actions.loadAddress, (state) => ({
     ...state,
     busy: {

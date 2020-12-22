@@ -2,7 +2,7 @@
   <div class="card-body">
     <div>
       <tabset>
-        <tab heading="Transfer">
+        <tab heading="Transfer" id="tab0" (selectTab)="onSelect($event)">
           <div class="my-5">
             <label>Receiving Address</label>
             <div class="input-group mb-3">
@@ -52,7 +52,7 @@
             {{ address ? 'Transfer' : 'Connect Wallet' }}
           </button>
         </tab>
-        <tab heading="Mint" id="tab1">
+        <tab heading="Mint" id="tab1" (selectTab)="onSelect($event)">
           <div class="my-5">
             <label>Receiving Address</label>
             <div class="input-group mb-3">
@@ -95,7 +95,7 @@
             {{ address ? 'Mint' : 'Connect Wallet' }}
           </button>
         </tab>
-        <tab heading="Burn">
+        <tab heading="Burn" id="tab2" (selectTab)="onSelect($event)">
           <div class="my-5">
             <label>Enter amount to burn</label>
             <div class="input-group">
@@ -131,27 +131,29 @@
   </div>
 </div>
 <!-- TODO: show only if Gatekeeper/Keyholder-->
-<div class="card mt-5">
-  <div class="card-body">
-    <h5>Open Minting Request</h5>
-    <app-open-minting-request
-      *ngFor="let request of pendingMintingRequests"
-      [mintRequest]="request"
-      [users]="users"
-      [approvals]="approvals"
-      [address]="address"
-    ></app-open-minting-request>
+<ng-container *ngIf="selectedTab === 'tab1'">
+  <div class="card mt-5">
+    <div class="card-body">
+      <h5>Open Minting Request</h5>
+      <app-open-minting-request
+        *ngFor="let request of pendingMintingRequests"
+        [mintRequest]="request"
+        [users]="users"
+        [approvals]="approvals"
+        [address]="address"
+      ></app-open-minting-request>
+    </div>
   </div>
-</div>
 
-<div class="card mt-5">
-  <div class="card-body">
-    <h5>Completed Minting Requests</h5>
-    <app-open-minting-request
-      *ngFor="let request of approvedMintingRequests"
-      [mintRequest]="request"
-      [users]="users"
-      [address]="address"
-    ></app-open-minting-request>
+  <div class="card mt-5">
+    <div class="card-body">
+      <h5>Completed Minting Requests</h5>
+      <app-open-minting-request
+        *ngFor="let request of approvedMintingRequests"
+        [mintRequest]="request"
+        [users]="users"
+        [address]="address"
+      ></app-open-minting-request>
+    </div>
   </div>
-</div>
+</ng-container>
