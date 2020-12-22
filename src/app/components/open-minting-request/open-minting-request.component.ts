@@ -76,6 +76,7 @@ export class OpenMintingRequestComponent {
       this.approvals = (
         await this.apiService.getApprovals(mintRequest.id).toPromise()
       ).results
+      console.log('approvals', this.approvals)
       this.currentConfirmations = this.approvals.length
     }
 
@@ -97,6 +98,9 @@ export class OpenMintingRequestComponent {
           hasApproval: approvals.some(
             (approval) => approval.approver.id === user.id
           ),
+          updated_at:
+            approvals.find((approval) => approval.approver.id === user.id)
+              ?.created_at ?? '',
         })),
     ]
   }
