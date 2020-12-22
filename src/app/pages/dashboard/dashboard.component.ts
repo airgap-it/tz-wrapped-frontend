@@ -30,6 +30,8 @@ export class DashboardComponent implements OnInit {
   public users: User[] | null = null
   public approvals: Approval[] | null = null
 
+  public currentUserType: 'keyholder' | 'gatekeeper' | undefined
+
   constructor(
     private readonly store$: Store<fromRoot.State>, // private readonly beaconService: BeaconService
     private readonly beaconService: BeaconService
@@ -52,6 +54,11 @@ export class DashboardComponent implements OnInit {
       this.users = (res as any).app.users
       this.approvals = (res as any).app.approvals
       this.address = (res as any).app.address
+      if (this.users) {
+        this.currentUserType = this.users.find(
+          (user) => user.address === this.address
+        )?.kind
+      }
     })
     // TODO: Why doesn't this work?
     // this.mintingRequests$ = this.store$.select((state) => state.app.mintingOperations)

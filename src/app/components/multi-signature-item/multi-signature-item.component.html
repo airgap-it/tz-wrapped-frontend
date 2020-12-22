@@ -5,12 +5,6 @@
         class="border rounded-circle border-primary bg-white status--container d-flex align-items-center justify-content-center"
       >
         <img *ngIf="multisigItem.hasApproval" src="/assets/img/check.svg" />
-        <button
-          *ngIf="!multisigItem.hasApproval && multisigItem.isCurrentUser"
-          (click)="approve()"
-        >
-          Sign
-        </button>
       </div>
     </div>
     <div class="col col-md-6">
@@ -19,7 +13,10 @@
     </div>
     <div class="col col-md-4">
       <p class="text-right m-0">
-        {{ multisigItem.updated_at | date: 'MMMM-d-y HH:mm:ss' }}
+        <ng-container *ngIf="multisigItem.updated_at">{{
+          multisigItem.updated_at | date: 'MMMM-d-y HH:mm:ss'
+        }}</ng-container>
+        <ng-container *ngIf="!multisigItem.updated_at">pending</ng-container>
       </p>
     </div>
   </div>

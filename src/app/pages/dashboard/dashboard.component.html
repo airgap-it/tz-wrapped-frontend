@@ -131,7 +131,12 @@
   </div>
 </div>
 <!-- TODO: show only if Gatekeeper/Keyholder-->
-<ng-container *ngIf="selectedTab === 'tab1'">
+<ng-container
+  *ngIf="
+    (currentUserType === 'gatekeeper' || currentUserType === 'keyholder') &&
+    selectedTab === 'tab1'
+  "
+>
   <div class="card mt-5">
     <div class="card-body">
       <h5>Open Minting Request</h5>
@@ -141,6 +146,7 @@
         [users]="users"
         [approvals]="approvals"
         [address]="address"
+        [currentUserType]="currentUserType"
       ></app-open-minting-request>
     </div>
   </div>
@@ -153,6 +159,7 @@
         [mintRequest]="request"
         [users]="users"
         [address]="address"
+        [currentUserType]="currentUserType"
       ></app-open-minting-request>
     </div>
   </div>

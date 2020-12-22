@@ -40,7 +40,9 @@ export class OpenMintingRequestComponent {
   public currentConfirmations: number = 0
   public maxConfirmations: number = 3
 
-  public isKeyholder: boolean = false
+  @Input()
+  public currentUserType: 'keyholder' | 'gatekeeper' | undefined
+  public currentUserApproved: boolean = false
   public multisigItems: UserWithApproval[] = []
 
   private hasRequestedApprovals: boolean = false
@@ -58,10 +60,6 @@ export class OpenMintingRequestComponent {
     this.maxConfirmations = this.users.filter(
       (user) => user.kind === 'keyholder'
     ).length
-
-    this.isKeyholder = this.users
-      .filter((user) => user.address === this.address)
-      .some((user) => user.kind === 'keyholder')
 
     if (!this.mintRequest) {
       throw new Error('Mint Request not loaded')
@@ -100,6 +98,10 @@ export class OpenMintingRequestComponent {
       (approval) => approval.request_id === mintRequest.id
     )
 
+    this.currentUserApproved = approvals.some(
+      (approval) => approval.approver.address === this.address
+    )
+
     this.multisigItems = [
       ...this.users
         .filter((user) => user.kind === 'keyholder')
@@ -127,6 +129,16 @@ export class OpenMintingRequestComponent {
       this.store$.dispatch(
         actions.getApprovedMintParameters({
           operationId: requestId,
+        })
+      )
+    }
+  }
+
+  public confirmRequest() {
+    if (this.mintRequest) {
+      this.store$.dispatch(
+        actions.requestApproveMintOperation({
+          requestId: this.mintRequest.id,
         })
       )
     }

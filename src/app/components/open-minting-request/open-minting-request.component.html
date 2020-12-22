@@ -29,7 +29,21 @@
   </div>
   <div>
     <button
-      *ngIf="mintRequest.state === 'approved' && isKeyholder"
+      *ngIf="
+        !currentUserApproved &&
+        mintRequest.state === 'open' &&
+        currentUserType === 'keyholder'
+      "
+      type="button"
+      class="btn btn-primary btn-block"
+      (click)="confirmRequest()"
+    >
+      Confirm Request
+    </button>
+    <button
+      *ngIf="
+        mintRequest.state === 'approved' && currentUserType === 'keyholder'
+      "
       type="button"
       class="btn btn-primary btn-block"
       (click)="submitApprovedMint()"
