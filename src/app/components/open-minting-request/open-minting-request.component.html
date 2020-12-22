@@ -5,15 +5,20 @@
         <strong>{{ mintRequest.amount }} tzBTC</strong>
       </h5>
       <p class="m-0">{{ mintRequest.requester.display_name }}</p>
-      <p class="text-muted">{{ mintRequest.requester.address | shorten }}</p>
-      <p class="text-muted">{{ mintRequest.state }}</p>
+      <p class="text-muted m-0">
+        {{ mintRequest.requester.address | shorten }}
+      </p>
     </div>
     <div class="col col-md-6">
-      <p class="text-right">
-        {{ mintRequest.created_at | date: 'MMMM-d-y HH:mm:ss' }}
+      <p class="text-right m-0">
+        {{ mintRequest.created_at | date: 'd.M.yy' }}
+      </p>
+      <p class="text-right text-muted m-0">
+        {{ mintRequest.created_at | date: 'HH:mm' }}
       </p>
     </div>
   </div>
+  <p class="text-muted">{{ mintRequest.state }}</p>
   <div>
     <p>
       <strong
@@ -27,7 +32,7 @@
       [multisigItem]="multisigItem"
     ></app-multi-signature-item>
   </div>
-  <div>
+  <div class="pt-3">
     <button
       *ngIf="
         !currentUserApproved &&

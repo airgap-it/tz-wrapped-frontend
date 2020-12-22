@@ -7,17 +7,22 @@
         <img *ngIf="multisigItem.hasApproval" src="/assets/img/check.svg" />
       </div>
     </div>
-    <div class="col col-md-6">
+    <div class="col col-md-5 pr-0">
       <p class="m-0">{{ multisigItem.display_name }}</p>
       <p class="text-muted m-0">{{ multisigItem.address | shorten }}</p>
     </div>
-    <div class="col col-md-4">
-      <p class="text-right m-0">
-        <ng-container *ngIf="multisigItem.updated_at">{{
-          multisigItem.updated_at | date: 'MMMM-d-y HH:mm:ss'
-        }}</ng-container>
-        <ng-container *ngIf="!multisigItem.updated_at">pending</ng-container>
-      </p>
+    <div class="col col-md-5 pl-0">
+      <ng-container *ngIf="multisigItem.updated_at">
+        <p class="text-right m-0">
+          {{ multisigItem.updated_at | date: 'd.M.yy' }}
+        </p>
+        <p class="text-right text-muted m-0">
+          {{ multisigItem.updated_at | date: 'HH:mm' }}
+        </p>
+      </ng-container>
+      <ng-container *ngIf="!multisigItem.updated_at"
+        ><p class="text-right m-0">pending</p></ng-container
+      >
     </div>
   </div>
   <div class="multi-signature__border d-none d-sm-block"></div>
