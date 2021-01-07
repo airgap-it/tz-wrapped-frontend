@@ -2,9 +2,11 @@ import { createReducer, on } from '@ngrx/store'
 
 import * as actions from './app.actions'
 import { Approval, Contract, Operation, User } from './services/api/api.service'
+import BigNumber from 'bignumber.js'
 
 interface Busy {
   address: boolean
+  balance: boolean
   transferAmount: boolean
   receivingAddress: boolean
   mintingRequests: boolean
@@ -13,35 +15,38 @@ interface Busy {
   approvals: boolean
 }
 
-interface App {
+export interface State {
   contracts: Contract[]
+  activeContract: Contract | undefined
   users: User[]
   approvals: Approval[]
   address: string
+  balance: BigNumber | undefined
   transferAmount: number
   receivingAddress: string
   mintingOperations: Operation[]
-}
-
-export interface State {
-  app: App
+  pendingMintingOperations: Operation[]
   busy: Busy
+  asset: string
 }
 
 export const initialState: State = {
-  app: {
-    contracts: [],
-    users: [],
-    approvals: [], // TODO: We might have to filter those per request
-    address: '',
-    transferAmount: 0,
-    receivingAddress: '',
-    mintingOperations: [],
-  },
+  contracts: [],
+  activeContract: undefined,
+  users: [],
+  approvals: [], // TODO: We might have to filter those per request
+  address: '',
+  balance: undefined,
+  transferAmount: 0,
+  receivingAddress: '',
+  mintingOperations: [],
+  pendingMintingOperations: [],
+  asset: '',
   busy: {
     address: false,
     receivingAddress: false,
     transferAmount: false,
+    balance: false,
     mintingRequests: false,
     contracts: false,
     users: false,
@@ -60,11 +65,7 @@ export const reducer = createReducer(
   })),
   on(actions.disconnectWallet, (state) => ({
     ...state,
-    address: undefined, // TODO: Why is it on this level? It doesn't work if we remove it, but I it shouldn't be here
-    app: {
-      ...state.app,
-      address: '',
-    },
+    address: '',
     busy: {
       ...state.busy,
       address: false,
@@ -79,11 +80,7 @@ export const reducer = createReducer(
   })),
   on(actions.loadAddressSucceeded, (state, { address }) => ({
     ...state,
-    address, // TODO: Why is it on this level? It doesn't work if we remove it, but I it shouldn't be here
-    app: {
-      ...state.app,
-      address,
-    },
+    address,
     busy: {
       ...state.busy,
       address: false,
@@ -96,6 +93,30 @@ export const reducer = createReducer(
       address: false,
     },
   })),
+
+  on(actions.loadBalance, (state) => ({
+    ...state,
+    busy: {
+      ...state.busy,
+      balance: true,
+    },
+  })),
+  on(actions.loadBalanceSucceeded, (state, { balance }) => ({
+    ...state,
+    balance,
+    busy: {
+      ...state.busy,
+      balance: false,
+    },
+  })),
+  on(actions.loadBalanceFailed, (state) => ({
+    ...state,
+    busy: {
+      ...state.busy,
+      balance: false,
+    },
+  })),
+
   on(actions.loadContracts, (state) => ({
     ...state,
     busy: {
@@ -105,10 +126,7 @@ export const reducer = createReducer(
   })),
   on(actions.loadContractsSucceeded, (state, { response }) => ({
     ...state,
-    app: {
-      ...state.app,
-      contracts: response.results,
-    },
+    contracts: response.results,
     busy: {
       ...state.busy,
       contracts: false,
@@ -130,10 +148,7 @@ export const reducer = createReducer(
   })),
   on(actions.loadUsersSucceeded, (state, { response }) => ({
     ...state,
-    app: {
-      ...state.app,
-      users: response.results,
-    },
+    users: response.results,
     busy: {
       ...state.busy,
       users: false,
@@ -150,11 +165,8 @@ export const reducer = createReducer(
     actions.transferOperation,
     (state, { transferAmount, receivingAddress }) => ({
       ...state,
-      app: {
-        ...state.app,
-        transferAmount,
-        receivingAddress,
-      },
+      transferAmount,
+      receivingAddress,
       busy: {
         ...state.busy,
         receivingAddress: true,
@@ -187,10 +199,10 @@ export const reducer = createReducer(
   })),
   on(actions.loadMintingRequestsSucceeded, (state, { response }) => ({
     ...state,
-    app: {
-      ...state.app,
-      mintingOperations: response.results,
-    },
+    mintingOperations: response.results,
+    pendingMintingOperations: response.results.filter(
+      (request) => request.state != 'approved'
+    ),
     busy: {
       ...state.busy,
       mintingRequests: false,
@@ -212,13 +224,10 @@ export const reducer = createReducer(
   })),
   on(actions.loadApprovalsSucceeded, (state, { requestId, response }) => ({
     ...state,
-    app: {
-      ...state.app,
-      approvals: response.results.map((result) => ({
-        ...result,
-        request_id: requestId,
-      })),
-    },
+    approvals: response.results.map((result) => ({
+      ...result,
+      request_id: requestId,
+    })),
     busy: {
       ...state.busy,
       approvals: false,
@@ -229,6 +238,20 @@ export const reducer = createReducer(
     busy: {
       ...state.busy,
       approvals: false,
+    },
+  })),
+  on(actions.changeAsset, (state, { asset }) => ({
+    ...state,
+    asset: asset,
+    busy: {
+      ...state.busy,
+    },
+  })),
+  on(actions.setActiveContract, (state, { contract }) => ({
+    ...state,
+    activeContract: contract,
+    busy: {
+      ...state.busy,
     },
   }))
 )

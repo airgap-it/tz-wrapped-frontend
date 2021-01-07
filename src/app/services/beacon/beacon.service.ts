@@ -59,6 +59,7 @@ export class BeaconService {
       if (activeAccount) {
         this.userAddress = await activeAccount.address
         this.store$.dispatch(actions.loadAddress())
+        this.store$.dispatch(actions.loadBalance())
       }
     } catch (error) {
       console.log('Setting up BeaconWallet failed: ', error)
@@ -75,10 +76,6 @@ export class BeaconService {
       this.userAddress = await this.wallet.getPKH()
 
       this.store$.dispatch(actions.loadAddress())
-
-      this.balance = new BigNumber(
-        (await tezos.tz.getBalance(this.userAddress)).toString(10)
-      )
     } catch (error) {
       console.log('requesting permission failed: ', error)
     }
@@ -130,5 +127,13 @@ export class BeaconService {
 
   getAddress(): Observable<string> {
     return of(this.userAddress ?? '')
+  }
+
+  async getBalance(): Promise<BigNumber | undefined> {
+    return this.userAddress
+      ? (this.balance = new BigNumber(
+          (await tezos.tz.getBalance(this.userAddress)).toString(10)
+        ))
+      : undefined
   }
 }

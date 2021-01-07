@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core'
 import { Store } from '@ngrx/store'
 import { combineLatest, Observable } from 'rxjs'
-import * as fromRoot from '../../app.reducer'
+import * as fromRoot from '../../reducers/index'
 import * as actions from '../../app.actions'
-import { User } from 'src/app/services/api/api.service'
+import { Contract, User } from 'src/app/services/api/api.service'
 import { map } from 'rxjs/operators'
 
 @Component({
@@ -15,11 +15,14 @@ export class HeaderItemComponent implements OnInit {
   public address$: Observable<string>
   public users$: Observable<User[]>
   public address: string = ''
+  public asset$: Observable<string>
+  private contracts$: Observable<Contract[]>
 
   constructor(private readonly store$: Store<fromRoot.State>) {
     this.address$ = this.store$.select((state) => state.app.address)
-    this.users$ = this.store$.select((state) => (state.app as any).app.users)
-    this.users$.subscribe((users) => console.log('USERS', users))
+    this.users$ = this.store$.select((state) => state.app.users)
+    this.asset$ = this.store$.select((state) => state.app.asset)
+    this.contracts$ = this.store$.select((state) => state.app.contracts)
 
     combineLatest([this.address$, this.users$])
       .pipe(
@@ -40,5 +43,9 @@ export class HeaderItemComponent implements OnInit {
 
   reset(): void {
     this.store$.dispatch(actions.disconnectWallet())
+  }
+
+  changeContract(contract: Contract) {
+    this.store$.dispatch(actions.setActiveContract({ contract }))
   }
 }

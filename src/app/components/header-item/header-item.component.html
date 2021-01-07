@@ -22,13 +22,17 @@
           class="btn btn-light dropdown-toggle"
           aria-controls="dropdown-animated"
         >
+          {{ asset$ | async }}
           <img
             width="32px"
             height="32px"
-            src="/assets/img/tzbtc.svg"
+            [src]="
+              (asset$ | async) == 'tzBTC'
+                ? '/assets/img/tzbtc.svg'
+                : '/assets/img/tzeth.svg'
+            "
             class="mr-2"
           />
-          tzBTC <span class="caret"></span>
         </button>
         <ul
           id="dropdown-animated"
@@ -37,15 +41,14 @@
           role="menu"
           aria-labelledby="button-animated"
         >
-          <li role="menuitem">
-            <a class="dropdown-item" href="#">
-              <img
-                width="32px"
-                height="32px"
-                src="/assets/img/tzeth.svg"
-                class="mr-2"
-              />
-              tzETH
+          <li role="menuitem" *ngFor="let contract of contracts$ | async">
+            <a
+              class="dropdown-item"
+              href="#"
+              (click)="changeContract(contract)"
+            >
+              <!-- TODO: Add image -->
+              {{ contract.display_name }}
             </a>
           </li>
         </ul>

@@ -16,6 +16,7 @@ import {
   OperationResponseOutput,
   RequestOperationInput,
 } from '@airgap/beacon-sdk'
+import BigNumber from 'bignumber.js'
 
 const featureName = 'App'
 
@@ -54,6 +55,18 @@ export const loadAddressSucceeded = createAction(
 )
 export const loadAddressFailed = createAction(
   `[${featureName}] Load Address of Connected Wallet Failed`,
+  props<{ error: any }>()
+)
+
+export const loadBalance = createAction(
+  `[${featureName}] Load Balance of Connected Wallet`
+)
+export const loadBalanceSucceeded = createAction(
+  `[${featureName}] Load Balance of Connected Wallet Succeeded`,
+  props<{ balance: BigNumber | undefined }>()
+)
+export const loadBalanceFailed = createAction(
+  `[${featureName}] Load Balance of Connected Wallet Failed`,
   props<{ error: any }>()
 )
 
@@ -124,7 +137,7 @@ export const requestMintOperation = createAction(
 )
 export const requestMintOperationSucceeded = createAction(
   `[${featureName}] Minting Request Succeeded`,
-  props<{ response: MintResponse }>()
+  props<{ response: MintResponse; contractId: string }>()
 )
 export const requestMintOperationFailed = createAction(
   `[${featureName}] Minting Request Failed`,
@@ -133,11 +146,11 @@ export const requestMintOperationFailed = createAction(
 
 export const signMintOperationRequest = createAction(
   `[${featureName}] Starting Sign Mint Operation Request`,
-  props<{ response: MintResponse }>()
+  props<{ response: MintResponse; contractId: string }>()
 )
 export const signMintOperationRequestSucceeded = createAction(
   `[${featureName}] Sign Mint Operation Request Succeeded`,
-  props<{ response: MintResponse; signature: string }>()
+  props<{ response: MintResponse; signature: string; contractId: string }>()
 )
 export const signMintOperationRequestFailed = createAction(
   `[${featureName}] Sign Mint Operation Request Failed`,
@@ -146,7 +159,7 @@ export const signMintOperationRequestFailed = createAction(
 
 export const submitSignedMintingRequest = createAction(
   `[${featureName}] Starting Submit Minting Request`,
-  props<{ request: OperationRequest }>()
+  props<{ request: OperationRequest; contractId: string }>()
 )
 export const submitSignedMintingRequestSucceeded = createAction(
   `[${featureName}] Submit Minting Request Succeeded`
@@ -219,4 +232,12 @@ export const signApprovedMintSucceeded = createAction(
 export const signApprovedMintFailed = createAction(
   `[${featureName}] Sign Approved MintFailed`,
   props<{ error: any }>()
+)
+export const changeAsset = createAction(
+  `[${featureName}] Changing Asset`,
+  props<{ asset: string }>()
+)
+export const setActiveContract = createAction(
+  `[${featureName}] Setting Active Contract`,
+  props<{ contract: Contract }>()
 )
