@@ -29,7 +29,7 @@
                 >Balance: {{ balance }} {{ asset$ | async }}
               </span>
             </label>
-            <div class="input-group" *ngIf="balance$ | async as balance">
+            <div class="input-group">
               <div class="input-group-prepend">
                 <span class="input-group-text">
                   <img
@@ -265,17 +265,31 @@
       selectedTab === 'tab2'
     "
   >
-    <div class="card mt-5" *ngIf="(burningRequests$ | async).length != 0">
+    <div class="card mt-5" *ngIf="(pendingBurnRequests$ | async).length != 0">
       <div class="card-body">
         <h5>Burning Request</h5>
         <app-open-minting-request
-          *ngFor="let request of burningRequests$ | async"
+          *ngFor="let request of pendingBurnRequests$ | async"
           [mintRequest]="request"
           [users]="users$ | async"
           [approvals]="approvals$ | async"
           [address]="address$ | async"
           [currentUserType]="currentUserType"
         ></app-open-minting-request>
+      </div>
+    </div>
+
+    <div class="card mt-5" *ngIf="(approvedBurnRequests$ | async).length != 0">
+      <div class="card-body">
+        <h5>Completed Burning Requests</h5>
+        <app-open-minting-request
+          *ngFor="let request of approvedBurnRequests$ | async"
+          [mintRequest]="request"
+          [users]="users$ | async"
+          [address]="address$ | async"
+          [currentUserType]="currentUserType"
+        >
+        </app-open-minting-request>
       </div>
     </div>
   </ng-container>

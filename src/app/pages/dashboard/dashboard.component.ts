@@ -36,6 +36,8 @@ export class DashboardComponent implements OnInit {
   public address$: Observable<string | null>
   public pendingMintingRequests$: Observable<Operation[] | null>
   public approvedMintingRequests$: Observable<Operation[] | null>
+  public pendingBurnRequests$: Observable<Operation[] | null>
+  public approvedBurnRequests$: Observable<Operation[] | null>
   public users$: Observable<User[] | null>
   public approvals$: Observable<Approval[] | null>
   public mintingRequests$: Observable<Operation[]>
@@ -74,18 +76,27 @@ export class DashboardComponent implements OnInit {
     this.burningRequests$ = this.store$.select(
       (state) => state.app.burningOperations
     )
-    this.pendingMintingRequests$ = this.store$.select(
-      (state) => state.app.pendingMintingOperations
-    )
 
-    // this.pendingMintingRequests$ = this.store$.select((state) =>
-    //   state.app.mintingOperations.filter(
-    //     (request: any) => request.state !== 'approved'
-    //   )
-    // )
+    this.pendingMintingRequests$ = this.store$.select((state) =>
+      state.app.mintingOperations.filter(
+        (request: any) => request.state === 'open'
+      )
+    )
 
     this.approvedMintingRequests$ = this.store$.select((state) =>
       state.app.mintingOperations.filter(
+        (request: any) => request.state === 'approved'
+      )
+    )
+
+    this.pendingBurnRequests$ = this.store$.select((state) =>
+      state.app.burningOperations.filter(
+        (request: any) => request.state === 'open'
+      )
+    )
+
+    this.approvedBurnRequests$ = this.store$.select((state) =>
+      state.app.burningOperations.filter(
         (request: any) => request.state === 'approved'
       )
     )
@@ -146,14 +157,14 @@ export class DashboardComponent implements OnInit {
   }
 
   updateAllMintingRequests(): void {
-    this.pendingMintingRequests$ = this.store$.select(
-      (state) => state.app.pendingMintingOperations
-    )
-    // this.pendingMintingRequests$ = this.store$.select((state) =>
-    //   state.app.mintingOperations.filter(
-    //     (request: any) => request.state !== 'approved'
-    //   )
+    // this.pendingMintingRequests$ = this.store$.select(
+    //   (state) => state.app.pendingMintingOperations
     // )
+    this.pendingMintingRequests$ = this.store$.select((state) =>
+      state.app.mintingOperations.filter(
+        (request: any) => request.state === 'open'
+      )
+    )
 
     this.approvedMintingRequests$ = this.store$.select((state) =>
       state.app.mintingOperations.filter(
@@ -189,7 +200,9 @@ export class DashboardComponent implements OnInit {
         this.store$.dispatch(
           actions.requestMintOperation({
             contractId: contractId,
-            mintAmount: this.amountControl.value,
+            mintAmount: new BigNumber(this.amountControl.value)
+              .shiftedBy(8)
+              .toFixed(),
             receivingAddress: this.receivingAddressControl.value,
           })
         )
@@ -210,7 +223,9 @@ export class DashboardComponent implements OnInit {
         this.store$.dispatch(
           actions.requestBurnOperation({
             contractId: contractId,
-            burnAmount: this.amountControl.value,
+            burnAmount: new BigNumber(this.amountControl.value)
+              .shiftedBy(8)
+              .toFixed(),
           })
         )
       }
