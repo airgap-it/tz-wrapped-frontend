@@ -10,6 +10,7 @@ interface Busy {
   transferAmount: boolean
   receivingAddress: boolean
   mintingRequests: boolean
+  burningRequests: boolean
   contracts: boolean
   users: boolean
   approvals: boolean
@@ -25,6 +26,7 @@ export interface State {
   transferAmount: number
   receivingAddress: string
   mintingOperations: Operation[]
+  burningOperations: Operation[]
   pendingMintingOperations: Operation[]
   busy: Busy
   asset: string
@@ -40,6 +42,7 @@ export const initialState: State = {
   transferAmount: 0,
   receivingAddress: '',
   mintingOperations: [],
+  burningOperations: [],
   pendingMintingOperations: [],
   asset: '',
   busy: {
@@ -48,6 +51,7 @@ export const initialState: State = {
     transferAmount: false,
     balance: false,
     mintingRequests: false,
+    burningRequests: false,
     contracts: false,
     users: false,
     approvals: false,
@@ -188,6 +192,28 @@ export const reducer = createReducer(
       ...state.busy,
       receivingAddress: false,
       transferAmount: false,
+    },
+  })),
+  on(actions.loadBurningRequests, (state) => ({
+    ...state,
+    busy: {
+      ...state.busy,
+      burningRequests: true,
+    },
+  })),
+  on(actions.loadBurningRequestsSucceeded, (state, { response }) => ({
+    ...state,
+    burningOperations: response.results,
+    busy: {
+      ...state.busy,
+      burningRequests: false,
+    },
+  })),
+  on(actions.loadBurningRequestsFailed, (state) => ({
+    ...state,
+    busy: {
+      ...state.busy,
+      burningRequests: false,
     },
   })),
   on(actions.loadMintingRequests, (state) => ({

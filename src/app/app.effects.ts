@@ -1,8 +1,10 @@
 import { TezosOperationType } from '@airgap/beacon-sdk'
 import { Injectable } from '@angular/core'
 import { Actions, createEffect, ofType } from '@ngrx/effects'
+import { Store } from '@ngrx/store'
 import { of } from 'rxjs'
-import { map, catchError, switchMap } from 'rxjs/operators'
+import { map, catchError, switchMap, withLatestFrom } from 'rxjs/operators'
+import * as fromRoot from '../app/reducers/index'
 
 import * as actions from './app.actions'
 import { ApiService, OperationKind } from './services/api/api.service'
@@ -122,6 +124,24 @@ export class AppEffects {
     )
   )
 
+  loadBurningRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadBurningRequests),
+      switchMap(({ contractId }) => {
+        return this.apiService
+          .getOperations(contractId, OperationKind.BURN)
+          .pipe(
+            map((response) =>
+              actions.loadBurningRequestsSucceeded({ response })
+            ),
+            catchError((error) =>
+              of(actions.loadBurningRequestsFailed({ error }))
+            )
+          )
+      })
+    )
+  )
+
   loadApprovals$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.loadApprovals),
@@ -148,6 +168,237 @@ export class AppEffects {
     )
   )
 
+  requestBurnOperation$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.requestBurnOperation),
+
+      withLatestFrom(this.store$.select((state) => state.app.address)),
+      switchMap(([{ contractId, burnAmount }, address]) => {
+        return this.apiService.burn(contractId, address, burnAmount).pipe(
+          map((response) => {
+            console.log('burn response: ', response)
+            return actions.requestBurnOperationSucceeded({
+              response,
+              contractId,
+            })
+          }),
+          catchError((error) =>
+            of(actions.requestBurnOperationFailed({ error }))
+          )
+        )
+      })
+    )
+  )
+
+  burnOperationSucceeded$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.requestBurnOperationSucceeded),
+      map(({ response, contractId }) => {
+        console.log('got burn request, now singing', response)
+        return actions.signBurnOperationRequest({ response, contractId })
+      })
+    )
+  )
+
+  signBurnOperationRequest$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.signBurnOperationRequest),
+      switchMap(({ response, contractId }) => {
+        return this.beaconService
+          .sign(response.signable_message)
+          .then((signResponse) =>
+            actions.signBurnOperationRequestSucceeded({
+              response,
+              signature: signResponse.signature,
+              contractId,
+            })
+          )
+          .catch((error) => actions.signBurnOperationRequestFailed({ error }))
+      })
+    )
+  )
+
+  signBurnOperationRequestSucceeded$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.signBurnOperationRequestSucceeded),
+      map(({ response, signature, contractId }) => {
+        console.log('got Burning request, now singing', response)
+        return actions.submitSignedBurningRequest({
+          request: { ...response.operation_request, gk_signature: signature },
+          contractId,
+        })
+      })
+    )
+  )
+
+  submitSignedBurningRequest$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.submitSignedBurningRequest),
+      switchMap(({ request, contractId }) => {
+        console.log('SENDING SIGNED REQUEST:', request)
+        {
+          return this.apiService
+            .addSignature(request)
+            .toPromise()
+            .then((signResponse) => {
+              return (
+                actions.submitSignedBurningRequestSucceeded(),
+                actions.loadBurningRequests({ contractId })
+              )
+            })
+            .catch((error) =>
+              actions.submitSignedBurningRequestFailed({ error })
+            )
+        }
+      })
+    )
+  )
+
+  requestApproveBurnOperation$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.requestApproveBurnOperation),
+      switchMap(({ requestId }) => {
+        return this.apiService
+          .getSignableMessage(requestId)
+          .toPromise()
+          .then((response) =>
+            actions.requestApproveBurnOperationSucceeded({ response })
+          )
+          .catch((error) =>
+            actions.requestApproveBurnOperationFailed({ error })
+          )
+      })
+    )
+  )
+
+  requestApproveBurnOperationSucceeded$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.requestApproveBurnOperationSucceeded),
+      map(({ response }) => {
+        console.log('got Burning approval request, now singing', response)
+        return actions.signApproveBurnOperationRequest({ response })
+      })
+    )
+  )
+
+  signApproveBurnOperationRequest$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.signApproveBurnOperationRequest),
+      switchMap(({ response }) => {
+        return this.beaconService
+          .sign(response.signable_message)
+          .then((signResponse) =>
+            actions.signApproveBurnOperationRequestSucceeded({
+              response,
+              signature: signResponse.signature,
+            })
+          )
+          .catch((error) =>
+            actions.signApproveBurnOperationRequestFailed({ error })
+          )
+      })
+    )
+  )
+
+  signApproveBurnOperationRequestSucceeded$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.signApproveBurnOperationRequestSucceeded),
+      map(({ response, signature }) => {
+        console.log('got Burning request, now singing', response)
+        return actions.submitSignedApproveBurnOperationRequest({
+          request: response,
+          approval: { ...response.operation_approval, kh_signature: signature },
+        })
+      })
+    )
+  )
+
+  submitSignedApproveBurnOperationRequest$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.submitSignedApproveBurnOperationRequest),
+      switchMap(({ request, approval }) => {
+        return this.apiService
+          .addApproval(approval)
+          .toPromise()
+          .then((response) =>
+            actions.submitSignedApproveBurnOperationRequestSucceeded({
+              request,
+              approval,
+            })
+          )
+          .catch((error) =>
+            actions.submitSignedApproveBurnOperationRequestFailed({ error })
+          )
+      })
+    )
+  )
+
+  submitSignedApproveBurnOperationRequestSucceeded$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.submitSignedApproveBurnOperationRequestSucceeded),
+      map(({ request }) => {
+        console.log('submit done, now refreshing approvals')
+        return actions.loadApprovals({
+          requestId: request.operation_approval.request,
+        })
+      })
+    )
+  )
+
+  getApprovedBurnParameters$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.getApprovedBurnParameters),
+      switchMap(({ operationId }) => {
+        return this.apiService
+          .getParameters(operationId)
+          .toPromise()
+          .then((response) =>
+            actions.getApprovedBurnParametersSucceeded({
+              parameters: response,
+            })
+          )
+          .catch((error) => actions.getApprovedBurnParametersFailed({ error }))
+      })
+    )
+  )
+
+  getApprovedBurnParametersSucceeded$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.getApprovedBurnParametersSucceeded),
+      map(({ parameters }) => {
+        console.log('submit done, now refreshing approvals')
+        return actions.signApprovedBurn({
+          operation: {
+            operationDetails: [
+              {
+                kind: TezosOperationType.TRANSACTION,
+                amount: '0',
+                destination: 'KT1BYMvJoM75JyqFbsLKouqkAv8dgEvViioP',
+                parameters,
+              },
+            ],
+          },
+        })
+      })
+    )
+  )
+
+  signApprovedBurn$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.signApprovedBurn),
+      switchMap(({ operation }) => {
+        return this.beaconService
+          .operation(operation)
+          .then((response) =>
+            actions.signApprovedBurnSucceeded({
+              response,
+            })
+          )
+          .catch((error) => actions.signApprovedBurnFailed({ error }))
+      })
+    )
+  )
+
   requestMintOperation$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.requestMintOperation),
@@ -156,7 +407,6 @@ export class AppEffects {
           .mint(contractId, receivingAddress, mintAmount)
           .pipe(
             map((response) => {
-              console.log('response_ ', response)
               return actions.requestMintOperationSucceeded({
                 response,
                 contractId,
@@ -215,7 +465,6 @@ export class AppEffects {
     this.actions$.pipe(
       ofType(actions.submitSignedMintingRequest),
       switchMap(({ request, contractId }) => {
-        console.log('SENDING SIGNED REQUEST')
         {
           return this.apiService
             .addSignature(request)
@@ -391,6 +640,7 @@ export class AppEffects {
   constructor(
     private readonly actions$: Actions,
     private readonly beaconService: BeaconService,
-    private readonly apiService: ApiService
+    private readonly apiService: ApiService,
+    private readonly store$: Store<fromRoot.State>
   ) {}
 }

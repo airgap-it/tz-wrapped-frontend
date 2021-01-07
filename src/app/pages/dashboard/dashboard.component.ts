@@ -39,6 +39,7 @@ export class DashboardComponent implements OnInit {
   public users$: Observable<User[] | null>
   public approvals$: Observable<Approval[] | null>
   public mintingRequests$: Observable<Operation[]>
+  public burningRequests$: Observable<Operation[]>
   public currentUserType$: Observable<'keyholder' | 'gatekeeper' | undefined> // TODO: Create proper type and use it everywhere
   public balance$: Observable<BigNumber | undefined>
   public asset$: Observable<string>
@@ -70,7 +71,9 @@ export class DashboardComponent implements OnInit {
     this.mintingRequests$ = this.store$.select(
       (state) => state.app.mintingOperations
     )
-
+    this.burningRequests$ = this.store$.select(
+      (state) => state.app.burningOperations
+    )
     this.pendingMintingRequests$ = this.store$.select(
       (state) => state.app.pendingMintingOperations
     )
@@ -128,6 +131,11 @@ export class DashboardComponent implements OnInit {
         this.store$.dispatch(actions.loadUsers({ contractId: contractId }))
         this.store$.dispatch(
           actions.loadMintingRequests({
+            contractId: contractId,
+          })
+        )
+        this.store$.dispatch(
+          actions.loadBurningRequests({
             contractId: contractId,
           })
         )
@@ -197,6 +205,16 @@ export class DashboardComponent implements OnInit {
 
   burn() {
     console.log('burn')
+    this.activeContractId$.subscribe((contractId) => {
+      if (contractId) {
+        this.store$.dispatch(
+          actions.requestBurnOperation({
+            contractId: contractId,
+            burnAmount: this.amountControl.value,
+          })
+        )
+      }
+    })
   }
 
   transfer() {

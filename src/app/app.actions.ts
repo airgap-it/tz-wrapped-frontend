@@ -3,7 +3,7 @@ import { NavigationEnd } from '@angular/router'
 import {
   Approval,
   Contract,
-  MintResponse,
+  MintBurnRequestResponse,
   Operation,
   OperationRequest,
   PagedResponse,
@@ -106,6 +106,19 @@ export const loadMintingRequestsFailed = createAction(
   props<{ error: any }>()
 )
 
+export const loadBurningRequests = createAction(
+  `[${featureName}] Load Burning Requests`,
+  props<{ contractId: string }>()
+)
+export const loadBurningRequestsSucceeded = createAction(
+  `[${featureName}] Load Burning Requests Succeeded`,
+  props<{ response: PagedResponse<Operation> }>()
+)
+export const loadBurningRequestsFailed = createAction(
+  `[${featureName}] Load Burning Requests Failed`,
+  props<{ error: any }>()
+)
+
 export const loadApprovals = createAction(
   `[${featureName}] Load Approvals`,
   props<{ requestId: string }>()
@@ -131,13 +144,120 @@ export const transferOperationFailed = createAction(
   props<{ error: any }>()
 )
 
+export const requestBurnOperation = createAction(
+  `[${featureName}] Starting Burn Operation Request`,
+  props<{ contractId: string; burnAmount: string }>()
+)
+export const requestBurnOperationSucceeded = createAction(
+  `[${featureName}] Burning Request Succeeded`,
+  props<{ response: MintBurnRequestResponse; contractId: string }>()
+)
+export const requestBurnOperationFailed = createAction(
+  `[${featureName}] Burning Request Failed`,
+  props<{ error: any }>()
+)
+
+export const signBurnOperationRequest = createAction(
+  `[${featureName}] Starting Sign Burn Operation Request`,
+  props<{ response: MintBurnRequestResponse; contractId: string }>()
+)
+export const signBurnOperationRequestSucceeded = createAction(
+  `[${featureName}] Sign Burn Operation Request Succeeded`,
+  props<{
+    response: MintBurnRequestResponse
+    signature: string
+    contractId: string
+  }>()
+)
+export const signBurnOperationRequestFailed = createAction(
+  `[${featureName}] Sign Burn Operation Request Failed`,
+  props<{ error: any }>()
+)
+
+export const submitSignedBurningRequest = createAction(
+  `[${featureName}] Starting Submit Burning Request`,
+  props<{ request: OperationRequest; contractId: string }>()
+)
+export const submitSignedBurningRequestSucceeded = createAction(
+  `[${featureName}] Submit Burning Request Succeeded`
+)
+export const submitSignedBurningRequestFailed = createAction(
+  `[${featureName}] Submit Burning Request Failed`,
+  props<{ error: any }>()
+)
+
+export const requestApproveBurnOperation = createAction(
+  `[${featureName}] Request Approve Burn Operation `,
+  props<{ requestId: string }>()
+)
+export const requestApproveBurnOperationSucceeded = createAction(
+  `[${featureName}] Request Approve Burn Operation Succeeded`,
+  props<{ response: SignableMessageRequest }>()
+)
+export const requestApproveBurnOperationFailed = createAction(
+  `[${featureName}] Request Approve Burn Operation Failed`,
+  props<{ error: any }>()
+)
+
+export const signApproveBurnOperationRequest = createAction(
+  `[${featureName}] Sign Approve Burn Operation Request `,
+  props<{ response: SignableMessageRequest }>()
+)
+export const signApproveBurnOperationRequestSucceeded = createAction(
+  `[${featureName}] Sign Approve Burn Operation Request Succeeded`,
+  props<{ response: SignableMessageRequest; signature: string }>()
+)
+export const signApproveBurnOperationRequestFailed = createAction(
+  `[${featureName}] Sign Approve Burn Operation Request Failed`,
+  props<{ error: any }>()
+)
+
+export const submitSignedApproveBurnOperationRequest = createAction(
+  `[${featureName}] Submit Signed Approve Burn Operation Request`,
+  props<{ request: SignableMessageRequest; approval: SignableMessage }>()
+)
+export const submitSignedApproveBurnOperationRequestSucceeded = createAction(
+  `[${featureName}] Submit Signed Approve Burn Operation RequestSucceeded`,
+  props<{ request: SignableMessageRequest; approval: SignableMessage }>()
+)
+export const submitSignedApproveBurnOperationRequestFailed = createAction(
+  `[${featureName}] Submit Signed Approve Burn Operation RequestFailed`,
+  props<{ error: any }>()
+)
+
+export const getApprovedBurnParameters = createAction(
+  `[${featureName}] Get Approved Burn Parameters`,
+  props<{ operationId: string }>()
+)
+export const getApprovedBurnParametersSucceeded = createAction(
+  `[${featureName}] Get Approved Burn ParametersSucceeded`,
+  props<{ parameters: any }>()
+)
+export const getApprovedBurnParametersFailed = createAction(
+  `[${featureName}] Get Approved Burn ParametersFailed`,
+  props<{ error: any }>()
+)
+
+export const signApprovedBurn = createAction(
+  `[${featureName}] Sign Approved Burn`,
+  props<{ operation: RequestOperationInput }>()
+)
+export const signApprovedBurnSucceeded = createAction(
+  `[${featureName}] Sign Approved BurnSucceeded`,
+  props<{ response: OperationResponseOutput }>()
+)
+export const signApprovedBurnFailed = createAction(
+  `[${featureName}] Sign Approved BurnFailed`,
+  props<{ error: any }>()
+)
+
 export const requestMintOperation = createAction(
   `[${featureName}] Starting Mint Operation Request`,
   props<{ contractId: string; mintAmount: string; receivingAddress: string }>()
 )
 export const requestMintOperationSucceeded = createAction(
   `[${featureName}] Minting Request Succeeded`,
-  props<{ response: MintResponse; contractId: string }>()
+  props<{ response: MintBurnRequestResponse; contractId: string }>()
 )
 export const requestMintOperationFailed = createAction(
   `[${featureName}] Minting Request Failed`,
@@ -146,11 +266,15 @@ export const requestMintOperationFailed = createAction(
 
 export const signMintOperationRequest = createAction(
   `[${featureName}] Starting Sign Mint Operation Request`,
-  props<{ response: MintResponse; contractId: string }>()
+  props<{ response: MintBurnRequestResponse; contractId: string }>()
 )
 export const signMintOperationRequestSucceeded = createAction(
   `[${featureName}] Sign Mint Operation Request Succeeded`,
-  props<{ response: MintResponse; signature: string; contractId: string }>()
+  props<{
+    response: MintBurnRequestResponse
+    signature: string
+    contractId: string
+  }>()
 )
 export const signMintOperationRequestFailed = createAction(
   `[${featureName}] Sign Mint Operation Request Failed`,
@@ -233,6 +357,7 @@ export const signApprovedMintFailed = createAction(
   `[${featureName}] Sign Approved MintFailed`,
   props<{ error: any }>()
 )
+
 export const changeAsset = createAction(
   `[${featureName}] Changing Asset`,
   props<{ asset: string }>()
