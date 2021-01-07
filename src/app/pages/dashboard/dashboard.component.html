@@ -5,7 +5,7 @@
         <tab heading="Transfer" id="tab0" (selectTab)="onSelect($event)">
           <div class="my-5">
             <label>Receiving Address</label>
-            <div class="input-group mb-3">
+            <div class="form-group mb-3">
               <input
                 [formControl]="receivingAddressControl"
                 type="text"
@@ -16,11 +16,10 @@
                   'is-invalid':
                     receivingAddressControl.errors &&
                     (receivingAddressControl.touched ||
-                      receivingAddressControl.dirty),
-                  'is-valid': receivingAddressControl.valid
+                      receivingAddressControl.dirty)
                 }"
               />
-              <div class="invalid-feedback">
+              <div class="invalid-feedback px-3 py-2 px-3 py-2">
                 <strong>Invalid Address</strong>
               </div>
             </div>
@@ -56,8 +55,7 @@
                   'is-invalid':
                     amountTransferControl.errors &&
                     (amountTransferControl.touched ||
-                      amountTransferControl.dirty),
-                  'is-valid': amountTransferControl.valid
+                      amountTransferControl.dirty)
                 }"
               />
               <span class="input-group-prepend">
@@ -70,7 +68,7 @@
                   Max
                 </button>
               </span>
-              <div class="invalid-feedback">
+              <div class="invalid-feedback px-3 py-2">
                 <strong>Invalid Amount</strong>
               </div>
             </div>
@@ -102,7 +100,7 @@
         <tab heading="Mint" id="tab1" (selectTab)="onSelect($event)">
           <div class="my-5">
             <label>Receiving Address</label>
-            <div class="input-group mb-3">
+            <div class="form-group mb-3">
               <input
                 [formControl]="receivingAddressControl"
                 type="text"
@@ -113,17 +111,16 @@
                   'is-invalid':
                     receivingAddressControl.errors &&
                     (receivingAddressControl.touched ||
-                      receivingAddressControl.dirty),
-                  'is-valid': receivingAddressControl.valid
+                      receivingAddressControl.dirty)
                 }"
               />
-              <div class="invalid-feedback">
+              <div class="invalid-feedback px-3 py-2">
                 <strong>Invalid Address</strong>
               </div>
             </div>
 
             <label>Enter amount to mint</label>
-            <div class="input-group">
+            <div class="input-group input-group__two-items">
               <div class="input-group-prepend">
                 <span class="input-group-text">
                   <img
@@ -148,11 +145,10 @@
                 [ngClass]="{
                   'is-invalid':
                     amountControl.errors &&
-                    (amountControl.touched || amountControl.dirty),
-                  'is-valid': amountControl.valid
+                    (amountControl.touched || amountControl.dirty)
                 }"
               />
-              <div class="invalid-feedback">
+              <div class="invalid-feedback px-3 py-2">
                 <strong>Invalid Amount</strong>
               </div>
             </div>
@@ -172,7 +168,7 @@
         <tab heading="Burn" id="tab2" (selectTab)="onSelect($event)">
           <div class="my-5">
             <label>Enter amount to burn</label>
-            <div class="input-group">
+            <div class="input-group input-group__two-items">
               <div class="input-group-prepend">
                 <span class="input-group-text">
                   <img
@@ -197,11 +193,10 @@
                 [ngClass]="{
                   'is-invalid':
                     amountControl.errors &&
-                    (amountControl.touched || amountControl.dirty),
-                  'is-valid': amountControl.valid
+                    (amountControl.touched || amountControl.dirty)
                 }"
               />
-              <div class="invalid-feedback">
+              <div class="invalid-feedback px-3 py-2">
                 <strong>Invalid Amount</strong>
               </div>
             </div>

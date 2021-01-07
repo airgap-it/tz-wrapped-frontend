@@ -22,7 +22,6 @@
           class="btn btn-light dropdown-toggle"
           aria-controls="dropdown-animated"
         >
-          {{ asset$ | async }}
           <img
             width="32px"
             height="32px"
@@ -32,7 +31,7 @@
                 : '/assets/img/tzeth.svg'
             "
             class="mr-2"
-          />
+          />{{ asset$ | async }}
         </button>
         <ul
           id="dropdown-animated"

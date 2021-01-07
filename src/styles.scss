@@ -53,15 +53,18 @@ $dropdown-link-active-bg: rgba(map_get($theme-colors, 'primary'), 0.54);
   box-shadow: $box-shadow;
 }
 .btn,
-.input-group {
+.input-group,
+.form-group {
   box-shadow: $btn-box-shadow;
 }
 
-.input-group {
+.input-group,
+.form-group {
   border-radius: $border-radius;
 }
 
-.input-group-prepend .btn {
+.input-group-prepend .btn,
+.input-group__two-items input {
   border-top-right-radius: $border-radius !important;
   border-bottom-right-radius: $border-radius !important;
 }
