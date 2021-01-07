@@ -93,7 +93,7 @@ export class BeaconService {
           .transfer(
             pkhSrc,
             receivingAddress,
-            new BigNumber(amount).shiftedBy(6).toFixed()
+            new BigNumber(amount).shiftedBy(8).toFixed()
           )
           .send()
         await operation.confirmation()
