@@ -6,7 +6,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
 
 import { AppRoutingModule } from './app-routing.module'
 import { AppComponent } from './app.component'
-import { StoreModule } from '@ngrx/store'
+import { Store, StoreModule } from '@ngrx/store'
 import { HeaderItemComponent } from './components/header-item/header-item.component'
 import { MultiSignatureItemComponent } from './components/multi-signature-item/multi-signature-item.component'
 import { SettingsComponent } from './pages/settings/settings.component'
@@ -52,7 +52,7 @@ export const rpcURLDelphinet = 'https://delphinet-tezos.giganode.io'
     HttpClientModule,
     ReactiveFormsModule,
   ],
-  providers: [BeaconService],
+  providers: [BeaconService, Store],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

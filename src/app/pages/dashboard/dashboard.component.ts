@@ -1,13 +1,22 @@
 import { Component, EventEmitter, Input, OnInit } from '@angular/core'
 import { Store } from '@ngrx/store'
-import * as fromRoot from '../../app.reducer'
+import * as fromRoot from '../../reducers/index'
 import * as actions from '../../app.actions'
-import { FormControl } from '@angular/forms'
+import {
+  AbstractControl,
+  FormControl,
+  ValidatorFn,
+  Validators,
+} from '@angular/forms'
 import { BeaconService } from '../../services/beacon/beacon.service'
-import { Approval, Operation, User } from 'src/app/services/api/api.service'
-// import { BeaconService } from "src/app/services/beacon/beacon.service";
-
-const CONTRACT_ID = '73ec5d6c-2a68-45e0-9d6c-5b02d025426e'
+import {
+  Approval,
+  Contract,
+  Operation,
+  User,
+} from 'src/app/services/api/api.service'
+import { Observable } from 'rxjs'
+import BigNumber from 'bignumber.js'
 
 @Component({
   selector: 'app-dashboard',
@@ -20,58 +29,128 @@ export class DashboardComponent implements OnInit {
   public selectedTab: 'tab0' | 'tab1' | 'tab2' = 'tab0' // Rename to "tab-mint", etc.
 
   receivingAddressControl: FormControl
+  amountTransferControl: FormControl
   amountControl: FormControl
   // receivingAddress$: Observable<string>;
   dataEmitter: EventEmitter<any[]> = new EventEmitter<any[]>()
-  public address: string | null = null
-  public pendingMintingRequests: Operation[] | null = null
-  public approvedMintingRequests: Operation[] | null = null
-  public users: User[] | null = null
-  public approvals: Approval[] | null = null
-
-  public currentUserType: 'keyholder' | 'gatekeeper' | undefined // TODO: Create proper type and use it everywhere
+  public address$: Observable<string | null>
+  public pendingMintingRequests$: Observable<Operation[] | null>
+  public approvedMintingRequests$: Observable<Operation[] | null>
+  public users$: Observable<User[] | null>
+  public approvals$: Observable<Approval[] | null>
+  public mintingRequests$: Observable<Operation[]>
+  public currentUserType$: Observable<'keyholder' | 'gatekeeper' | undefined> // TODO: Create proper type and use it everywhere
+  public balance$: Observable<BigNumber | undefined>
+  public asset$: Observable<string>
+  public activeContract$: Observable<Contract | undefined>
+  public activeContractId$: Observable<string | undefined>
 
   constructor(
     private readonly store$: Store<fromRoot.State>, // private readonly beaconService: BeaconService
     private readonly beaconService: BeaconService
   ) {
-    // localStorage.clear();
-    this.receivingAddressControl = new FormControl('')
-    this.amountControl = new FormControl(null)
+    this.store$.dispatch(actions.loadContracts())
+    this.asset$ = this.store$.select((state) => state.app.asset)
+
+    this.receivingAddressControl = new FormControl('', [
+      Validators.required,
+      Validators.minLength(36),
+      Validators.maxLength(36),
+      Validators.pattern('^tz1[\\d|a-zA-Z]{33}'),
+    ])
+
+    this.amountControl = new FormControl(null, [
+      Validators.min(0),
+      Validators.required,
+      Validators.pattern('^[+-]?(\\d*\\.)?\\d+$'),
+    ])
+
     this.beaconService.setupBeaconWallet()
 
-    const s = this.store$.select((state) => state.app)
-    s.subscribe((res) => {
-      // TODO: Why is res not "App"?
-      // TODO: Refactor this to use individual selectors
-      console.log('app', res)
-      this.pendingMintingRequests = (res as any).app.mintingOperations.filter(
-        (request: any) => request.state !== 'approved'
-      )
-      this.approvedMintingRequests = (res as any).app.mintingOperations.filter(
+    this.mintingRequests$ = this.store$.select(
+      (state) => state.app.mintingOperations
+    )
+
+    this.pendingMintingRequests$ = this.store$.select(
+      (state) => state.app.pendingMintingOperations
+    )
+
+    // this.pendingMintingRequests$ = this.store$.select((state) =>
+    //   state.app.mintingOperations.filter(
+    //     (request: any) => request.state !== 'approved'
+    //   )
+    // )
+
+    this.approvedMintingRequests$ = this.store$.select((state) =>
+      state.app.mintingOperations.filter(
         (request: any) => request.state === 'approved'
       )
-      this.users = (res as any).app.users
-      this.approvals = (res as any).app.approvals
-      this.address = (res as any).app.address
-      if (this.users) {
-        this.currentUserType = this.users.find(
-          (user) => user.address === this.address
-        )?.kind
-      }
+    )
+
+    this.users$ = this.store$.select((state) => state.app.users)
+    this.approvals$ = this.store$.select((state) => state.app.approvals)
+    this.address$ = this.store$.select((state) => state.app.address)
+
+    this.balance$ = this.store$.select((state) => state.app.balance)
+
+    this.amountTransferControl = new FormControl(null, [
+      Validators.min(0),
+      // Validators.max(balance.toNumber()), //TODO: disabled for now, need to figure out a way to use value of observable
+      Validators.required,
+      Validators.pattern('^[+-]?(\\d*\\.)?\\d+$'),
+    ])
+
+    this.currentUserType$ = new Observable<undefined>()
+    this.address$.subscribe((address) => {
+      this.currentUserType$ = this.store$.select(
+        (state) =>
+          state.app.users.find((user) => user.address === address)?.kind
+      )
     })
-    // TODO: Why doesn't this work?
-    // this.mintingRequests$ = this.store$.select((state) => state.app.mintingOperations)
+    this.activeContract$ = this.store$.select(
+      (state) => state.app.activeContract
+    )
+    this.activeContractId$ = this.store$.select(
+      (state) => state.app.activeContract?.id
+    )
+    this.activeContractId$.subscribe((active) =>
+      console.log('active contract in dash: ', active)
+    )
   }
 
   ngOnInit(): void {
     this.store$.dispatch(actions.loadContracts()) // TODO: Load this in a higher component?
     // TODO: Use active contract (dependent on the selection)
-    this.store$.dispatch(actions.loadUsers({ contractId: CONTRACT_ID }))
-    this.store$.dispatch(
-      actions.loadMintingRequests({
-        contractId: CONTRACT_ID,
-      })
+
+    this.activeContractId$.subscribe((contractId) => {
+      if (contractId) {
+        console.log('okay')
+        this.store$.dispatch(actions.loadUsers({ contractId: contractId }))
+        this.store$.dispatch(
+          actions.loadMintingRequests({
+            contractId: contractId,
+          })
+        )
+      }
+    })
+
+    this.store$.dispatch(actions.loadBalance())
+  }
+
+  updateAllMintingRequests(): void {
+    this.pendingMintingRequests$ = this.store$.select(
+      (state) => state.app.pendingMintingOperations
+    )
+    // this.pendingMintingRequests$ = this.store$.select((state) =>
+    //   state.app.mintingOperations.filter(
+    //     (request: any) => request.state !== 'approved'
+    //   )
+    // )
+
+    this.approvedMintingRequests$ = this.store$.select((state) =>
+      state.app.mintingOperations.filter(
+        (request: any) => request.state === 'approved'
+      )
     )
   }
 
@@ -96,17 +175,24 @@ export class DashboardComponent implements OnInit {
       throw new Error(`Amount invalid: ${this.amountControl.value}`)
     }
 
-    this.store$.dispatch(
-      actions.requestMintOperation({
-        contractId: CONTRACT_ID,
-        mintAmount: this.amountControl.value,
-        receivingAddress: this.receivingAddressControl.value,
-      })
-    )
+    this.activeContractId$.subscribe((contractId) => {
+      if (contractId) {
+        console.log('okay 2')
+        this.store$.dispatch(
+          actions.requestMintOperation({
+            contractId: contractId,
+            mintAmount: this.amountControl.value,
+            receivingAddress: this.receivingAddressControl.value,
+          })
+        )
+      }
+    })
+
+    this.updateAllMintingRequests()
     // this.beaconService.transferOperation(
     //   Number(this.amountControl.value),
     //   this.receivingAddressControl.value
-    // );
+    // )
   }
 
   burn() {
@@ -121,20 +207,13 @@ export class DashboardComponent implements OnInit {
       this.receivingAddressControl.value.length === 36 &&
       this.receivingAddressControl.value.startsWith('tz1')
 
-    const amountCondition =
-      this.amountControl.value && Number(this.amountControl.value)
-
-    if (amountCondition && receivingAddressCondition) {
+    if (this.amountTransferControl.value && receivingAddressCondition) {
       this.store$.dispatch(
         actions.transferOperation({
-          transferAmount: Number(this.amountControl.value),
+          transferAmount: Number(this.amountTransferControl.value),
           receivingAddress: this.receivingAddressControl.value,
         })
       )
-      // this.beaconService.transferOperation(
-      //   Number(this.amountControl.value),
-      //   this.receivingAddressControl.value
-      // );
     } else {
       console.log('invalid inputs')
     }
@@ -142,5 +221,11 @@ export class DashboardComponent implements OnInit {
 
   onSelect(event: any): void {
     this.selectedTab = event.id
+  }
+
+  setMaxValue(): void {
+    this.balance$.subscribe((balance) => {
+      this.amountTransferControl.setValue(balance)
+    })
   }
 }

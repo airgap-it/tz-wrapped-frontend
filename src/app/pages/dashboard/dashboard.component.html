@@ -12,45 +12,92 @@
                 class="form-control"
                 placeholder="tz1.."
                 aria-label="Address"
+                [ngClass]="{
+                  'is-invalid':
+                    receivingAddressControl.errors &&
+                    (receivingAddressControl.touched ||
+                      receivingAddressControl.dirty),
+                  'is-valid': receivingAddressControl.valid
+                }"
               />
+              <div class="invalid-feedback">
+                <strong>Invalid Address</strong>
+              </div>
             </div>
             <label class="d-flex justify-content-between"
               >Amount
-              <!--TODO: add balance & token symbol-->
-              <span>Balance: 0 tzBTC</span>
+              <span *ngIf="balance$ | async as balance"
+                >Balance: {{ balance }} {{ asset$ | async }}
+              </span>
             </label>
-            <div class="input-group">
+            <div class="input-group" *ngIf="balance$ | async as balance">
               <div class="input-group-prepend">
                 <span class="input-group-text">
                   <img
                     width="32px"
                     height="32px"
-                    src="/assets/img/tzbtc.svg"
+                    [src]="
+                      (asset$ | async) == 'tzBTC'
+                        ? '/assets/img/tzbtc.svg'
+                        : '/assets/img/tzeth.svg'
+                    "
                     class="mr-2"
                   />
-                  tzBTC</span
-                >
+                  {{ asset$ | async }}
+                </span>
               </div>
               <input
-                [formControl]="amountControl"
+                [formControl]="amountTransferControl"
                 type="text"
                 class="form-control"
                 placeholder="0.0"
                 aria-label="Amount"
+                [ngClass]="{
+                  'is-invalid':
+                    amountTransferControl.errors &&
+                    (amountTransferControl.touched ||
+                      amountTransferControl.dirty),
+                  'is-valid': amountTransferControl.valid
+                }"
               />
               <span class="input-group-prepend">
-                <!--TODO: input max balance -->
-                <button type="button" class="btn btn-primary">Max</button>
+                <button
+                  *ngIf="balance$"
+                  type="button"
+                  class="btn btn-primary"
+                  (click)="setMaxValue()"
+                >
+                  Max
+                </button>
               </span>
+              <div class="invalid-feedback">
+                <strong>Invalid Amount</strong>
+              </div>
             </div>
           </div>
-          <button
-            type="button"
-            class="btn btn-primary btn-block"
-            (click)="address ? transfer() : connectWallet()"
-          >
-            {{ address ? 'Transfer' : 'Connect Wallet' }}
-          </button>
+
+          <ng-container *ngIf="address$ | async as address; else connectButton">
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              (click)="transfer()"
+              [disabled]="
+                amountTransferControl.invalid && receivingAddressControl.invalid
+              "
+            >
+              Transfer
+            </button>
+          </ng-container>
+
+          <ng-template #connectButton>
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              (click)="connectWallet()"
+            >
+              Connect Wallet
+            </button>
+          </ng-template>
         </tab>
         <tab heading="Mint" id="tab1" (selectTab)="onSelect($event)">
           <div class="my-5">
@@ -62,7 +109,17 @@
                 class="form-control"
                 placeholder="tz1.."
                 aria-label="Address"
+                [ngClass]="{
+                  'is-invalid':
+                    receivingAddressControl.errors &&
+                    (receivingAddressControl.touched ||
+                      receivingAddressControl.dirty),
+                  'is-valid': receivingAddressControl.valid
+                }"
               />
+              <div class="invalid-feedback">
+                <strong>Invalid Address</strong>
+              </div>
             </div>
 
             <label>Enter amount to mint</label>
@@ -72,11 +129,15 @@
                   <img
                     width="32px"
                     height="32px"
-                    src="/assets/img/tzbtc.svg"
+                    [src]="
+                      (asset$ | async) == 'tzBTC'
+                        ? '/assets/img/tzbtc.svg'
+                        : '/assets/img/tzeth.svg'
+                    "
                     class="mr-2"
                   />
-                  tzBTC</span
-                >
+                  {{ asset$ | async }}
+                </span>
               </div>
               <input
                 [formControl]="amountControl"
@@ -84,16 +145,29 @@
                 class="form-control"
                 placeholder="0.0"
                 aria-label="Amount"
+                [ngClass]="{
+                  'is-invalid':
+                    amountControl.errors &&
+                    (amountControl.touched || amountControl.dirty),
+                  'is-valid': amountControl.valid
+                }"
               />
+              <div class="invalid-feedback">
+                <strong>Invalid Amount</strong>
+              </div>
             </div>
           </div>
-          <button
-            type="button"
-            class="btn btn-primary btn-block"
-            (click)="address ? mint() : connectWallet()"
-          >
-            {{ address ? 'Request Mint' : 'Connect Wallet' }}
-          </button>
+
+          <ng-container *ngIf="address$ | async as address; else connectButton">
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              (click)="mint()"
+              [disabled]="amountControl.invalid"
+            >
+              Request Mint
+            </button>
+          </ng-container>
         </tab>
         <tab heading="Burn" id="tab2" (selectTab)="onSelect($event)">
           <div class="my-5">
@@ -104,63 +178,89 @@
                   <img
                     width="32px"
                     height="32px"
-                    src="/assets/img/tzbtc.svg"
+                    [src]="
+                      (asset$ | async) == 'tzBTC'
+                        ? '/assets/img/tzbtc.svg'
+                        : '/assets/img/tzeth.svg'
+                    "
                     class="mr-2"
                   />
-                  tzBTC</span
-                >
+                  {{ asset$ | async }}
+                </span>
               </div>
               <input
+                [formControl]="amountControl"
                 type="text"
                 class="form-control"
                 placeholder="0.0"
                 aria-label="Amount"
+                [ngClass]="{
+                  'is-invalid':
+                    amountControl.errors &&
+                    (amountControl.touched || amountControl.dirty),
+                  'is-valid': amountControl.valid
+                }"
               />
+              <div class="invalid-feedback">
+                <strong>Invalid Amount</strong>
+              </div>
             </div>
           </div>
-          <button
-            type="button"
-            class="btn btn-primary btn-block"
-            (click)="address ? burn() : connectWallet()"
-          >
-            {{ address ? 'Request Burn' : 'Connect Wallet' }}
-          </button>
+
+          <ng-container *ngIf="address$ | async as address; else connectButton">
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              (click)="burn()"
+              [disabled]="amountControl.invalid"
+            >
+              Request Burn
+            </button>
+          </ng-container>
         </tab>
       </tabset>
     </div>
   </div>
 </div>
 <!-- TODO: show only if Gatekeeper/Keyholder-->
-<ng-container
-  *ngIf="
-    (currentUserType === 'gatekeeper' || currentUserType === 'keyholder') &&
-    selectedTab === 'tab1'
-  "
->
-  <div class="card mt-5">
-    <div class="card-body">
-      <h5>Open Minting Request</h5>
-      <app-open-minting-request
-        *ngFor="let request of pendingMintingRequests"
-        [mintRequest]="request"
-        [users]="users"
-        [approvals]="approvals"
-        [address]="address"
-        [currentUserType]="currentUserType"
-      ></app-open-minting-request>
+<ng-container *ngIf="currentUserType$ | async as currentUserType">
+  <ng-container
+    *ngIf="
+      (currentUserType === 'gatekeeper' || currentUserType === 'keyholder') &&
+      selectedTab === 'tab1'
+    "
+  >
+    <div
+      class="card mt-5"
+      *ngIf="(pendingMintingRequests$ | async).length != 0"
+    >
+      <div class="card-body">
+        <h5>Open Minting Request</h5>
+        <app-open-minting-request
+          *ngFor="let request of pendingMintingRequests$ | async"
+          [mintRequest]="request"
+          [users]="users$ | async"
+          [approvals]="approvals$ | async"
+          [address]="address$ | async"
+          [currentUserType]="currentUserType"
+        ></app-open-minting-request>
+      </div>
     </div>
-  </div>
 
-  <div class="card mt-5">
-    <div class="card-body">
-      <h5>Completed Minting Requests</h5>
-      <app-open-minting-request
-        *ngFor="let request of approvedMintingRequests"
-        [mintRequest]="request"
-        [users]="users"
-        [address]="address"
-        [currentUserType]="currentUserType"
-      ></app-open-minting-request>
+    <div
+      class="card mt-5"
+      *ngIf="(approvedMintingRequests$ | async).length != 0"
+    >
+      <div class="card-body">
+        <h5>Completed Minting Requests</h5>
+        <app-open-minting-request
+          *ngFor="let request of approvedMintingRequests$ | async"
+          [mintRequest]="request"
+          [users]="users$ | async"
+          [address]="address$ | async"
+          [currentUserType]="currentUserType"
+        ></app-open-minting-request>
+      </div>
     </div>
-  </div>
+  </ng-container>
 </ng-container>

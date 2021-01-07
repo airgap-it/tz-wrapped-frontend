@@ -48,10 +48,10 @@ export class OpenMintingRequestComponent {
   private hasRequestedApprovals: boolean = false
 
   async ngOnChanges(): Promise<void> {
-    console.log(this.mintRequest)
-    console.log(this.users)
-    console.log(this.approvals)
-    console.log(this.address)
+    // console.log(this.mintRequest)
+    // console.log(this.users)
+    // console.log(this.approvals)
+    // console.log(this.address)
 
     if (!this.users) {
       throw new Error('Users not loaded')

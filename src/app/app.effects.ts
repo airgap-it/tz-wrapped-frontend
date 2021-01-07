@@ -28,7 +28,21 @@ export class AppEffects {
       ofType(actions.connectWalletSucceeded),
       map(() => {
         console.log('success')
-        return actions.loadAddress()
+        return actions.loadAddress(), actions.loadBalance()
+      })
+    )
+  )
+
+  loadBalance$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadBalance),
+      switchMap(() => {
+        return this.beaconService
+          .getBalance()
+          .then((response) =>
+            actions.loadBalanceSucceeded({ balance: response })
+          )
+          .catch((error) => actions.loadBalanceFailed(error))
       })
     )
   )
@@ -56,6 +70,16 @@ export class AppEffects {
     )
   )
 
+  loadContractsSucceeded$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadContractsSucceeded),
+      map(({ response }) => {
+        const contract = response.results[0]
+        return actions.setActiveContract({ contract })
+      })
+    )
+  )
+
   loadUsers$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.loadUsers),
@@ -64,6 +88,18 @@ export class AppEffects {
           map((response) => actions.loadUsersSucceeded({ response })),
           catchError((error) => of(actions.loadUsersFailed({ error })))
         )
+      })
+    )
+  )
+
+  disconnectWallet$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.disconnectWallet),
+      switchMap(() => {
+        return this.beaconService
+          .reset()
+          .then((response) => actions.disconnectWalletSucceeded())
+          .catch((error) => actions.disconnectWalletFailed({ error }))
       })
     )
   )
@@ -118,11 +154,18 @@ export class AppEffects {
       switchMap(({ contractId, receivingAddress, mintAmount }) => {
         return this.apiService
           .mint(contractId, receivingAddress, mintAmount)
-          .toPromise()
-          .then((response) =>
-            actions.requestMintOperationSucceeded({ response })
+          .pipe(
+            map((response) => {
+              console.log('response_ ', response)
+              return actions.requestMintOperationSucceeded({
+                response,
+                contractId,
+              })
+            }),
+            catchError((error) =>
+              of(actions.requestMintOperationFailed({ error }))
+            )
           )
-          .catch((error) => actions.requestMintOperationFailed({ error }))
       })
     )
   )
@@ -130,9 +173,9 @@ export class AppEffects {
   mintOperationSucceeded$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.requestMintOperationSucceeded),
-      map(({ response }) => {
+      map(({ response, contractId }) => {
         console.log('got minting request, now singing', response)
-        return actions.signMintOperationRequest({ response })
+        return actions.signMintOperationRequest({ response, contractId })
       })
     )
   )
@@ -140,13 +183,14 @@ export class AppEffects {
   signMintOperationRequest$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.signMintOperationRequest),
-      switchMap(({ response }) => {
+      switchMap(({ response, contractId }) => {
         return this.beaconService
           .sign(response.signable_message)
           .then((signResponse) =>
             actions.signMintOperationRequestSucceeded({
               response,
               signature: signResponse.signature,
+              contractId,
             })
           )
           .catch((error) => actions.signMintOperationRequestFailed({ error }))
@@ -157,10 +201,11 @@ export class AppEffects {
   signMintOperationRequestSucceeded$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.signMintOperationRequestSucceeded),
-      map(({ response, signature }) => {
+      map(({ response, signature, contractId }) => {
         console.log('got minting request, now singing', response)
         return actions.submitSignedMintingRequest({
           request: { ...response.operation_request, gk_signature: signature },
+          contractId,
         })
       })
     )
@@ -169,13 +214,22 @@ export class AppEffects {
   submitSignedMintingRequest$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.submitSignedMintingRequest),
-      switchMap(({ request }) => {
+      switchMap(({ request, contractId }) => {
         console.log('SENDING SIGNED REQUEST')
-        return this.apiService
-          .addSignature(request)
-          .toPromise()
-          .then((signResponse) => actions.submitSignedMintingRequestSucceeded())
-          .catch((error) => actions.submitSignedMintingRequestFailed({ error }))
+        {
+          return this.apiService
+            .addSignature(request)
+            .toPromise()
+            .then((signResponse) => {
+              return (
+                actions.submitSignedMintingRequestSucceeded(),
+                actions.loadMintingRequests({ contractId })
+              )
+            })
+            .catch((error) =>
+              actions.submitSignedMintingRequestFailed({ error })
+            )
+        }
       })
     )
   )
@@ -325,6 +379,15 @@ export class AppEffects {
     )
   )
 
+  setActiveContract$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.setActiveContract),
+      map(({ contract }) => {
+        const asset = contract.display_name
+        return actions.changeAsset({ asset })
+      })
+    )
+  )
   constructor(
     private readonly actions$: Actions,
     private readonly beaconService: BeaconService,
