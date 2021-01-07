@@ -17,6 +17,7 @@ export enum UserKind {
 
 export enum OperationKind {
   MINT = 'mint',
+  BURN = 'burn',
 }
 
 export interface PagedResponse<T> {
@@ -58,7 +59,7 @@ export interface OperationRequest {
   nonce: number
 }
 
-export interface MintResponse {
+export interface MintBurnRequestResponse {
   operation_request: OperationRequest
   signable_message: string
 }
@@ -146,23 +147,35 @@ export class ApiService {
     contractId: string,
     address: string,
     amount: string
-  ): Observable<MintResponse> {
+  ): Observable<MintBurnRequestResponse> {
     const path = `contracts/${contractId}/signable-message?kind=${OperationKind.MINT}&target_address=${address}&amount=${amount}`
     console.log('starting mint', path)
-    return this.http.get<MintResponse>(this.getUrl(path))
+    return this.http.get<MintBurnRequestResponse>(this.getUrl(path))
   }
 
-  addApproval(approval: SignableMessage): Observable<MintResponse> {
+  burn(
+    contractId: string,
+    address: string,
+    amount: string
+  ): Observable<MintBurnRequestResponse> {
+    const path = `contracts/${contractId}/signable-message?kind=${OperationKind.BURN}&target_address=${address}&amount=${amount}`
+    console.log('starting burn', path)
+    return this.http.get<MintBurnRequestResponse>(this.getUrl(path))
+  }
+
+  addApproval(approval: SignableMessage): Observable<MintBurnRequestResponse> {
     if (approval.kh_signature.length === 0) {
       throw new Error('No signature provided')
     }
     const path = `approvals`
-    return this.http.post<MintResponse>(this.getUrl(path), approval)
+    return this.http.post<MintBurnRequestResponse>(this.getUrl(path), approval)
   }
 
-  addSignature(operation: OperationRequest): Observable<MintResponse> {
+  addSignature(
+    operation: OperationRequest
+  ): Observable<MintBurnRequestResponse> {
     const path = `operations`
-    return this.http.post<MintResponse>(this.getUrl(path), operation)
+    return this.http.post<MintBurnRequestResponse>(this.getUrl(path), operation)
   }
 
   // method created to ease testing

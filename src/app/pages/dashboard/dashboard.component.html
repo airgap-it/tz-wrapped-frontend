@@ -259,6 +259,27 @@
           [users]="users$ | async"
           [address]="address$ | async"
           [currentUserType]="currentUserType"
+        >
+        </app-open-minting-request>
+      </div>
+    </div>
+  </ng-container>
+  <ng-container
+    *ngIf="
+      (currentUserType === 'gatekeeper' || currentUserType === 'keyholder') &&
+      selectedTab === 'tab2'
+    "
+  >
+    <div class="card mt-5" *ngIf="(burningRequests$ | async).length != 0">
+      <div class="card-body">
+        <h5>Burning Request</h5>
+        <app-open-minting-request
+          *ngFor="let request of burningRequests$ | async"
+          [mintRequest]="request"
+          [users]="users$ | async"
+          [approvals]="approvals$ | async"
+          [address]="address$ | async"
+          [currentUserType]="currentUserType"
         ></app-open-minting-request>
       </div>
     </div>
