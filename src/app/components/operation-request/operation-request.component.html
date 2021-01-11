@@ -1,0 +1,62 @@
+<ng-container *ngIf="operationRequest">
+  <div class="row py-3 align-items-center">
+    <div class="col col-md-6">
+      <h5 class="m-0">
+        <strong>{{ operationRequest.amount }} tzBTC</strong>
+      </h5>
+      <p class="m-0">{{ operationRequest.gatekeeper.display_name }}</p>
+      <p class="text-muted m-0">
+        {{ operationRequest.gatekeeper.address | shorten }}
+      </p>
+    </div>
+    <div class="col col-md-6">
+      <p class="text-right m-0">
+        {{ operationRequest.created_at | date: 'dd.MM.yy' }}
+      </p>
+      <p class="text-right text-muted m-0">
+        {{ operationRequest.created_at | date: 'HH:mm' }}
+      </p>
+    </div>
+  </div>
+  <p class="text-muted">{{ operationRequest.state }}</p>
+  <div
+    *ngIf="{
+      current: currentOperationApprovals$ | async,
+      max: maxOperationApprovals$ | async
+    } as progress"
+  >
+    <p>
+      <strong>{{ progress.current }}/{{ progress.max }} Confirmations</strong>
+    </p>
+  </div>
+  <div class="signature--container">
+    <app-multi-signature-item
+      *ngFor="let multisigItem of multisigItems$ | async"
+      [multisigItem]="multisigItem"
+    >
+    </app-multi-signature-item>
+  </div>
+  <div class="pt-3">
+    <button
+      *ngIf="
+        !(currentUserApproved | async) &&
+        operationRequest.state === 'open' &&
+        isKeyholder
+      "
+      type="button"
+      class="btn btn-primary btn-block"
+      (click)="approveOperationRequest()"
+    >
+      Approve Request
+    </button>
+    <button
+      *ngIf="operationRequest.state === 'approved' && isGatekeeper"
+      type="button"
+      class="btn btn-primary btn-block"
+      (click)="submitOperation()"
+    >
+      Submit Operation
+    </button>
+  </div>
+  <hr />
+</ng-container>

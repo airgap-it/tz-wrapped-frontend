@@ -217,79 +217,82 @@
     </div>
   </div>
 </div>
-<!-- TODO: show only if Gatekeeper/Keyholder-->
-<ng-container *ngIf="currentUserType$ | async as currentUserType">
+
+<ng-container
+  *ngIf="{
+    isGatekeeper: isGatekeeper$ | async,
+    isKeyholder: isKeyholder$ | async
+  } as userType"
+>
   <ng-container
     *ngIf="
-      (currentUserType === 'gatekeeper' || currentUserType === 'keyholder') &&
-      selectedTab === 'tab1'
+      (userType.isGatekeeper || userType.isKeyholder) && selectedTab === 'tab1'
     "
   >
     <div
       class="card mt-5"
-      *ngIf="(pendingMintingRequests$ | async).length != 0"
+      *ngIf="(openMintOperationRequests$ | async).length != 0"
     >
       <div class="card-body">
-        <h5>Open Minting Request</h5>
-        <app-open-minting-request
-          *ngFor="let request of pendingMintingRequests$ | async"
-          [mintRequest]="request"
-          [users]="users$ | async"
-          [approvals]="approvals$ | async"
+        <h5>Open Mint Requests</h5>
+        <operation-request
+          *ngFor="let request of openMintOperationRequests$ | async"
+          [operationRequest]="request"
           [address]="address$ | async"
-          [currentUserType]="currentUserType"
-        ></app-open-minting-request>
+          [isGatekeeper]="userType.isGatekeeper"
+          [isKeyholder]="userType.isKeyholder"
+        >
+        </operation-request>
       </div>
     </div>
 
     <div
       class="card mt-5"
-      *ngIf="(approvedMintingRequests$ | async).length != 0"
+      *ngIf="(approvedMintOperationRequests$ | async).length != 0"
     >
       <div class="card-body">
-        <h5>Completed Minting Requests</h5>
-        <app-open-minting-request
-          *ngFor="let request of approvedMintingRequests$ | async"
-          [mintRequest]="request"
-          [users]="users$ | async"
+        <h5>Approved Mint Requests</h5>
+        <operation-request
+          *ngFor="let request of approvedMintOperationRequests$ | async"
+          [operationRequest]="request"
           [address]="address$ | async"
-          [currentUserType]="currentUserType"
+          [isGatekeeper]="userType.isGatekeeper"
+          [isKeyholder]="userType.isKeyholder"
         >
-        </app-open-minting-request>
+        </operation-request>
       </div>
     </div>
   </ng-container>
   <ng-container
     *ngIf="
-      (currentUserType === 'gatekeeper' || currentUserType === 'keyholder') &&
-      selectedTab === 'tab2'
+      (userType.isGatekeeper || userType.isKeyholder) && selectedTab === 'tab2'
     "
   >
-    <div class="card mt-5" *ngIf="(pendingBurnRequests$ | async).length != 0">
+    <div class="card mt-5" *ngIf="(openBurnRequests$ | async).length != 0">
       <div class="card-body">
-        <h5>Burning Request</h5>
-        <app-open-minting-request
-          *ngFor="let request of pendingBurnRequests$ | async"
-          [mintRequest]="request"
-          [users]="users$ | async"
-          [approvals]="approvals$ | async"
+        <h5>Open Burn Requests</h5>
+        <operation-request
+          *ngFor="let request of openBurnRequests$ | async"
+          [operationRequest]="request"
           [address]="address$ | async"
-          [currentUserType]="currentUserType"
-        ></app-open-minting-request>
+          [isGatekeeper]="userType.isGatekeeper"
+          [isKeyholder]="userType.isKeyholder"
+        >
+        </operation-request>
       </div>
     </div>
 
     <div class="card mt-5" *ngIf="(approvedBurnRequests$ | async).length != 0">
       <div class="card-body">
-        <h5>Completed Burning Requests</h5>
-        <app-open-minting-request
+        <h5>Approved Burn Requests</h5>
+        <operation-request
           *ngFor="let request of approvedBurnRequests$ | async"
-          [mintRequest]="request"
-          [users]="users$ | async"
+          [operationRequest]="request"
           [address]="address$ | async"
-          [currentUserType]="currentUserType"
+          [isGatekeeper]="userType.isGatekeeper"
+          [isKeyholder]="userType.isKeyholder"
         >
-        </app-open-minting-request>
+        </operation-request>
       </div>
     </div>
   </ng-container>

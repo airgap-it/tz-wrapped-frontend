@@ -9,16 +9,16 @@ import {
 } from '@ngrx/store'
 import { ROOT_REDUCERS } from 'src/app/reducers'
 
-import { OpenMintingRequestComponent } from './open-minting-request.component'
+import { OperationRequestComponent } from './operation-request.component'
 import * as fromApp from '../../app.reducer'
 
 describe('OpenMintingRequestComponent', () => {
-  let component: OpenMintingRequestComponent
-  let fixture: ComponentFixture<OpenMintingRequestComponent>
+  let component: OperationRequestComponent
+  let fixture: ComponentFixture<OperationRequestComponent>
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [OpenMintingRequestComponent],
+      declarations: [OperationRequestComponent],
       providers: [
         Store,
         StateObservable,
@@ -31,7 +31,7 @@ describe('OpenMintingRequestComponent', () => {
   })
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(OpenMintingRequestComponent)
+    fixture = TestBed.createComponent(OperationRequestComponent)
     component = fixture.componentInstance
     fixture.detectChanges()
   })
