@@ -2,12 +2,12 @@ import { Injectable } from '@angular/core'
 import { HttpClient } from '@angular/common/http'
 import { Observable } from 'rxjs'
 
-const URL = 'https://tz-wrapped.dev.gke.papers.tech'
+// const URL = 'https://tz-wrapped.dev.gke.papers.tech'
+const URL = 'http://localhost'
 
-export enum State {
-  OPEN = 'open',
+export enum UserState {
   ACTIVE = 'active',
-  APPROVED = 'approved',
+  INACTIVE = 'inactive',
 }
 
 export enum UserKind {
@@ -15,9 +15,15 @@ export enum UserKind {
   KEYHOLDER = 'keyholder',
 }
 
-export enum OperationKind {
+export enum OperationRequestKind {
   MINT = 'mint',
   BURN = 'burn',
+}
+
+export enum OperationRequestState {
+  OPEN = 'open',
+  APPROVED = 'approved',
+  INJECTED = 'injected',
 }
 
 export interface PagedResponse<T> {
@@ -35,6 +41,7 @@ export interface Contract {
   multisig_pkh: string
   kind: UserKind
   display_name: string
+  min_approvals: number
 }
 
 export interface User {
@@ -45,58 +52,57 @@ export interface User {
   address: string
   contract_id: string
   kind: UserKind
-  state: State
+  state: UserState
   display_name: string
 }
 
-export interface OperationRequest {
-  destination: string
-  target_address: string
-  amount: number
-  kind: string
-  gk_signature: string
-  chain_id: string
-  nonce: number
-}
-
-export interface MintBurnRequestResponse {
-  operation_request: OperationRequest
-  signable_message: string
-}
-
-export interface Operation {
-  id: string
-  request_id: string // TODO: This does currently not exist, but probably should?
-  created_at: string
-  updated_at: string
-  requester: User
+export interface NewOperationRequest {
   contract_id: string
   target_address: string
   amount: number
   kind: string
-  gk_signature: string
+  signature: string
   chain_id: string
   nonce: number
-  state: string
-  operation_hash?: any
 }
 
-export interface Approval {
+export interface SignableOperationRequest {
+  unsigned_operation_request: NewOperationRequest
+  signable_message: string
+}
+
+export interface OperationRequest {
   id: string
   created_at: string
   updated_at: string
-  approver: User
-  request_id: string
-  kh_signature: string
+  gatekeeper: User
+  contract_id: string
+  target_address: string
+  amount: number
+  kind: string
+  signature: string
+  chain_id: string
+  nonce: number
+  state: OperationRequestState
+  operation_hash?: any
 }
 
-export interface SignableMessage {
-  request: string
-  kh_signature: string
+export interface OperationApproval {
+  id: string
+  created_at: string
+  updated_at: string
+  keyholder: User
+  operation_request_id: string
+  signature: string
 }
 
-export interface SignableMessageRequest {
-  operation_approval: SignableMessage
+export interface NewOperationApproval {
+  operation_request_id: string
+  signature: string
+}
+
+export interface ApprovableOperationRequest {
+  unsigned_operation_approval: NewOperationApproval
   signable_message: string
 }
 
@@ -104,82 +110,95 @@ export interface SignableMessageRequest {
   providedIn: 'root',
 })
 export class ApiService {
+  private static contractsPath = '/contracts'
+  private static usersPath = '/users'
+  private static operationRequestsPath = '/operation-requests'
+  private static operationApprovalsPath = '/operation-approvals'
+
   constructor(private readonly http: HttpClient) {}
 
   getContracts(): Observable<PagedResponse<Contract>> {
-    return this.http.get<PagedResponse<Contract>>(this.getUrl('contracts'))
+    return this.http.get<PagedResponse<Contract>>(
+      this.getUrl(ApiService.contractsPath)
+    )
   }
 
   getUsers(
     contractId: string,
     address?: string
   ): Observable<PagedResponse<User>> {
-    const path = `users?contract_id=${contractId}${
+    const path = `${ApiService.usersPath}?contract_id=${contractId}${
       address ? `&address=${address}` : ``
     }`
     return this.http.get<PagedResponse<User>>(this.getUrl(path))
   }
 
-  getOperations(
+  getOperationRequests(
     contractId: string,
-    operationKind: OperationKind
-  ): Observable<PagedResponse<Operation>> {
-    const path = `operations?kind=${operationKind}&contract_id=${contractId}`
-    return this.http.get<PagedResponse<Operation>>(this.getUrl(path))
+    operationKind: OperationRequestKind
+  ): Observable<PagedResponse<OperationRequest>> {
+    const path = `${ApiService.operationRequestsPath}?kind=${operationKind}&contract_id=${contractId}`
+    return this.http.get<PagedResponse<OperationRequest>>(this.getUrl(path))
   }
 
-  getApprovals(requestId: string): Observable<PagedResponse<Approval>> {
-    const path = `approvals?request_id=${requestId}`
-    return this.http.get<PagedResponse<Approval>>(this.getUrl(path))
+  getOperationApprovals(
+    requestId: string
+  ): Observable<PagedResponse<OperationApproval>> {
+    const path = `${ApiService.operationApprovalsPath}?operation_request_id=${requestId}`
+    return this.http.get<PagedResponse<OperationApproval>>(this.getUrl(path))
   }
 
-  getSignableMessage(contractId: string): Observable<SignableMessageRequest> {
-    const path = `operations/${contractId}/signable-message`
-    return this.http.get<SignableMessageRequest>(this.getUrl(path))
+  getApprovableOperationRequest(
+    contractId: string
+  ): Observable<ApprovableOperationRequest> {
+    const path = `${ApiService.operationRequestsPath}/${contractId}/signable-message`
+    return this.http.get<ApprovableOperationRequest>(this.getUrl(path))
   }
 
   getParameters(operationId: string): Observable<any> {
-    const path = `operations/${operationId}/parameters`
+    const path = `${ApiService.operationRequestsPath}/${operationId}/parameters`
     return this.http.get<any>(this.getUrl(path))
   }
 
-  mint(
+  getSignableOperationRequest(
     contractId: string,
-    address: string,
-    amount: string
-  ): Observable<MintBurnRequestResponse> {
-    const path = `contracts/${contractId}/signable-message?kind=${OperationKind.MINT}&target_address=${address}&amount=${amount}`
-    console.log('starting mint', path)
-    return this.http.get<MintBurnRequestResponse>(this.getUrl(path))
+    kind: OperationRequestKind,
+    amount: string,
+    targetAddress?: string
+  ): Observable<SignableOperationRequest> {
+    const path = `${
+      ApiService.contractsPath
+    }/${contractId}/signable-message?kind=${kind}&amount=${amount}${
+      kind === OperationRequestKind.MINT && targetAddress !== undefined
+        ? `&target_address=${targetAddress}`
+        : ''
+    }`
+    return this.http.get<SignableOperationRequest>(this.getUrl(path))
   }
 
-  burn(
-    contractId: string,
-    address: string,
-    amount: string
-  ): Observable<MintBurnRequestResponse> {
-    const path = `contracts/${contractId}/signable-message?kind=${OperationKind.BURN}&target_address=${address}&amount=${amount}`
-    console.log('starting burn', path)
-    return this.http.get<MintBurnRequestResponse>(this.getUrl(path))
-  }
-
-  addApproval(approval: SignableMessage): Observable<MintBurnRequestResponse> {
-    if (approval.kh_signature.length === 0) {
+  addOperationApproval(
+    approval: NewOperationApproval
+  ): Observable<OperationApproval> {
+    if (approval.signature.length === 0) {
       throw new Error('No signature provided')
     }
-    const path = `approvals`
-    return this.http.post<MintBurnRequestResponse>(this.getUrl(path), approval)
+    return this.http.post<OperationApproval>(
+      this.getUrl(ApiService.operationApprovalsPath),
+      approval
+    )
   }
 
-  addSignature(
-    operation: OperationRequest
-  ): Observable<MintBurnRequestResponse> {
-    const path = `operations`
-    return this.http.post<MintBurnRequestResponse>(this.getUrl(path), operation)
+  addOperationRequest(
+    operation: NewOperationRequest
+  ): Observable<OperationRequest> {
+    return this.http.post<OperationRequest>(
+      this.getUrl(ApiService.operationRequestsPath),
+      operation
+    )
   }
 
   // method created to ease testing
   private getUrl(path: string): string {
-    return `${URL}/api/v1/${path}`
+    return `${URL}/api/v1${path}`
   }
 }

@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core'
-import { UserWithApproval } from '../open-minting-request/open-minting-request.component'
+import { UserWithApproval } from '../operation-request/operation-request.component'
 
 @Component({
   selector: 'app-multi-signature-item',

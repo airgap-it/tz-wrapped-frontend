@@ -1,7 +1,13 @@
 import { createReducer, on } from '@ngrx/store'
 
 import * as actions from './app.actions'
-import { Approval, Contract, Operation, User } from './services/api/api.service'
+import {
+  OperationApproval,
+  Contract,
+  OperationRequest,
+  User,
+  OperationRequestKind,
+} from './services/api/api.service'
 import BigNumber from 'bignumber.js'
 
 interface Busy {
@@ -9,25 +15,24 @@ interface Busy {
   balance: boolean
   transferAmount: boolean
   receivingAddress: boolean
-  mintingRequests: boolean
-  burningRequests: boolean
+  mintOperationRequests: boolean
+  burnOperationRequests: boolean
   contracts: boolean
   users: boolean
-  approvals: boolean
+  operationApprovals: boolean
 }
 
 export interface State {
   contracts: Contract[]
   activeContract: Contract | undefined
   users: User[]
-  approvals: Approval[]
+  operationApprovals: Map<string, OperationApproval[]>
   address: string
   balance: BigNumber | undefined
   transferAmount: number
   receivingAddress: string
-  mintingOperations: Operation[]
-  burningOperations: Operation[]
-  pendingMintingOperations: Operation[]
+  mintOperationRequests: OperationRequest[]
+  burnOperationRequests: OperationRequest[]
   busy: Busy
   asset: string
 }
@@ -36,25 +41,24 @@ export const initialState: State = {
   contracts: [],
   activeContract: undefined,
   users: [],
-  approvals: [], // TODO: We might have to filter those per request
+  operationApprovals: new Map<string, OperationApproval[]>(),
   address: '',
   balance: undefined,
   transferAmount: 0,
   receivingAddress: '',
-  mintingOperations: [],
-  burningOperations: [],
-  pendingMintingOperations: [],
+  mintOperationRequests: [],
+  burnOperationRequests: [],
   asset: '',
   busy: {
     address: false,
     receivingAddress: false,
     transferAmount: false,
     balance: false,
-    mintingRequests: false,
-    burningRequests: false,
+    mintOperationRequests: false,
+    burnOperationRequests: false,
     contracts: false,
     users: false,
-    approvals: false,
+    operationApprovals: false,
   },
 }
 
@@ -70,6 +74,7 @@ export const reducer = createReducer(
   on(actions.disconnectWallet, (state) => ({
     ...state,
     address: '',
+    balance: undefined,
     busy: {
       ...state.busy,
       address: false,
@@ -194,78 +199,113 @@ export const reducer = createReducer(
       transferAmount: false,
     },
   })),
-  on(actions.loadBurningRequests, (state) => ({
+  on(actions.loadBurnOperationRequests, (state) => ({
     ...state,
     busy: {
       ...state.busy,
-      burningRequests: true,
+      burnOperationRequests: true,
     },
   })),
-  on(actions.loadBurningRequestsSucceeded, (state, { response }) => ({
+  on(actions.loadBurnOperationRequestsSucceeded, (state, { response }) => ({
     ...state,
-    burningOperations: response.results,
+    burnOperationRequests: response.results,
     busy: {
       ...state.busy,
-      burningRequests: false,
+      burnOperationRequests: false,
     },
   })),
-  on(actions.loadBurningRequestsFailed, (state) => ({
-    ...state,
-    busy: {
-      ...state.busy,
-      burningRequests: false,
-    },
-  })),
-  on(actions.loadMintingRequests, (state) => ({
+  on(actions.loadBurnOperationRequestsFailed, (state) => ({
     ...state,
     busy: {
       ...state.busy,
-      mintingRequests: true,
+      burnOperationRequests: false,
     },
   })),
-  on(actions.loadMintingRequestsSucceeded, (state, { response }) => ({
-    ...state,
-    mintingOperations: response.results,
-    pendingMintingOperations: response.results.filter(
-      (request) => request.state != 'approved'
-    ),
-    busy: {
-      ...state.busy,
-      mintingRequests: false,
-    },
-  })),
-  on(actions.loadMintingRequestsFailed, (state) => ({
+  on(actions.loadMintOperationRequests, (state) => ({
     ...state,
     busy: {
       ...state.busy,
-      mintingRequests: false,
+      mintOperationRequests: true,
     },
   })),
-  on(actions.loadApprovals, (state) => ({
+  on(actions.loadMintOperationRequestsSucceeded, (state, { response }) => ({
+    ...state,
+    mintOperationRequests: response.results,
+    busy: {
+      ...state.busy,
+      mintOperationRequests: false,
+    },
+  })),
+  on(actions.loadMintOperationRequestsFailed, (state) => ({
     ...state,
     busy: {
       ...state.busy,
-      approvals: true,
+      mintOperationRequests: false,
     },
   })),
-  on(actions.loadApprovalsSucceeded, (state, { requestId, response }) => ({
-    ...state,
-    approvals: response.results.map((result) => ({
-      ...result,
-      request_id: requestId,
-    })),
-    busy: {
-      ...state.busy,
-      approvals: false,
-    },
-  })),
-  on(actions.loadApprovalsFailed, (state) => ({
+  on(actions.loadOperationApprovals, (state) => ({
     ...state,
     busy: {
       ...state.busy,
-      approvals: false,
+      operationApprovals: true,
     },
   })),
+  on(
+    actions.loadOperationApprovalsSucceeded,
+    (state, { requestId, response }) => {
+      const operationApprovals = new Map(state.operationApprovals)
+      operationApprovals.set(requestId, response.results)
+      return {
+        ...state,
+        operationApprovals,
+        busy: {
+          ...state.busy,
+          operationApprovals: false,
+        },
+      }
+    }
+  ),
+  on(actions.submitOperationApprovalSucceeded, (state, { response }) => {
+    const operationApprovals = new Map(state.operationApprovals)
+    const items = Object.assign(
+      [],
+      operationApprovals.get(response.operation_request_id) ?? []
+    )
+    items.push(response)
+    operationApprovals.set(response.operation_request_id, items)
+    return {
+      ...state,
+      operationApprovals,
+      busy: {
+        ...state.busy,
+        operationApprovals: false,
+      },
+    }
+  }),
+  on(actions.loadOperationApprovalsFailed, (state) => ({
+    ...state,
+    busy: {
+      ...state.busy,
+      operationApprovals: false,
+    },
+  })),
+  on(actions.submitSignedOperationRequestSucceeded, (state, { response }) => {
+    if (response.kind === OperationRequestKind.MINT) {
+      const operationRequests = Object.assign([], state.mintOperationRequests)
+      operationRequests.push(response)
+      return {
+        ...state,
+        mintOperationRequests: operationRequests,
+      }
+    } else {
+      const operationRequests = Object.assign([], state.burnOperationRequests)
+      operationRequests.push(response)
+      return {
+        ...state,
+        burnOperationRequests: operationRequests,
+      }
+    }
+  }),
   on(actions.changeAsset, (state, { asset }) => ({
     ...state,
     asset: asset,

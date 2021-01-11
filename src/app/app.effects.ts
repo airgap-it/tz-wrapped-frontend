@@ -3,20 +3,33 @@ import { Injectable } from '@angular/core'
 import { Actions, createEffect, ofType } from '@ngrx/effects'
 import { Store } from '@ngrx/store'
 import { of } from 'rxjs'
-import { map, catchError, switchMap, withLatestFrom } from 'rxjs/operators'
+import {
+  map,
+  catchError,
+  switchMap,
+  withLatestFrom,
+  exhaustMap,
+  mergeMap,
+} from 'rxjs/operators'
 import * as fromRoot from '../app/reducers/index'
 
 import * as actions from './app.actions'
-import { ApiService, OperationKind } from './services/api/api.service'
+import { ApiService, OperationRequestKind } from './services/api/api.service'
 import { BeaconService } from './services/beacon/beacon.service'
 
 @Injectable()
 export class AppEffects {
+  constructor(
+    private readonly actions$: Actions,
+    private readonly beaconService: BeaconService,
+    private readonly apiService: ApiService,
+    private readonly store$: Store<fromRoot.State>
+  ) {}
+
   connectWallet$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.connectWallet),
       switchMap(() => {
-        console.log('ACTION')
         return this.beaconService
           .requestPermission()
           .then((response) => actions.connectWalletSucceeded())
@@ -29,7 +42,6 @@ export class AppEffects {
     this.actions$.pipe(
       ofType(actions.connectWalletSucceeded),
       map(() => {
-        console.log('success')
         return actions.loadAddress(), actions.loadBalance()
       })
     )
@@ -106,51 +118,53 @@ export class AppEffects {
     )
   )
 
-  loadMintingRequests$ = createEffect(() =>
+  loadMintOperationRequests$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.loadMintingRequests),
+      ofType(actions.loadMintOperationRequests),
       switchMap(({ contractId }) => {
         return this.apiService
-          .getOperations(contractId, OperationKind.MINT)
+          .getOperationRequests(contractId, OperationRequestKind.MINT)
           .pipe(
             map((response) =>
-              actions.loadMintingRequestsSucceeded({ response })
+              actions.loadMintOperationRequestsSucceeded({ response })
             ),
             catchError((error) =>
-              of(actions.loadMintingRequestsFailed({ error }))
+              of(actions.loadMintOperationRequestsFailed({ error }))
             )
           )
       })
     )
   )
 
-  loadBurningRequests$ = createEffect(() =>
+  loadBurnOperationRequests$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.loadBurningRequests),
+      ofType(actions.loadBurnOperationRequests),
       switchMap(({ contractId }) => {
         return this.apiService
-          .getOperations(contractId, OperationKind.BURN)
+          .getOperationRequests(contractId, OperationRequestKind.BURN)
           .pipe(
             map((response) =>
-              actions.loadBurningRequestsSucceeded({ response })
+              actions.loadBurnOperationRequestsSucceeded({ response })
             ),
             catchError((error) =>
-              of(actions.loadBurningRequestsFailed({ error }))
+              of(actions.loadBurnOperationRequestsFailed({ error }))
             )
           )
       })
     )
   )
 
-  loadApprovals$ = createEffect(() =>
+  loadOperationApprovals$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.loadApprovals),
-      switchMap(({ requestId }) => {
-        return this.apiService.getApprovals(requestId).pipe(
+      ofType(actions.loadOperationApprovals),
+      mergeMap(({ requestId }) => {
+        return this.apiService.getOperationApprovals(requestId).pipe(
           map((response) =>
-            actions.loadApprovalsSucceeded({ requestId, response })
+            actions.loadOperationApprovalsSucceeded({ requestId, response })
           ),
-          catchError((error) => of(actions.loadApprovalsFailed({ error })))
+          catchError((error) =>
+            of(actions.loadOperationApprovalsFailed({ error }))
+          )
         )
       })
     )
@@ -168,435 +182,198 @@ export class AppEffects {
     )
   )
 
-  requestBurnOperation$ = createEffect(() =>
+  getSignableOperationRequest$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.requestBurnOperation),
-
-      withLatestFrom(this.store$.select((state) => state.app.address)),
-      switchMap(([{ contractId, burnAmount }, address]) => {
-        return this.apiService.burn(contractId, address, burnAmount).pipe(
-          map((response) => {
-            console.log('burn response: ', response)
-            return actions.requestBurnOperationSucceeded({
-              response,
-              contractId,
-            })
-          }),
-          catchError((error) =>
-            of(actions.requestBurnOperationFailed({ error }))
-          )
-        )
-      })
-    )
-  )
-
-  burnOperationSucceeded$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.requestBurnOperationSucceeded),
-      map(({ response, contractId }) => {
-        console.log('got burn request, now singing', response)
-        return actions.signBurnOperationRequest({ response, contractId })
-      })
-    )
-  )
-
-  signBurnOperationRequest$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.signBurnOperationRequest),
-      switchMap(({ response, contractId }) => {
-        return this.beaconService
-          .sign(response.signable_message)
-          .then((signResponse) =>
-            actions.signBurnOperationRequestSucceeded({
-              response,
-              signature: signResponse.signature,
-              contractId,
-            })
-          )
-          .catch((error) => actions.signBurnOperationRequestFailed({ error }))
-      })
-    )
-  )
-
-  signBurnOperationRequestSucceeded$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.signBurnOperationRequestSucceeded),
-      map(({ response, signature, contractId }) => {
-        console.log('got Burning request, now singing', response)
-        return actions.submitSignedBurningRequest({
-          request: { ...response.operation_request, gk_signature: signature },
-          contractId,
-        })
-      })
-    )
-  )
-
-  submitSignedBurningRequest$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.submitSignedBurningRequest),
-      switchMap(({ request, contractId }) => {
-        console.log('SENDING SIGNED REQUEST:', request)
-        {
-          return this.apiService
-            .addSignature(request)
-            .toPromise()
-            .then((signResponse) => {
-              return (
-                actions.submitSignedBurningRequestSucceeded(),
-                actions.loadBurningRequests({ contractId })
-              )
-            })
-            .catch((error) =>
-              actions.submitSignedBurningRequestFailed({ error })
-            )
-        }
-      })
-    )
-  )
-
-  requestApproveBurnOperation$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.requestApproveBurnOperation),
-      switchMap(({ requestId }) => {
+      ofType(actions.getSignableOperationRequest),
+      switchMap(({ contractId, kind, amount, targetAddress }) => {
         return this.apiService
-          .getSignableMessage(requestId)
-          .toPromise()
-          .then((response) =>
-            actions.requestApproveBurnOperationSucceeded({ response })
-          )
-          .catch((error) =>
-            actions.requestApproveBurnOperationFailed({ error })
-          )
-      })
-    )
-  )
-
-  requestApproveBurnOperationSucceeded$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.requestApproveBurnOperationSucceeded),
-      map(({ response }) => {
-        console.log('got Burning approval request, now singing', response)
-        return actions.signApproveBurnOperationRequest({ response })
-      })
-    )
-  )
-
-  signApproveBurnOperationRequest$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.signApproveBurnOperationRequest),
-      switchMap(({ response }) => {
-        return this.beaconService
-          .sign(response.signable_message)
-          .then((signResponse) =>
-            actions.signApproveBurnOperationRequestSucceeded({
-              response,
-              signature: signResponse.signature,
-            })
-          )
-          .catch((error) =>
-            actions.signApproveBurnOperationRequestFailed({ error })
-          )
-      })
-    )
-  )
-
-  signApproveBurnOperationRequestSucceeded$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.signApproveBurnOperationRequestSucceeded),
-      map(({ response, signature }) => {
-        console.log('got Burning request, now singing', response)
-        return actions.submitSignedApproveBurnOperationRequest({
-          request: response,
-          approval: { ...response.operation_approval, kh_signature: signature },
-        })
-      })
-    )
-  )
-
-  submitSignedApproveBurnOperationRequest$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.submitSignedApproveBurnOperationRequest),
-      switchMap(({ request, approval }) => {
-        return this.apiService
-          .addApproval(approval)
-          .toPromise()
-          .then((response) =>
-            actions.submitSignedApproveBurnOperationRequestSucceeded({
-              request,
-              approval,
-            })
-          )
-          .catch((error) =>
-            actions.submitSignedApproveBurnOperationRequestFailed({ error })
-          )
-      })
-    )
-  )
-
-  submitSignedApproveBurnOperationRequestSucceeded$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.submitSignedApproveBurnOperationRequestSucceeded),
-      map(({ request }) => {
-        console.log('submit done, now refreshing approvals')
-        return actions.loadApprovals({
-          requestId: request.operation_approval.request,
-        })
-      })
-    )
-  )
-
-  getApprovedBurnParameters$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.getApprovedBurnParameters),
-      switchMap(({ operationId }) => {
-        return this.apiService
-          .getParameters(operationId)
-          .toPromise()
-          .then((response) =>
-            actions.getApprovedBurnParametersSucceeded({
-              parameters: response,
-            })
-          )
-          .catch((error) => actions.getApprovedBurnParametersFailed({ error }))
-      })
-    )
-  )
-
-  getApprovedBurnParametersSucceeded$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.getApprovedBurnParametersSucceeded),
-      map(({ parameters }) => {
-        console.log('submit done, now refreshing approvals')
-        return actions.signApprovedBurn({
-          operation: {
-            operationDetails: [
-              {
-                kind: TezosOperationType.TRANSACTION,
-                amount: '0',
-                destination: 'KT1BYMvJoM75JyqFbsLKouqkAv8dgEvViioP',
-                parameters,
-              },
-            ],
-          },
-        })
-      })
-    )
-  )
-
-  signApprovedBurn$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.signApprovedBurn),
-      switchMap(({ operation }) => {
-        return this.beaconService
-          .operation(operation)
-          .then((response) =>
-            actions.signApprovedBurnSucceeded({
-              response,
-            })
-          )
-          .catch((error) => actions.signApprovedBurnFailed({ error }))
-      })
-    )
-  )
-
-  requestMintOperation$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.requestMintOperation),
-      switchMap(({ contractId, receivingAddress, mintAmount }) => {
-        return this.apiService
-          .mint(contractId, receivingAddress, mintAmount)
+          .getSignableOperationRequest(contractId, kind, amount, targetAddress)
           .pipe(
             map((response) => {
-              return actions.requestMintOperationSucceeded({
+              return actions.getSignableOperationRequestSucceeded({
                 response,
                 contractId,
               })
             }),
             catchError((error) =>
-              of(actions.requestMintOperationFailed({ error }))
+              of(actions.getSignableOperationRequestFailed({ error }))
             )
           )
       })
     )
   )
 
-  mintOperationSucceeded$ = createEffect(() =>
+  getSignableOperationRequestSucceeded$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.requestMintOperationSucceeded),
+      ofType(actions.getSignableOperationRequestSucceeded),
       map(({ response, contractId }) => {
-        console.log('got minting request, now singing', response)
-        return actions.signMintOperationRequest({ response, contractId })
+        return actions.signOperationRequest({ response, contractId })
       })
     )
   )
 
-  signMintOperationRequest$ = createEffect(() =>
+  signOperationRequest$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.signMintOperationRequest),
+      ofType(actions.signOperationRequest),
       switchMap(({ response, contractId }) => {
         return this.beaconService
           .sign(response.signable_message)
           .then((signResponse) =>
-            actions.signMintOperationRequestSucceeded({
+            actions.signOperationRequestSucceeded({
               response,
               signature: signResponse.signature,
               contractId,
             })
           )
-          .catch((error) => actions.signMintOperationRequestFailed({ error }))
+          .catch((error) => actions.signOperationRequestFailed({ error }))
       })
     )
   )
 
-  signMintOperationRequestSucceeded$ = createEffect(() =>
+  signOperationRequestSucceeded$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.signMintOperationRequestSucceeded),
+      ofType(actions.signOperationRequestSucceeded),
       map(({ response, signature, contractId }) => {
-        console.log('got minting request, now singing', response)
-        return actions.submitSignedMintingRequest({
-          request: { ...response.operation_request, gk_signature: signature },
+        return actions.submitSignedOperationRequest({
+          request: {
+            ...response.unsigned_operation_request,
+            signature: signature,
+          },
           contractId,
         })
       })
     )
   )
 
-  submitSignedMintingRequest$ = createEffect(() =>
+  submitSignedOperationRequest$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.submitSignedMintingRequest),
+      ofType(actions.submitSignedOperationRequest),
       switchMap(({ request, contractId }) => {
         {
           return this.apiService
-            .addSignature(request)
+            .addOperationRequest(request)
             .toPromise()
-            .then((signResponse) => {
-              return (
-                actions.submitSignedMintingRequestSucceeded(),
-                actions.loadMintingRequests({ contractId })
-              )
+            .then((response) => {
+              return actions.submitSignedOperationRequestSucceeded({ response })
             })
             .catch((error) =>
-              actions.submitSignedMintingRequestFailed({ error })
+              actions.submitSignedOperationRequestFailed({ error })
             )
         }
       })
     )
   )
 
-  requestApproveMintOperation$ = createEffect(() =>
+  getApprovableOperationRequest$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.requestApproveMintOperation),
+      ofType(actions.getApprovableOperationRequest),
       switchMap(({ requestId }) => {
         return this.apiService
-          .getSignableMessage(requestId)
+          .getApprovableOperationRequest(requestId)
           .toPromise()
           .then((response) =>
-            actions.requestApproveMintOperationSucceeded({ response })
+            actions.getApprovableOperationRequestSucceeded({ response })
           )
           .catch((error) =>
-            actions.requestApproveMintOperationFailed({ error })
+            actions.getApprovableOperationRequestFailed({ error })
           )
       })
     )
   )
 
-  requestApproveMintOperationSucceeded$ = createEffect(() =>
+  getApprovableOperationRequestSucceeded$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.requestApproveMintOperationSucceeded),
+      ofType(actions.getApprovableOperationRequestSucceeded),
       map(({ response }) => {
-        console.log('got minting approval request, now singing', response)
-        return actions.signApproveMintOperationRequest({ response })
+        return actions.approveOperationRequest({ response })
       })
     )
   )
 
-  signApproveMintOperationRequest$ = createEffect(() =>
+  approveOperationRequest$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.signApproveMintOperationRequest),
+      ofType(actions.approveOperationRequest),
       switchMap(({ response }) => {
         return this.beaconService
           .sign(response.signable_message)
           .then((signResponse) =>
-            actions.signApproveMintOperationRequestSucceeded({
+            actions.approveOperationRequestSucceeded({
               response,
               signature: signResponse.signature,
             })
           )
-          .catch((error) =>
-            actions.signApproveMintOperationRequestFailed({ error })
-          )
+          .catch((error) => actions.approveOperationRequestFailed({ error }))
       })
     )
   )
 
-  signApproveMintOperationRequestSucceeded$ = createEffect(() =>
+  approveOperationRequestSucceeded$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.signApproveMintOperationRequestSucceeded),
+      ofType(actions.approveOperationRequestSucceeded),
       map(({ response, signature }) => {
-        console.log('got minting request, now singing', response)
-        return actions.submitSignedApproveMintOperationRequest({
+        return actions.submitOperationApproval({
           request: response,
-          approval: { ...response.operation_approval, kh_signature: signature },
+          approval: {
+            ...response.unsigned_operation_approval,
+            signature: signature,
+          },
         })
       })
     )
   )
 
-  submitSignedApproveMintOperationRequest$ = createEffect(() =>
+  submitOperationApproval$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.submitSignedApproveMintOperationRequest),
+      ofType(actions.submitOperationApproval),
       switchMap(({ request, approval }) => {
         return this.apiService
-          .addApproval(approval)
+          .addOperationApproval(approval)
           .toPromise()
           .then((response) =>
-            actions.submitSignedApproveMintOperationRequestSucceeded({
-              request,
-              approval,
+            actions.submitOperationApprovalSucceeded({
+              response,
             })
           )
-          .catch((error) =>
-            actions.submitSignedApproveMintOperationRequestFailed({ error })
-          )
+          .catch((error) => actions.submitOperationApprovalFailed({ error }))
       })
     )
   )
 
-  submitSignedApproveMintOperationRequestSucceeded$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.submitSignedApproveMintOperationRequestSucceeded),
-      map(({ request }) => {
-        console.log('submit done, now refreshing approvals')
-        return actions.loadApprovals({
-          requestId: request.operation_approval.request,
-        })
-      })
-    )
-  )
+  // submitOperationApprovalSucceeded$ = createEffect(() =>
+  //   this.actions$.pipe(
+  //     ofType(actions.submitOperationApprovalSucceeded),
+  //     map(({ request }) => {
+  //       return actions.loadOperationApprovals({
+  //         requestId: request.unsigned_operation_approval.operation_request_id,
+  //       })
+  //     })
+  //   )
+  // )
 
-  getApprovedMintParameters$ = createEffect(() =>
+  getOperationRequestParameters$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.getApprovedMintParameters),
+      ofType(actions.getOperationRequestParameters),
       switchMap(({ operationId }) => {
         return this.apiService
           .getParameters(operationId)
           .toPromise()
           .then((response) =>
-            actions.getApprovedMintParametersSucceeded({
+            actions.getOperationRequestParametersSucceeded({
               parameters: response,
             })
           )
-          .catch((error) => actions.getApprovedMintParametersFailed({ error }))
+          .catch((error) =>
+            actions.getOperationRequestParametersFailed({ error })
+          )
       })
     )
   )
 
-  getApprovedMintParametersSucceeded$ = createEffect(() =>
+  getOperationRequestParametersSucceeded$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.getApprovedMintParametersSucceeded),
+      ofType(actions.getOperationRequestParametersSucceeded),
       map(({ parameters }) => {
-        console.log('submit done, now refreshing approvals')
-        return actions.signApprovedMint({
+        return actions.submitOperation({
           operation: {
             operationDetails: [
               {
@@ -612,18 +389,18 @@ export class AppEffects {
     )
   )
 
-  signApprovedMint$ = createEffect(() =>
+  submitOperation$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.signApprovedMint),
+      ofType(actions.submitOperation),
       switchMap(({ operation }) => {
         return this.beaconService
           .operation(operation)
           .then((response) =>
-            actions.signApprovedMintSucceeded({
+            actions.submitOperationSucceeded({
               response,
             })
           )
-          .catch((error) => actions.signApprovedMintFailed({ error }))
+          .catch((error) => actions.submitOperationFailed({ error }))
       })
     )
   )
@@ -637,10 +414,4 @@ export class AppEffects {
       })
     )
   )
-  constructor(
-    private readonly actions$: Actions,
-    private readonly beaconService: BeaconService,
-    private readonly apiService: ApiService,
-    private readonly store$: Store<fromRoot.State>
-  ) {}
 }
