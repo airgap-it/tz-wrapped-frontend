@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core'
 import { HttpClient } from '@angular/common/http'
 import { Observable } from 'rxjs'
 
-// const URL = 'https://tz-wrapped.dev.gke.papers.tech'
-const URL = 'http://localhost'
+const URL = 'https://tz-wrapped.dev.gke.papers.tech'
+// const URL = 'http://localhost'
 
 export enum UserState {
   ACTIVE = 'active',
