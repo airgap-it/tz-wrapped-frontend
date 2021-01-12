@@ -5,12 +5,12 @@ import {
   ReducerManager,
   ReducerManagerDispatcher,
   StateObservable,
-  Store,
+  StoreModule,
 } from '@ngrx/store'
 import { ROOT_REDUCERS } from 'src/app/reducers'
 
 import { OperationRequestComponent } from './operation-request.component'
-import * as fromApp from '../../app.reducer'
+import { MockStore, provideMockStore } from '@ngrx/store/testing'
 
 describe('OpenMintingRequestComponent', () => {
   let component: OperationRequestComponent
@@ -18,9 +18,11 @@ describe('OpenMintingRequestComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
+      imports: [StoreModule.forRoot(ROOT_REDUCERS)],
       declarations: [OperationRequestComponent],
       providers: [
-        Store,
+        provideMockStore({}),
+        MockStore,
         StateObservable,
         ActionsSubject,
         ReducerManager,
