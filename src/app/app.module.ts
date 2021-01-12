@@ -40,7 +40,6 @@ export const rpcURLDelphinet = 'https://delphinet-tezos.giganode.io'
     CommonModule,
     TabsModule.forRoot(),
     AppRoutingModule,
-    StoreModule.forRoot({}, {}),
     EffectsModule.forRoot([AppEffects]),
     StoreModule.forRoot(ROOT_REDUCERS, {
       metaReducers,
