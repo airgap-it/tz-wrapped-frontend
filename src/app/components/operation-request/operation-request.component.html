@@ -2,7 +2,9 @@
   <div class="row py-3 align-items-center">
     <div class="col col-md-6">
       <h5 class="m-0">
-        <strong>{{ operationRequest.amount }} tzBTC</strong>
+        <strong
+          >{{ operationRequest.amount }} {{ contract.display_name }}</strong
+        >
       </h5>
       <p class="m-0">{{ operationRequest.gatekeeper.display_name }}</p>
       <p class="text-muted m-0">
@@ -31,7 +33,7 @@
   </div>
   <div class="signature--container">
     <app-multi-signature-item
-      *ngFor="let multisigItem of multisigItems$ | async"
+      *ngFor="let multisigItem of multisigItems"
       [multisigItem]="multisigItem"
     >
     </app-multi-signature-item>
