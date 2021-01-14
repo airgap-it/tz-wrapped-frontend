@@ -11,6 +11,7 @@ import * as fromRoot from '../../reducers/index'
 import * as actions from '../../app.actions'
 import { Store } from '@ngrx/store'
 import { Observable } from 'rxjs'
+import { Contract } from '@taquito/taquito'
 
 export interface UserWithApproval extends User {
   requestId: string
@@ -25,10 +26,10 @@ export interface UserWithApproval extends User {
 })
 export class OperationRequestComponent implements OnInit {
   @Input()
-  operationRequest: OperationRequest | undefined
+  operationRequest!: OperationRequest
 
   @Input()
-  address: string = ''
+  address!: string
 
   @Input()
   public isGatekeeper: boolean = false
@@ -36,12 +37,18 @@ export class OperationRequestComponent implements OnInit {
   @Input()
   public isKeyholder: boolean = false
 
+  @Input()
+  public keyholders: User[] = []
+
+  @Input()
+  public contract!: Contract
+
   private operationApprovals$: Observable<
     OperationApproval[]
   > = new Observable()
 
   public currentUserApproved: Observable<boolean> = new Observable()
-  public multisigItems$: Observable<UserWithApproval[]> = new Observable()
+  public multisigItems: UserWithApproval[] = []
 
   public currentOperationApprovals$: Observable<number> = new Observable()
   public maxOperationApprovals$: Observable<number> = new Observable()
@@ -60,23 +67,18 @@ export class OperationRequestComponent implements OnInit {
       (state) => state.app.operationApprovals.get(operationRequestId) ?? []
     )
     this.operationApprovals$.subscribe((operationApprovals) => {
-      this.multisigItems$ = this.store$.select((state) => {
-        return state.app.users
-          .filter((user) => user.kind === UserKind.KEYHOLDER)
-          .map((user) => ({
-            ...user,
-            requestId: operationRequestId,
-            isCurrentUser: user.address === this.address,
-            hasApproval: operationApprovals.some(
-              (approval) => approval.keyholder.id === user.id
-            ),
-            updated_at:
-              operationApprovals.find(
-                (operationApproval) =>
-                  operationApproval.keyholder.id === user.id
-              )?.created_at ?? '',
-          }))
-      })
+      this.multisigItems = this.keyholders.map((user) => ({
+        ...user,
+        requestId: operationRequestId,
+        isCurrentUser: user.address === this.address,
+        hasApproval: operationApprovals.some(
+          (approval) => approval.keyholder.id === user.id
+        ),
+        updated_at:
+          operationApprovals.find(
+            (operationApproval) => operationApproval.keyholder.id === user.id
+          )?.created_at ?? '',
+      }))
     })
     this.maxOperationApprovals$ = this.store$.select(
       (store) =>

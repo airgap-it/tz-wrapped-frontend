@@ -14,7 +14,7 @@ import {
 } from 'src/app/services/api/api.service'
 import { Observable } from 'rxjs'
 import BigNumber from 'bignumber.js'
-import { switchMap, take } from 'rxjs/operators'
+import { filter, map, switchMap, take } from 'rxjs/operators'
 
 @Component({
   selector: 'app-dashboard',
@@ -31,19 +31,20 @@ export class DashboardComponent implements OnInit {
   amountControl: FormControl
   dataEmitter: EventEmitter<any[]> = new EventEmitter<any[]>()
   public address$: Observable<string | null>
-  public openMintOperationRequests$: Observable<OperationRequest[] | null>
-  public approvedMintOperationRequests$: Observable<OperationRequest[] | null>
-  public openBurnRequests$: Observable<OperationRequest[] | null>
-  public approvedBurnRequests$: Observable<OperationRequest[] | null>
-  public users$: Observable<User[] | null>
+  public openMintOperationRequests$: Observable<OperationRequest[]>
+  public approvedMintOperationRequests$: Observable<OperationRequest[]>
+  public openBurnRequests$: Observable<OperationRequest[]>
+  public approvedBurnRequests$: Observable<OperationRequest[]>
+  public users$: Observable<User[]>
+  public keyholders$: Observable<User[]>
   public mintOperationRequests$: Observable<OperationRequest[]>
   public burnOperationRequests$: Observable<OperationRequest[]>
   public isGatekeeper$: Observable<boolean>
   public isKeyholder$: Observable<boolean>
   public balance$: Observable<BigNumber | undefined>
   public asset$: Observable<string>
-  public activeContract$: Observable<Contract | undefined>
-  public activeContractId$: Observable<string | undefined>
+  public activeContract$: Observable<Contract>
+  public activeContractId$: Observable<string>
 
   constructor(
     private readonly store$: Store<fromRoot.State>,
@@ -103,6 +104,9 @@ export class DashboardComponent implements OnInit {
     )
 
     this.users$ = this.store$.select((state) => state.app.users)
+    this.keyholders$ = this.store$.select((state) =>
+      state.app.users.filter((user) => user.kind === UserKind.KEYHOLDER)
+    )
     this.address$ = this.store$.select((state) => state.app.address)
     this.isGatekeeper$ = this.address$.pipe(
       switchMap((address) => {
@@ -133,12 +137,18 @@ export class DashboardComponent implements OnInit {
       Validators.pattern('^[+-]?(\\d*\\.)?\\d+$'),
     ])
 
-    this.activeContract$ = this.store$.select(
-      (state) => state.app.activeContract
-    )
-    this.activeContractId$ = this.store$.select(
-      (state) => state.app.activeContract?.id
-    )
+    this.activeContract$ = this.store$
+      .select((state) => state.app.activeContract)
+      .pipe(
+        filter((value) => value !== undefined),
+        map((value) => value!)
+      )
+    this.activeContractId$ = this.store$
+      .select((state) => state.app.activeContract?.id)
+      .pipe(
+        filter((value) => value !== undefined),
+        map((value) => value!)
+      )
   }
 
   ngOnInit(): void {

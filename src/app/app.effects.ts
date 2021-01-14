@@ -10,11 +10,16 @@ import {
   withLatestFrom,
   exhaustMap,
   mergeMap,
+  filter,
 } from 'rxjs/operators'
 import * as fromRoot from '../app/reducers/index'
 
 import * as actions from './app.actions'
-import { ApiService, OperationRequestKind } from './services/api/api.service'
+import {
+  ApiService,
+  Contract,
+  OperationRequestKind,
+} from './services/api/api.service'
 import { BeaconService } from './services/beacon/beacon.service'
 
 @Injectable()
@@ -372,14 +377,16 @@ export class AppEffects {
   getOperationRequestParametersSucceeded$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.getOperationRequestParametersSucceeded),
-      map(({ parameters }) => {
+      withLatestFrom(this.store$.select((state) => state.app.activeContract)),
+      filter((value) => value[1] !== undefined),
+      map(([{ parameters }, contract]) => {
         return actions.submitOperation({
           operation: {
             operationDetails: [
               {
                 kind: TezosOperationType.TRANSACTION,
                 amount: '0',
-                destination: 'KT1BYMvJoM75JyqFbsLKouqkAv8dgEvViioP',
+                destination: contract!.multisig_pkh,
                 parameters,
               },
             ],
