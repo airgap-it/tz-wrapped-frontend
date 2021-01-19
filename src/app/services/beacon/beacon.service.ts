@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core'
 import {
+  AccountInfo,
   Network,
   NetworkType,
   OperationResponseOutput,
@@ -7,105 +8,99 @@ import {
   RequestOperationInput,
   SignPayloadResponseOutput,
 } from '@airgap/beacon-sdk'
-import { TezosToolkit, WalletContract } from '@taquito/taquito'
+import {
+  TezosToolkit,
+  TransactionWalletOperation,
+  WalletContract,
+} from '@taquito/taquito'
 import { Observable, of } from 'rxjs'
 import BigNumber from 'bignumber.js'
 import { BeaconWallet } from '@taquito/beacon-wallet'
 import { Store } from '@ngrx/store'
-import * as fromRoot from '../../app.reducer'
+import * as fromRoot from '../../reducers/index'
 import * as actions from '../../app.actions'
-// import { rpcURLMainnet } from "src/app/app.module";
-const tezos = new TezosToolkit('https://testnet-tezos.giganode.io')
+import { combineLatest } from 'rxjs'
+
+import { RpcClient } from '@taquito/rpc'
+import { Uint8ArrayConsumer } from '@taquito/local-forging'
+import { Contract, ContractKind } from '../api/api.service'
+import { first, take } from 'rxjs/operators'
+const x = require('@taquito/local-forging/dist/lib/michelson/codec')
+
+const RPC_URL = 'https://testnet-tezos.giganode.io'
+
+const tezos = new TezosToolkit(RPC_URL)
 
 @Injectable({
   providedIn: 'root',
 })
 export class BeaconService {
-  public userAddress: string | undefined
   public balance: BigNumber | undefined
   public contractInstance: WalletContract | undefined
   public scopes: PermissionScope[] | undefined
 
   public wallet: BeaconWallet
   public network: Network = { type: NetworkType.DELPHINET }
-  public contractAddress = 'KT1Q66HBBQYaHGAKnxeuedkgLyJYF9jkD96H' //TODO: replace with value from backend
 
-  constructor(private readonly store$: Store<fromRoot.State>) {
+  constructor() {
     this.wallet = new BeaconWallet({ name: 'Foundry' })
-
-    // localStorage.clear();
   }
 
-  // async clearActiveAccount() {
-  //   try {
-  //     await this.wallet.clearActiveAccount();
-  //   } catch (error) {
-  //     console.log("clearing active account failed: ", error);
-  //   }
-  // }
-
-  // async disconnectActiveAccount() {
-  //   try {
-  //     await this.wallet.disconnect();
-  //   } catch (error) {
-  //     console.log("disconnecting active account failed: ", error);
-  //   }
-  // }
-
-  async setupBeaconWallet() {
+  async setupBeaconWallet(): Promise<AccountInfo | undefined> {
     try {
       tezos.setWalletProvider(this.wallet)
-      const activeAccount = await this.wallet.client.getActiveAccount()
-      if (activeAccount) {
-        this.userAddress = await activeAccount.address
-        this.store$.dispatch(actions.loadAddress())
-        this.store$.dispatch(actions.loadBalance())
-      }
+      return await this.wallet.client.getActiveAccount()
     } catch (error) {
-      console.log('Setting up BeaconWallet failed: ', error)
+      console.error('Setting up BeaconWallet failed: ', error)
+      return undefined
     }
   }
 
-  async requestPermission() {
-    console.log('connecting')
-    try {
-      // requesting permissions
-      await this.wallet.requestPermissions({ network: this.network })
-
-      tezos.setWalletProvider(this.wallet)
-      this.userAddress = await this.wallet.getPKH()
-
-      this.store$.dispatch(actions.loadAddress())
-    } catch (error) {
-      console.log('requesting permission failed: ', error)
-    }
+  async requestPermission(): Promise<AccountInfo | undefined> {
+    await this.wallet.requestPermissions({ network: this.network })
+    return this.wallet.client.getActiveAccount()
   }
 
-  async transferOperation(amount: number, receivingAddress: string) {
+  async transferOperation(
+    amount: BigNumber,
+    receivingAddress: string,
+    contract: Contract
+  ): Promise<void> {
     try {
-      this.contractInstance = await tezos.wallet.at(this.contractAddress)
-      console.log('contract instance: ', this.contractInstance)
+      let contractInstance = await tezos.wallet.at(contract.pkh)
       const pkhSrc = await this.wallet.getPKH()
-      console.log('pkhsrc: ', pkhSrc)
 
       try {
-        const operation = await this.contractInstance.methods
-          .transfer(
-            pkhSrc,
-            receivingAddress,
-            new BigNumber(amount).shiftedBy(8).toFixed()
-          )
-          .send()
+        let operation: TransactionWalletOperation
+        switch (contract.kind) {
+          case ContractKind.FA1: {
+            operation = await contractInstance.methods
+              .transfer(pkhSrc, receivingAddress, amount.toFixed())
+              .send()
+          }
+          case ContractKind.FA2: {
+            operation = await contractInstance.methods
+              .transfer([
+                {
+                  from_: pkhSrc,
+                  txs: [
+                    {
+                      to_: receivingAddress,
+                      token_id: contract.token_id,
+                      amount: amount.toFixed(),
+                    },
+                  ],
+                },
+              ])
+              .send()
+          }
+        }
         await operation.confirmation()
-        const storage: Storage = await this.contractInstance.storage()
-
-        console.log((await storage.ledger.get(pkhSrc)).balance)
-        console.log((await storage.ledger.get(this.userAddress)).balance)
       } catch (error) {
-        console.log('confirmation failed: ', error)
+        console.error('confirmation failed: ', error)
       }
     } catch (error) {
-      console.log('transfer operation failed: ', error)
+      console.error('transfer operation failed: ', error)
     }
   }
 
@@ -125,15 +120,59 @@ export class BeaconService {
     return this.wallet.clearActiveAccount()
   }
 
-  getAddress(): Observable<string> {
-    return of(this.userAddress ?? '')
+  async getBalance(
+    address: string,
+    contract: Contract
+  ): Promise<BigNumber | undefined> {
+    if (contract.kind === ContractKind.FA1) {
+      return await this.getFA1Balance(contract, address).catch(
+        (error) => undefined
+      )
+    } else if (contract.kind === ContractKind.FA2) {
+      return await this.getFA2Balance(contract, address).catch(
+        (error) => undefined
+      )
+    }
   }
 
-  async getBalance(): Promise<BigNumber | undefined> {
-    return this.userAddress
-      ? (this.balance = new BigNumber(
-          (await tezos.tz.getBalance(this.userAddress)).toString(10)
-        ))
-      : undefined
+  private async getFA1Balance(contract: Contract, userAddress: string) {
+    const client = new RpcClient(RPC_URL)
+
+    const packedData = await client.packData({
+      data: {
+        prim: 'Pair',
+        args: [{ string: 'ledger' }, { string: userAddress }],
+      },
+      type: {
+        prim: 'pair',
+        args: [{ prim: 'string' }, { prim: 'address' }],
+      },
+    })
+
+    const contractInstance = await tezos.wallet.at(contract.pkh)
+    const storage: any = await contractInstance.storage()
+    const value: any = await storage['0'].get(packedData.packed)
+
+    const response = x.valueDecoder(
+      Uint8ArrayConsumer.fromHexString(value.slice(2))
+    )
+
+    return new BigNumber(response.args[0].int)
+  }
+
+  private async getFA2Balance(contract: Contract, userAddress: string) {
+    try {
+      const contractInstance = await tezos.wallet.at(contract.pkh)
+      const storage: Storage = await contractInstance.storage()
+
+      return new BigNumber(
+        await storage.ledger.get({
+          token_id: contract.token_id,
+          owner: userAddress,
+        })
+      )
+    } catch (e) {
+      console.error(e)
+    }
   }
 }

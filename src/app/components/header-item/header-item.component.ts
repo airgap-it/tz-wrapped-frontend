@@ -19,9 +19,13 @@ export class HeaderItemComponent implements OnInit {
   private contracts$: Observable<Contract[]>
 
   constructor(private readonly store$: Store<fromRoot.State>) {
-    this.address$ = this.store$.select((state) => state.app.address)
+    this.address$ = this.store$.select(
+      (state) => state.app.activeAccount?.address ?? ''
+    )
     this.users$ = this.store$.select((state) => state.app.users)
-    this.asset$ = this.store$.select((state) => state.app.asset)
+    this.asset$ = this.store$.select(
+      (state) => state.app.activeContract?.display_name ?? ''
+    )
     this.contracts$ = this.store$.select((state) => state.app.contracts)
 
     combineLatest([this.address$, this.users$])
@@ -37,9 +41,7 @@ export class HeaderItemComponent implements OnInit {
       })
   }
 
-  ngOnInit(): void {
-    this.store$.dispatch(actions.loadAddress())
-  }
+  ngOnInit(): void {}
 
   reset(): void {
     this.store$.dispatch(actions.disconnectWallet())

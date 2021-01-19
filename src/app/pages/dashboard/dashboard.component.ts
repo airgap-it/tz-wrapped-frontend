@@ -3,7 +3,6 @@ import { Store } from '@ngrx/store'
 import * as fromRoot from '../../reducers/index'
 import * as actions from '../../app.actions'
 import { FormControl, Validators } from '@angular/forms'
-import { BeaconService } from '../../services/beacon/beacon.service'
 import {
   Contract,
   OperationRequest,
@@ -12,9 +11,20 @@ import {
   OperationRequestState,
   UserKind,
 } from 'src/app/services/api/api.service'
-import { Observable } from 'rxjs'
+import { combineLatest, Observable } from 'rxjs'
 import BigNumber from 'bignumber.js'
-import { filter, map, switchMap, take } from 'rxjs/operators'
+import {
+  convertBalanceToUIString,
+  convertUIStringToBalance,
+} from 'src/app/utils/amount'
+import { filter, first, map, switchMap, take } from 'rxjs/operators'
+import { ActivatedRoute } from '@angular/router'
+
+export enum Tab {
+  TRANSFER = 'tab-transfer',
+  MINT = 'tab-mint',
+  BURN = 'tab-burn',
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -24,7 +34,7 @@ import { filter, map, switchMap, take } from 'rxjs/operators'
 export class DashboardComponent implements OnInit {
   @Input() buttonLabel: string | undefined
 
-  public selectedTab: 'tab0' | 'tab1' | 'tab2' = 'tab0' // Rename to "tab-mint", etc.
+  public selectedTab$: Observable<Tab> = new Observable<Tab>()
 
   receivingAddressControl: FormControl
   amountTransferControl: FormControl
@@ -33,8 +43,10 @@ export class DashboardComponent implements OnInit {
   public address$: Observable<string | null>
   public openMintOperationRequests$: Observable<OperationRequest[]>
   public approvedMintOperationRequests$: Observable<OperationRequest[]>
+  public injectedMintOperationRequests$: Observable<OperationRequest[]>
   public openBurnRequests$: Observable<OperationRequest[]>
   public approvedBurnRequests$: Observable<OperationRequest[]>
+  public injectedBurnRequests$: Observable<OperationRequest[]>
   public users$: Observable<User[]>
   public keyholders$: Observable<User[]>
   public mintOperationRequests$: Observable<OperationRequest[]>
@@ -42,16 +54,16 @@ export class DashboardComponent implements OnInit {
   public isGatekeeper$: Observable<boolean>
   public isKeyholder$: Observable<boolean>
   public balance$: Observable<BigNumber | undefined>
-  public asset$: Observable<string>
   public activeContract$: Observable<Contract>
   public activeContractId$: Observable<string>
 
   constructor(
     private readonly store$: Store<fromRoot.State>,
-    private readonly beaconService: BeaconService
+    private readonly route: ActivatedRoute
   ) {
+    this.selectedTab$ = this.store$.select((state) => state.app.selectedTab)
+    this.store$.dispatch(actions.setupBeacon())
     this.store$.dispatch(actions.loadContracts())
-    this.asset$ = this.store$.select((state) => state.app.asset)
 
     this.receivingAddressControl = new FormControl('', [
       Validators.required,
@@ -65,8 +77,6 @@ export class DashboardComponent implements OnInit {
       Validators.required,
       Validators.pattern('^[+-]?(\\d*\\.)?\\d+$'),
     ])
-
-    this.beaconService.setupBeaconWallet()
 
     this.mintOperationRequests$ = this.store$.select(
       (state) => state.app.mintOperationRequests
@@ -89,6 +99,13 @@ export class DashboardComponent implements OnInit {
       )
     )
 
+    this.injectedMintOperationRequests$ = this.store$.select((state) =>
+      state.app.mintOperationRequests.filter(
+        (operationRequest) =>
+          operationRequest.state === OperationRequestState.INJECTED
+      )
+    )
+
     this.openBurnRequests$ = this.store$.select((state) =>
       state.app.burnOperationRequests.filter(
         (operationRequest) =>
@@ -103,11 +120,20 @@ export class DashboardComponent implements OnInit {
       )
     )
 
+    this.injectedBurnRequests$ = this.store$.select((state) =>
+      state.app.burnOperationRequests.filter(
+        (operationRequest) =>
+          operationRequest.state === OperationRequestState.INJECTED
+      )
+    )
+
     this.users$ = this.store$.select((state) => state.app.users)
     this.keyholders$ = this.store$.select((state) =>
       state.app.users.filter((user) => user.kind === UserKind.KEYHOLDER)
     )
-    this.address$ = this.store$.select((state) => state.app.address)
+    this.address$ = this.store$.select(
+      (state) => state.app.activeAccount?.address ?? ''
+    )
     this.isGatekeeper$ = this.address$.pipe(
       switchMap((address) => {
         return this.store$.select((state) =>
@@ -152,6 +178,16 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.route.params.subscribe((params) => {
+      if (params?.tab === 'mint') {
+        this.store$.dispatch(actions.selectTab({ tab: Tab.MINT }))
+      } else if (params?.tab === 'burn') {
+        this.store$.dispatch(actions.selectTab({ tab: Tab.BURN }))
+      } else {
+        this.store$.dispatch(actions.selectTab({ tab: Tab.TRANSFER }))
+      }
+    })
+
     this.balance$.subscribe((balance) => {
       this.amountTransferControl.setValidators([
         Validators.min(0),
@@ -215,19 +251,18 @@ export class DashboardComponent implements OnInit {
       throw new Error(`Amount invalid: ${this.amountControl.value}`)
     }
 
-    this.activeContractId$.pipe(take(1)).subscribe((contractId) => {
-      if (contractId) {
-        this.store$.dispatch(
-          actions.getSignableOperationRequest({
-            contractId,
-            kind,
-            amount: new BigNumber(this.amountControl.value)
-              .shiftedBy(8)
-              .toFixed(),
-            targetAddress,
-          })
-        )
-      }
+    this.activeContract$.pipe(take(1)).subscribe((contract) => {
+      this.store$.dispatch(
+        actions.getSignableOperationRequest({
+          contractId: contract.id,
+          kind,
+          amount: convertUIStringToBalance(
+            this.amountControl.value,
+            contract.decimals
+          ).toFixed(),
+          targetAddress,
+        })
+      )
     })
   }
 
@@ -238,24 +273,38 @@ export class DashboardComponent implements OnInit {
       this.receivingAddressControl.value.startsWith('tz1')
 
     if (this.amountTransferControl.value && receivingAddressCondition) {
-      this.store$.dispatch(
-        actions.transferOperation({
-          transferAmount: Number(this.amountTransferControl.value),
-          receivingAddress: this.receivingAddressControl.value,
-        })
-      )
+      this.activeContract$.pipe(take(1)).subscribe((contract) => {
+        this.store$.dispatch(
+          actions.transferOperation({
+            transferAmount: convertUIStringToBalance(
+              this.amountTransferControl.value,
+              contract.decimals
+            ),
+            receivingAddress: this.receivingAddressControl.value,
+          })
+        )
+      })
     } else {
-      console.log('invalid inputs')
+      console.error('invalid inputs')
     }
   }
 
   onSelect(event: any): void {
-    this.selectedTab = event.id
+    this.store$.dispatch(actions.selectTab({ tab: event.id }))
   }
 
   setMaxValue(): void {
-    this.balance$.subscribe((balance) => {
-      this.amountTransferControl.setValue(balance)
-    })
+    combineLatest([
+      this.balance$,
+      this.store$.select((state) => state.app.activeContract),
+    ])
+      .pipe(first())
+      .subscribe(async ([balance, contract]) => {
+        if (balance && contract) {
+          this.amountTransferControl.setValue(
+            convertBalanceToUIString(balance, contract.decimals).toString(10)
+          )
+        }
+      })
   }
 }

@@ -3,8 +3,13 @@
     <div class="col col-md-6">
       <h5 class="m-0">
         <strong
-          >{{ operationRequest.amount }} {{ contract.display_name }}</strong
-        >
+          >{{
+            operationRequest.amount
+              | amountConverter
+                : { decimals: contract.decimals, symbol: contract.display_name }
+              | async
+          }}
+        </strong>
       </h5>
       <p class="m-0">{{ operationRequest.gatekeeper.display_name }}</p>
       <p class="text-muted m-0">
@@ -21,14 +26,24 @@
     </div>
   </div>
   <p class="text-muted">{{ operationRequest.state }}</p>
-  <div
-    *ngIf="{
-      current: currentOperationApprovals$ | async,
-      max: maxOperationApprovals$ | async
-    } as progress"
+  <p
+    class="text-muted"
+    *ngIf="
+      operationRequest.nonce !== (contractNonce$ | async) &&
+      operationRequest.state === 'approved' &&
+      isGatekeeper
+    "
   >
+    This request can only be handled after the previous requests are completed.
+  </p>
+  <div>
     <p>
-      <strong>{{ progress.current }}/{{ progress.max }} Confirmations</strong>
+      <strong
+        >{{ currentOperationApprovals$ | async }}/{{
+          contract.min_approvals
+        }}
+        Confirmations</strong
+      >
     </p>
   </div>
   <div class="signature--container">
@@ -39,20 +54,45 @@
     </app-multi-signature-item>
   </div>
   <div class="pt-3">
+    <div class="row">
+      <div class="col">
+        <button
+          *ngIf="
+            !(currentUserApproved | async) &&
+            operationRequest.state === 'open' &&
+            isKeyholder
+          "
+          type="button"
+          class="btn btn-primary btn-block"
+          (click)="approveOperationRequest()"
+        >
+          Approve Request
+        </button>
+      </div>
+      <div
+        class="col-md-2 pl-0"
+        *ngIf="
+          !(currentUserApproved | async) &&
+          operationRequest.state === 'open' &&
+          isKeyholder
+        "
+      >
+        <button
+          type="button"
+          class="btn btn-light btn-block"
+          (click)="openModal()"
+        >
+          <img src="/assets/img/info-circle.svg" width="18px" />
+        </button>
+      </div>
+    </div>
+
     <button
       *ngIf="
-        !(currentUserApproved | async) &&
-        operationRequest.state === 'open' &&
-        isKeyholder
+        operationRequest.nonce === (contractNonce$ | async) &&
+        operationRequest.state === 'approved' &&
+        isGatekeeper
       "
-      type="button"
-      class="btn btn-primary btn-block"
-      (click)="approveOperationRequest()"
-    >
-      Approve Request
-    </button>
-    <button
-      *ngIf="operationRequest.state === 'approved' && isGatekeeper"
       type="button"
       class="btn btn-primary btn-block"
       (click)="submitOperation()"

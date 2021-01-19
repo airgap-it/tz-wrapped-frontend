@@ -8,28 +8,45 @@ import {
   NewOperationRequest,
   PagedResponse,
   NewOperationApproval,
-  ApprovableOperationRequest,
   User,
   OperationRequestKind,
+  SignableMessageInfo,
 } from './services/api/api.service'
 import {
-  OperationRequestInput,
+  AccountInfo,
   OperationResponseOutput,
   RequestOperationInput,
 } from '@airgap/beacon-sdk'
 import BigNumber from 'bignumber.js'
+import { Tab } from './pages/dashboard/dashboard.component'
 
 const featureName = 'App'
+
+export const selectTab = createAction(
+  `[${featureName}] Select Tab`,
+  props<{ tab: Tab }>()
+)
 
 export const saveLatestRoute = createAction(
   `[${featureName}] Save Latest Route`,
   props<{ navigation: NavigationEnd }>()
 )
+
+export const setupBeacon = createAction(`[${featureName}] Setup Beacon`)
+export const setupBeaconSucceeded = createAction(
+  `[${featureName}] Setup Beacon Succeeded`
+)
+export const setupBeaconFailed = createAction(
+  `[${featureName}] Setup Beacon Failed`,
+  props<{ error: any }>()
+)
+
 export const connectWallet = createAction(
   `[${featureName}] Connect Wallet with Beacon`
 )
 export const connectWalletSucceeded = createAction(
-  `[${featureName}] Connect Wallet with Beacon Succeeded`
+  `[${featureName}] Connect Wallet with Beacon Succeeded`,
+  props<{ accountInfo: AccountInfo | undefined }>()
 )
 export const connectWalletFailed = createAction(
   `[${featureName}] Connect Wallet with Beacon Failed`,
@@ -56,6 +73,19 @@ export const loadAddressSucceeded = createAction(
 )
 export const loadAddressFailed = createAction(
   `[${featureName}] Load Address of Connected Wallet Failed`,
+  props<{ error: any }>()
+)
+
+export const loadContractNonce = createAction(
+  `[${featureName}] Load Contract Nonce`,
+  props<{ contractId: string }>()
+)
+export const loadContractNonceSucceeded = createAction(
+  `[${featureName}] Load Contract Nonce Succeeded`,
+  props<{ contractId: string; nonce: number }>()
+)
+export const loadContractNonceFailed = createAction(
+  `[${featureName}] Load Contract Nonce Failed`,
   props<{ error: any }>()
 )
 
@@ -122,11 +152,14 @@ export const loadBurnOperationRequestsFailed = createAction(
 
 export const loadOperationApprovals = createAction(
   `[${featureName}] Load Operation Approvals`,
-  props<{ requestId: string }>()
+  props<{ operationRequestId: string }>()
 )
 export const loadOperationApprovalsSucceeded = createAction(
   `[${featureName}] Load Operation Approvals Succeeded`,
-  props<{ requestId: string; response: PagedResponse<OperationApproval> }>()
+  props<{
+    operationRequestId: string
+    response: PagedResponse<OperationApproval>
+  }>()
 )
 export const loadOperationApprovalsFailed = createAction(
   `[${featureName}] Load Operation Approvals Failed`,
@@ -135,7 +168,7 @@ export const loadOperationApprovalsFailed = createAction(
 
 export const transferOperation = createAction(
   `[${featureName}] Starting Transfer Operation`,
-  props<{ transferAmount: number; receivingAddress: string }>()
+  props<{ transferAmount: BigNumber; receivingAddress: string }>()
 )
 export const transferOperationSucceeded = createAction(
   `[${featureName}] Transferring Succeeded`
@@ -195,26 +228,29 @@ export const submitSignedOperationRequestFailed = createAction(
   props<{ error: any }>()
 )
 
-export const getApprovableOperationRequest = createAction(
-  `[${featureName}] Get Approvable Operation Request `,
-  props<{ requestId: string }>()
+export const getSignableMessage = createAction(
+  `[${featureName}] Get Signable Message `,
+  props<{ operationRequestId: string }>()
 )
-export const getApprovableOperationRequestSucceeded = createAction(
-  `[${featureName}] Get Approvable Request Succeeded`,
-  props<{ response: ApprovableOperationRequest }>()
+export const getSignableMessageSucceeded = createAction(
+  `[${featureName}] Get Signable Message Succeeded`,
+  props<{ signableMessage: SignableMessageInfo; operationRequestId: string }>()
 )
-export const getApprovableOperationRequestFailed = createAction(
-  `[${featureName}] Get Approvable Request Failed`,
+export const getSignableMessageFailed = createAction(
+  `[${featureName}] Get Signable Message Failed`,
   props<{ error: any }>()
 )
 
 export const approveOperationRequest = createAction(
-  `[${featureName}] Approve Operation Request `,
-  props<{ response: ApprovableOperationRequest }>()
+  `[${featureName}] Approve Operation Request`,
+  props<{
+    signableMessage: SignableMessageInfo
+    operationRequest: OperationRequest
+  }>()
 )
 export const approveOperationRequestSucceeded = createAction(
   `[${featureName}] Approve Operation Request Succeeded`,
-  props<{ response: ApprovableOperationRequest; signature: string }>()
+  props<{ operationRequest: OperationRequest; signature: string }>()
 )
 export const approveOperationRequestFailed = createAction(
   `[${featureName}] Approve Operation Request Failed`,
@@ -223,14 +259,14 @@ export const approveOperationRequestFailed = createAction(
 
 export const submitOperationApproval = createAction(
   `[${featureName}] Submit Operation Approval`,
-  props<{
-    request: ApprovableOperationRequest
-    approval: NewOperationApproval
-  }>()
+  props<{ operationRequest: OperationRequest; signature: string }>()
 )
 export const submitOperationApprovalSucceeded = createAction(
   `[${featureName}] Submit Operation Approval Succeeded`,
-  props<{ response: OperationApproval }>()
+  props<{
+    operationApproval: OperationApproval
+    operationRequest: OperationRequest
+  }>()
 )
 export const submitOperationApprovalFailed = createAction(
   `[${featureName}] Submit Operation Approval Failed`,
@@ -239,11 +275,11 @@ export const submitOperationApprovalFailed = createAction(
 
 export const getOperationRequestParameters = createAction(
   `[${featureName}] Get Operation Request Parameters`,
-  props<{ operationId: string }>()
+  props<{ operationRequest: OperationRequest }>()
 )
 export const getOperationRequestParametersSucceeded = createAction(
   `[${featureName}] Get Operation Request Parameters Succeeded`,
-  props<{ parameters: any }>()
+  props<{ operationRequest: OperationRequest; parameters: any }>()
 )
 export const getOperationRequestParametersFailed = createAction(
   `[${featureName}] Get Operation Request ParametersFailed`,
@@ -252,22 +288,44 @@ export const getOperationRequestParametersFailed = createAction(
 
 export const submitOperation = createAction(
   `[${featureName}] Submit Operation`,
-  props<{ operation: RequestOperationInput }>()
+  props<{
+    operationRequest: OperationRequest
+    operation: RequestOperationInput
+  }>()
 )
 export const submitOperationSucceeded = createAction(
   `[${featureName}] Submit Operation Succeeded`,
-  props<{ response: OperationResponseOutput }>()
+  props<{
+    operationRequest: OperationRequest
+    response: OperationResponseOutput
+  }>()
 )
 export const submitOperationFailed = createAction(
   `[${featureName}] Submit Operation Failed`,
   props<{ error: any }>()
 )
 
-export const changeAsset = createAction(
-  `[${featureName}] Changing Asset`,
-  props<{ asset: string }>()
+export const updateOperationWithHash = createAction(
+  `[${featureName}] Update Operation With Hash`,
+  props<{
+    operationRequest: OperationRequest
+    response: OperationResponseOutput
+  }>()
 )
+export const updateOperationWithHashSucceeded = createAction(
+  `[${featureName}] Update Operation With Hash Succeeded`,
+  props<{ operationRequest: OperationRequest }>()
+)
+export const updateOperationWithHashFailed = createAction(
+  `[${featureName}] Update Operation With Hash Failed`,
+  props<{ error: any }>()
+)
+
 export const setActiveContract = createAction(
   `[${featureName}] Setting Active Contract`,
   props<{ contract: Contract }>()
+)
+
+export const setActiveContractSucceeded = createAction(
+  `[${featureName}] Setting Active Contract Succeeded`
 )

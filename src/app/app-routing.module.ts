@@ -7,6 +7,7 @@ import { SettingsComponent } from './pages/settings/settings.component'
 const routes: Routes = [
   { path: '', component: DashboardComponent },
   { path: 'settings', component: SettingsComponent },
+  { path: ':tab', component: DashboardComponent },
 ]
 
 @NgModule({
