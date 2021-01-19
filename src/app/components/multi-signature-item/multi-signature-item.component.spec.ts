@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing'
+import { BsModalRef, BsModalService, ModalModule } from 'ngx-bootstrap/modal'
 
 import { MultiSignatureItemComponent } from './multi-signature-item.component'
 
@@ -8,7 +9,9 @@ describe('MultiSignatureItemComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
+      imports: [ModalModule.forRoot()],
       declarations: [MultiSignatureItemComponent],
+      providers: [BsModalService, BsModalRef],
     }).compileComponents()
   })
 

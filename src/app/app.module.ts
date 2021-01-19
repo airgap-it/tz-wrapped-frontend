@@ -2,6 +2,7 @@ import { BrowserModule } from '@angular/platform-browser'
 import { NgModule } from '@angular/core'
 import { TabsModule } from 'ngx-bootstrap/tabs'
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown'
+import { ModalModule } from 'ngx-bootstrap/modal'
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
 
 import { AppRoutingModule } from './app-routing.module'
@@ -19,10 +20,10 @@ import { CommonModule } from '@angular/common'
 import { ReactiveFormsModule } from '@angular/forms'
 import { HttpClientModule } from '@angular/common/http'
 import { OperationRequestComponent } from './components/operation-request/operation-request.component'
-import { ShortenPipe } from './shorten.pipe'
+import { ModalItemComponent } from './components/modal-item/modal-item.component'
+import { AmountConverterPipe } from './pipes/amount.pipe'
+import { ShortenPipe } from './pipes/shorten.pipe'
 
-export const rpcURLMainnet = 'https://tezos-node.prod.gke.papers.tech'
-export const rpcURLDelphinet = 'https://delphinet-tezos.giganode.io'
 @NgModule({
   declarations: [
     AppComponent,
@@ -32,10 +33,13 @@ export const rpcURLDelphinet = 'https://delphinet-tezos.giganode.io'
     DashboardComponent,
     OperationRequestComponent,
     ShortenPipe,
+    ModalItemComponent,
+    AmountConverterPipe,
   ],
   imports: [
     BrowserAnimationsModule,
     BsDropdownModule.forRoot(),
+    ModalModule.forRoot(),
     BrowserModule,
     CommonModule,
     TabsModule.forRoot(),

@@ -7,6 +7,11 @@ import { EMPTY } from 'rxjs'
 
 import { DashboardComponent } from './dashboard.component'
 import { initialState as appInitialState } from '../../app.reducer'
+import { ActivatedRoute } from '@angular/router'
+
+const fakeActivatedRoute = {
+  snapshot: { data: {} },
+}
 
 describe('DashboardComponent', () => {
   let component: DashboardComponent
@@ -20,6 +25,7 @@ describe('DashboardComponent', () => {
       providers: [
         provideMockStore({ initialState }),
         { provide: Actions, useValue: EMPTY },
+        { provide: ActivatedRoute, useValue: fakeActivatedRoute },
       ],
       declarations: [DashboardComponent],
       schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],

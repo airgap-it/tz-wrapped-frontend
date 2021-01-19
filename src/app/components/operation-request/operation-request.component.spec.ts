@@ -11,6 +11,7 @@ import { ROOT_REDUCERS } from 'src/app/reducers'
 
 import { OperationRequestComponent } from './operation-request.component'
 import { MockStore, provideMockStore } from '@ngrx/store/testing'
+import { BsModalRef, BsModalService, ModalModule } from 'ngx-bootstrap/modal'
 
 describe('OpenMintingRequestComponent', () => {
   let component: OperationRequestComponent
@@ -18,7 +19,7 @@ describe('OpenMintingRequestComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [StoreModule.forRoot(ROOT_REDUCERS)],
+      imports: [ModalModule.forRoot(), StoreModule.forRoot(ROOT_REDUCERS)],
       declarations: [OperationRequestComponent],
       providers: [
         provideMockStore({}),
@@ -28,6 +29,8 @@ describe('OpenMintingRequestComponent', () => {
         ReducerManager,
         ReducerManagerDispatcher,
         { provide: InjectionToken, useValue: ROOT_REDUCERS },
+        BsModalService,
+        BsModalRef,
       ],
     }).compileComponents()
   })

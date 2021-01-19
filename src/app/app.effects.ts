@@ -8,18 +8,13 @@ import {
   catchError,
   switchMap,
   withLatestFrom,
-  exhaustMap,
   mergeMap,
   filter,
 } from 'rxjs/operators'
 import * as fromRoot from '../app/reducers/index'
 
 import * as actions from './app.actions'
-import {
-  ApiService,
-  Contract,
-  OperationRequestKind,
-} from './services/api/api.service'
+import { ApiService, OperationRequestKind } from './services/api/api.service'
 import { BeaconService } from './services/beacon/beacon.service'
 
 @Injectable()
@@ -31,13 +26,33 @@ export class AppEffects {
     private readonly store$: Store<fromRoot.State>
   ) {}
 
+  setupBeacon$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.setupBeacon),
+      switchMap(() => {
+        return this.beaconService
+          .setupBeaconWallet()
+          .then((accountInfo) => {
+            if (accountInfo !== undefined) {
+              return actions.connectWalletSucceeded({ accountInfo })
+            } else {
+              return actions.setupBeaconSucceeded()
+            }
+          })
+          .catch((error) => actions.connectWalletFailed({ error }))
+      })
+    )
+  )
+
   connectWallet$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.connectWallet),
       switchMap(() => {
         return this.beaconService
           .requestPermission()
-          .then((response) => actions.connectWalletSucceeded())
+          .then((accountInfo) =>
+            actions.connectWalletSucceeded({ accountInfo })
+          )
           .catch((error) => actions.connectWalletFailed({ error }))
       })
     )
@@ -46,18 +61,28 @@ export class AppEffects {
   connectWalletSucceeded$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.connectWalletSucceeded),
-      map(() => {
-        return actions.loadAddress(), actions.loadBalance()
-      })
+      map(() => actions.loadBalance())
     )
   )
 
   loadBalance$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.loadBalance),
-      switchMap(() => {
+      withLatestFrom(
+        this.store$.select((store) => store.app.activeAccount?.address),
+        this.store$.select((store) => store.app.activeContract)
+      ),
+      filter(
+        ([action, address, contract]) =>
+          address !== undefined && contract !== undefined
+      ),
+      map(([action, address, contract]) => ({
+        address: address!,
+        contract: contract!,
+      })),
+      switchMap(({ address, contract }) => {
         return this.beaconService
-          .getBalance()
+          .getBalance(address, contract)
           .then((response) =>
             actions.loadBalanceSucceeded({ balance: response })
           )
@@ -66,17 +91,6 @@ export class AppEffects {
     )
   )
 
-  loadAddress$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.loadAddress),
-      switchMap(() => {
-        return this.beaconService.getAddress().pipe(
-          map((address) => actions.loadAddressSucceeded({ address })),
-          catchError((error) => of(actions.loadAddressFailed({ error })))
-        )
-      })
-    )
-  )
   loadContracts$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.loadContracts),
@@ -162,10 +176,13 @@ export class AppEffects {
   loadOperationApprovals$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.loadOperationApprovals),
-      mergeMap(({ requestId }) => {
+      mergeMap(({ operationRequestId: requestId }) => {
         return this.apiService.getOperationApprovals(requestId).pipe(
           map((response) =>
-            actions.loadOperationApprovalsSucceeded({ requestId, response })
+            actions.loadOperationApprovalsSucceeded({
+              operationRequestId: requestId,
+              response,
+            })
           ),
           catchError((error) =>
             of(actions.loadOperationApprovalsFailed({ error }))
@@ -178,12 +195,29 @@ export class AppEffects {
   transferOperation$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.transferOperation),
-      switchMap(({ receivingAddress, transferAmount }) => {
+      withLatestFrom(this.store$.select((store) => store.app.activeContract)),
+      filter(
+        ([{ receivingAddress, transferAmount }, contract]) =>
+          contract !== undefined
+      ),
+      map(([{ receivingAddress, transferAmount }, contract]) => ({
+        receivingAddress,
+        transferAmount,
+        contract: contract!,
+      })),
+      switchMap(({ receivingAddress, transferAmount, contract }) => {
         return this.beaconService
-          .transferOperation(transferAmount, receivingAddress)
+          .transferOperation(transferAmount, receivingAddress, contract)
           .then((response) => actions.transferOperationSucceeded())
           .catch((error) => actions.transferOperationFailed({ error }))
       })
+    )
+  )
+
+  transferOperationSucceeded$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.transferOperationSucceeded),
+      map(() => actions.loadBalance())
     )
   )
 
@@ -222,7 +256,7 @@ export class AppEffects {
       ofType(actions.signOperationRequest),
       switchMap(({ response, contractId }) => {
         return this.beaconService
-          .sign(response.signable_message)
+          .sign(response.signable_message_info.message)
           .then((signResponse) =>
             actions.signOperationRequestSucceeded({
               response,
@@ -269,28 +303,20 @@ export class AppEffects {
     )
   )
 
-  getApprovableOperationRequest$ = createEffect(() =>
+  getSignableMessage$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.getApprovableOperationRequest),
-      switchMap(({ requestId }) => {
+      ofType(actions.getSignableMessage),
+      mergeMap(({ operationRequestId }) => {
         return this.apiService
-          .getApprovableOperationRequest(requestId)
+          .getSignableMessage(operationRequestId)
           .toPromise()
-          .then((response) =>
-            actions.getApprovableOperationRequestSucceeded({ response })
+          .then((signableMessage) =>
+            actions.getSignableMessageSucceeded({
+              signableMessage,
+              operationRequestId,
+            })
           )
-          .catch((error) =>
-            actions.getApprovableOperationRequestFailed({ error })
-          )
-      })
-    )
-  )
-
-  getApprovableOperationRequestSucceeded$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.getApprovableOperationRequestSucceeded),
-      map(({ response }) => {
-        return actions.approveOperationRequest({ response })
+          .catch((error) => actions.getSignableMessageFailed({ error }))
       })
     )
   )
@@ -298,12 +324,12 @@ export class AppEffects {
   approveOperationRequest$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.approveOperationRequest),
-      switchMap(({ response }) => {
+      switchMap(({ signableMessage, operationRequest }) => {
         return this.beaconService
-          .sign(response.signable_message)
+          .sign(signableMessage.message)
           .then((signResponse) =>
             actions.approveOperationRequestSucceeded({
-              response,
+              operationRequest,
               signature: signResponse.signature,
             })
           )
@@ -315,14 +341,8 @@ export class AppEffects {
   approveOperationRequestSucceeded$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.approveOperationRequestSucceeded),
-      map(({ response, signature }) => {
-        return actions.submitOperationApproval({
-          request: response,
-          approval: {
-            ...response.unsigned_operation_approval,
-            signature: signature,
-          },
-        })
+      map(({ operationRequest, signature }) => {
+        return actions.submitOperationApproval({ operationRequest, signature })
       })
     )
   )
@@ -330,13 +350,17 @@ export class AppEffects {
   submitOperationApproval$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.submitOperationApproval),
-      switchMap(({ request, approval }) => {
+      switchMap(({ operationRequest, signature }) => {
         return this.apiService
-          .addOperationApproval(approval)
+          .addOperationApproval({
+            operation_request_id: operationRequest.id,
+            signature,
+          })
           .toPromise()
-          .then((response) =>
+          .then((operationApproval) =>
             actions.submitOperationApprovalSucceeded({
-              response,
+              operationApproval,
+              operationRequest,
             })
           )
           .catch((error) => actions.submitOperationApprovalFailed({ error }))
@@ -344,26 +368,33 @@ export class AppEffects {
     )
   )
 
-  // submitOperationApprovalSucceeded$ = createEffect(() =>
-  //   this.actions$.pipe(
-  //     ofType(actions.submitOperationApprovalSucceeded),
-  //     map(({ request }) => {
-  //       return actions.loadOperationApprovals({
-  //         requestId: request.unsigned_operation_approval.operation_request_id,
-  //       })
-  //     })
-  //   )
-  // )
+  submitOperationApprovalSucceeded$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.submitOperationApprovalSucceeded),
+      map(({ operationApproval, operationRequest }) => {
+        if (operationRequest.kind === OperationRequestKind.MINT) {
+          return actions.loadMintOperationRequests({
+            contractId: operationRequest.contract_id,
+          })
+        } else {
+          return actions.loadBurnOperationRequests({
+            contractId: operationRequest.contract_id,
+          })
+        }
+      })
+    )
+  )
 
   getOperationRequestParameters$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.getOperationRequestParameters),
-      switchMap(({ operationId }) => {
+      switchMap(({ operationRequest }) => {
         return this.apiService
-          .getParameters(operationId)
+          .getParameters(operationRequest.id)
           .toPromise()
           .then((response) =>
             actions.getOperationRequestParametersSucceeded({
+              operationRequest,
               parameters: response,
             })
           )
@@ -379,8 +410,9 @@ export class AppEffects {
       ofType(actions.getOperationRequestParametersSucceeded),
       withLatestFrom(this.store$.select((state) => state.app.activeContract)),
       filter((value) => value[1] !== undefined),
-      map(([{ parameters }, contract]) => {
+      map(([{ operationRequest, parameters }, contract]) => {
         return actions.submitOperation({
+          operationRequest,
           operation: {
             operationDetails: [
               {
@@ -399,11 +431,12 @@ export class AppEffects {
   submitOperation$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.submitOperation),
-      switchMap(({ operation }) => {
+      switchMap(({ operationRequest: operationRequestId, operation }) => {
         return this.beaconService
           .operation(operation)
           .then((response) =>
             actions.submitOperationSucceeded({
+              operationRequest: operationRequestId,
               response,
             })
           )
@@ -412,12 +445,81 @@ export class AppEffects {
     )
   )
 
+  submitOperationSucceeded$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.submitOperationSucceeded),
+      map(({ operationRequest: operationRequestId, response }) =>
+        actions.updateOperationWithHash({
+          operationRequest: operationRequestId,
+          response,
+        })
+      )
+    )
+  )
+
+  updateOperationWithHash$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.updateOperationWithHash),
+      switchMap(({ operationRequest, response }) => {
+        return this.apiService
+          .updateOperationRequest(operationRequest.id, response.transactionHash)
+          .toPromise()
+          .then(() =>
+            actions.updateOperationWithHashSucceeded({ operationRequest })
+          )
+          .catch((error) => actions.updateOperationWithHashFailed({ error }))
+      })
+    )
+  )
+
+  updateOperationWithHashSucceeded$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.updateOperationWithHashSucceeded),
+      map(({ operationRequest }) => {
+        if (operationRequest.kind === OperationRequestKind.MINT) {
+          return actions.loadMintOperationRequests({
+            contractId: operationRequest.contract_id,
+          })
+        } else {
+          return actions.loadBurnOperationRequests({
+            contractId: operationRequest.contract_id,
+          })
+        }
+      })
+    )
+  )
+
   setActiveContract$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.setActiveContract),
-      map(({ contract }) => {
-        const asset = contract.display_name
-        return actions.changeAsset({ asset })
+      switchMap(({ contract }) => [
+        actions.setActiveContractSucceeded(),
+        actions.loadContractNonce({ contractId: contract.id }),
+      ])
+    )
+  )
+
+  setActiveContractSucceeded$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.setActiveContractSucceeded),
+      switchMap(() => [actions.loadBalance()])
+    )
+  )
+
+  loadContractNonce$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadContractNonce),
+      mergeMap(({ contractId }) => {
+        return this.apiService
+          .getContractNonce(contractId)
+          .toPromise()
+          .then((response) =>
+            actions.loadContractNonceSucceeded({
+              contractId,
+              nonce: response,
+            })
+          )
+          .catch((error) => actions.loadContractNonceFailed({ error }))
       })
     )
   )

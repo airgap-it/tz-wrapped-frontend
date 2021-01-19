@@ -32,6 +32,11 @@ export interface PagedResponse<T> {
   results: T[]
 }
 
+export enum ContractKind {
+  FA1 = 'fa1',
+  FA2 = 'fa2',
+}
+
 export interface Contract {
   id: string
   created_at: string
@@ -39,8 +44,9 @@ export interface Contract {
   pkh: string
   token_id: number
   multisig_pkh: string
-  kind: UserKind
+  kind: ContractKind
   display_name: string
+  decimals: number
   min_approvals: number
 }
 
@@ -58,7 +64,7 @@ export interface User {
 
 export interface NewOperationRequest {
   contract_id: string
-  target_address: string
+  target_address: string | null
   amount: number
   kind: string
   signature: string
@@ -68,7 +74,13 @@ export interface NewOperationRequest {
 
 export interface SignableOperationRequest {
   unsigned_operation_request: NewOperationRequest
-  signable_message: string
+  signable_message_info: SignableMessageInfo
+}
+
+export interface SignableMessageInfo {
+  message: string
+  tezos_client_command: string
+  blake2b_hash: string
 }
 
 export interface OperationRequest {
@@ -77,8 +89,8 @@ export interface OperationRequest {
   updated_at: string
   gatekeeper: User
   contract_id: string
-  target_address: string
-  amount: number
+  target_address: string | null
+  amount: string
   kind: string
   signature: string
   chain_id: string
@@ -99,11 +111,6 @@ export interface OperationApproval {
 export interface NewOperationApproval {
   operation_request_id: string
   signature: string
-}
-
-export interface ApprovableOperationRequest {
-  unsigned_operation_approval: NewOperationApproval
-  signable_message: string
 }
 
 @Injectable({
@@ -148,15 +155,20 @@ export class ApiService {
     return this.http.get<PagedResponse<OperationApproval>>(this.getUrl(path))
   }
 
-  getApprovableOperationRequest(
-    contractId: string
-  ): Observable<ApprovableOperationRequest> {
-    const path = `${ApiService.operationRequestsPath}/${contractId}/signable-message`
-    return this.http.get<ApprovableOperationRequest>(this.getUrl(path))
+  getSignableMessage(
+    operationRequestId: string
+  ): Observable<SignableMessageInfo> {
+    const path = `${ApiService.operationRequestsPath}/${operationRequestId}/signable-message`
+    return this.http.get<SignableMessageInfo>(this.getUrl(path))
   }
 
-  getParameters(operationId: string): Observable<any> {
-    const path = `${ApiService.operationRequestsPath}/${operationId}/parameters`
+  getParameters(operationRequestId: string): Observable<any> {
+    const path = `${ApiService.operationRequestsPath}/${operationRequestId}/parameters`
+    return this.http.get<any>(this.getUrl(path))
+  }
+
+  getContractNonce(contractId: string): Observable<any> {
+    const path = `${ApiService.contractsPath}/${contractId}/nonce`
     return this.http.get<any>(this.getUrl(path))
   }
 
@@ -194,6 +206,15 @@ export class ApiService {
     return this.http.post<OperationRequest>(
       this.getUrl(ApiService.operationRequestsPath),
       operation
+    )
+  }
+
+  updateOperationRequest(operationId: string, operationHash: string) {
+    return this.http.patch<void>(
+      this.getUrl(ApiService.operationRequestsPath + '/' + operationId),
+      {
+        operation_hash: operationHash,
+      }
     )
   }
 

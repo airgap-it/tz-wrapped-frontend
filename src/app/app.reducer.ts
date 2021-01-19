@@ -7,63 +7,73 @@ import {
   OperationRequest,
   User,
   OperationRequestKind,
+  SignableMessageInfo,
 } from './services/api/api.service'
 import BigNumber from 'bignumber.js'
+import { AccountInfo } from '@airgap/beacon-sdk'
+import { Tab } from './pages/dashboard/dashboard.component'
 
 interface Busy {
-  address: boolean
+  activeAccount: boolean
   balance: boolean
-  transferAmount: boolean
-  receivingAddress: boolean
   mintOperationRequests: boolean
   burnOperationRequests: boolean
   contracts: boolean
   users: boolean
   operationApprovals: boolean
+  signableMessages: boolean
+  contractNonces: boolean
 }
 
 export interface State {
+  selectedTab: Tab
+  activeAccount: AccountInfo | undefined
   contracts: Contract[]
   activeContract: Contract | undefined
+  contractNonces: Map<string, number>
   users: User[]
   operationApprovals: Map<string, OperationApproval[]>
-  address: string
+  signableMessages: Map<string, SignableMessageInfo>
   balance: BigNumber | undefined
-  transferAmount: number
-  receivingAddress: string
   mintOperationRequests: OperationRequest[]
   burnOperationRequests: OperationRequest[]
   busy: Busy
-  asset: string
 }
 
 export const initialState: State = {
+  selectedTab: Tab.TRANSFER,
+  activeAccount: undefined,
   contracts: [],
   activeContract: undefined,
+  contractNonces: new Map<string, number>(),
   users: [],
   operationApprovals: new Map<string, OperationApproval[]>(),
-  address: '',
+  signableMessages: new Map<string, SignableMessageInfo>(),
   balance: undefined,
-  transferAmount: 0,
-  receivingAddress: '',
   mintOperationRequests: [],
   burnOperationRequests: [],
-  asset: '',
   busy: {
-    address: false,
-    receivingAddress: false,
-    transferAmount: false,
+    activeAccount: false,
     balance: false,
     mintOperationRequests: false,
     burnOperationRequests: false,
     contracts: false,
     users: false,
     operationApprovals: false,
+    signableMessages: false,
+    contractNonces: false,
   },
 }
 
 export const reducer = createReducer(
   initialState,
+  on(actions.selectTab, (state, { tab }) => ({
+    ...state,
+    selectedTab: tab,
+    busy: {
+      ...state.busy,
+    },
+  })),
   on(actions.connectWallet, (state) => ({
     ...state,
     busy: {
@@ -71,40 +81,26 @@ export const reducer = createReducer(
       address: true,
     },
   })),
+  on(actions.connectWalletSucceeded, (state, { accountInfo }) => ({
+    ...state,
+    activeAccount: accountInfo,
+    busy: {
+      ...state.busy,
+      address: true,
+    },
+  })),
   on(actions.disconnectWallet, (state) => ({
     ...state,
-    address: '',
+    activeAccount: undefined,
     balance: undefined,
     busy: {
       ...state.busy,
       address: false,
     },
   })),
-  on(actions.loadAddress, (state) => ({
-    ...state,
-    busy: {
-      ...state.busy,
-      address: true,
-    },
-  })),
-  on(actions.loadAddressSucceeded, (state, { address }) => ({
-    ...state,
-    address,
-    busy: {
-      ...state.busy,
-      address: false,
-    },
-  })),
-  on(actions.loadAddressFailed, (state) => ({
-    ...state,
-    busy: {
-      ...state.busy,
-      address: false,
-    },
-  })),
-
   on(actions.loadBalance, (state) => ({
     ...state,
+    balance: undefined,
     busy: {
       ...state.busy,
       balance: true,
@@ -170,35 +166,6 @@ export const reducer = createReducer(
       users: false,
     },
   })),
-  on(
-    actions.transferOperation,
-    (state, { transferAmount, receivingAddress }) => ({
-      ...state,
-      transferAmount,
-      receivingAddress,
-      busy: {
-        ...state.busy,
-        receivingAddress: true,
-        transferAmount: true,
-      },
-    })
-  ),
-  on(actions.transferOperationSucceeded, (state) => ({
-    ...state,
-    busy: {
-      ...state.busy,
-      receivingAddress: false,
-      transferAmount: false,
-    },
-  })),
-  on(actions.transferOperationFailed, (state) => ({
-    ...state,
-    busy: {
-      ...state.busy,
-      receivingAddress: false,
-      transferAmount: false,
-    },
-  })),
   on(actions.loadBurnOperationRequests, (state) => ({
     ...state,
     busy: {
@@ -243,6 +210,25 @@ export const reducer = createReducer(
       mintOperationRequests: false,
     },
   })),
+  on(actions.loadContractNonce, (state, { contractId }) => ({
+    ...state,
+    busy: {
+      ...state.busy,
+      contractNonces: true,
+    },
+  })),
+  on(actions.loadContractNonceSucceeded, (state, { contractId, nonce }) => {
+    const contractNonces = new Map(state.contractNonces)
+    contractNonces.set(contractId, nonce)
+    return {
+      ...state,
+      contractNonces,
+      busy: {
+        ...state.busy,
+        contractNonces: false,
+      },
+    }
+  }),
   on(actions.loadOperationApprovals, (state) => ({
     ...state,
     busy: {
@@ -252,7 +238,7 @@ export const reducer = createReducer(
   })),
   on(
     actions.loadOperationApprovalsSucceeded,
-    (state, { requestId, response }) => {
+    (state, { operationRequestId: requestId, response }) => {
       const operationApprovals = new Map(state.operationApprovals)
       operationApprovals.set(requestId, response.results)
       return {
@@ -265,28 +251,40 @@ export const reducer = createReducer(
       }
     }
   ),
-  on(actions.submitOperationApprovalSucceeded, (state, { response }) => {
-    const operationApprovals = new Map(state.operationApprovals)
-    const items = Object.assign(
-      [],
-      operationApprovals.get(response.operation_request_id) ?? []
-    )
-    items.push(response)
-    operationApprovals.set(response.operation_request_id, items)
-    return {
-      ...state,
-      operationApprovals,
-      busy: {
-        ...state.busy,
-        operationApprovals: false,
-      },
-    }
-  }),
   on(actions.loadOperationApprovalsFailed, (state) => ({
     ...state,
     busy: {
       ...state.busy,
       operationApprovals: false,
+    },
+  })),
+  on(actions.getSignableMessage, (state, { operationRequestId }) => ({
+    ...state,
+    busy: {
+      ...state.busy,
+      signableMessages: true,
+    },
+  })),
+  on(
+    actions.getSignableMessageSucceeded,
+    (state, { signableMessage, operationRequestId }) => {
+      const signableMessages = new Map(state.signableMessages)
+      signableMessages.set(operationRequestId, signableMessage)
+      return {
+        ...state,
+        signableMessages,
+        busy: {
+          ...state.busy,
+          signableMessages: false,
+        },
+      }
+    }
+  ),
+  on(actions.getSignableMessageFailed, (state, { error }) => ({
+    ...state,
+    busy: {
+      ...state.busy,
+      signableMessages: false,
     },
   })),
   on(actions.submitSignedOperationRequestSucceeded, (state, { response }) => {
@@ -306,13 +304,26 @@ export const reducer = createReducer(
       }
     }
   }),
-  on(actions.changeAsset, (state, { asset }) => ({
-    ...state,
-    asset: asset,
-    busy: {
-      ...state.busy,
-    },
-  })),
+  on(
+    actions.submitOperationApprovalSucceeded,
+    (state, { operationApproval, operationRequest }) => {
+      const operationApprovals = new Map(state.operationApprovals)
+      const items = Object.assign(
+        [],
+        operationApprovals.get(operationApproval.operation_request_id) ?? []
+      )
+      items.push(operationApproval)
+      operationApprovals.set(operationApproval.operation_request_id, items)
+      return {
+        ...state,
+        operationApprovals,
+        busy: {
+          ...state.busy,
+          operationApprovals: false,
+        },
+      }
+    }
+  ),
   on(actions.setActiveContract, (state, { contract }) => ({
     ...state,
     activeContract: contract,

@@ -1,8 +1,13 @@
-<div class="card">
+<div class="card" *ngIf="activeContract$ | async as activeContract">
   <div class="card-body">
     <div>
-      <tabset>
-        <tab heading="Transfer" id="tab0" (selectTab)="onSelect($event)">
+      <tabset *ngIf="selectedTab$ | async as selectedTab">
+        <tab
+          heading="Transfer"
+          id="tab-transfer"
+          [active]="selectedTab === 'tab-transfer'"
+          (selectTab)="onSelect($event)"
+        >
           <div class="my-5">
             <label>Receiving Address</label>
             <div class="form-group mb-3">
@@ -26,7 +31,16 @@
             <label class="d-flex justify-content-between"
               >Amount
               <span *ngIf="balance$ | async as balance"
-                >Balance: {{ balance }} {{ asset$ | async }}
+                >Balance:
+                {{
+                  balance
+                    | amountConverter
+                      : {
+                          decimals: activeContract.decimals,
+                          symbol: activeContract.display_name
+                        }
+                    | async
+                }}
               </span>
             </label>
             <div class="input-group">
@@ -36,13 +50,13 @@
                     width="32px"
                     height="32px"
                     [src]="
-                      (asset$ | async) == 'tzBTC'
+                      activeContract.display_name == 'tzBTC'
                         ? '/assets/img/tzbtc.svg'
                         : '/assets/img/tzeth.svg'
                     "
                     class="mr-2"
                   />
-                  {{ asset$ | async }}
+                  {{ activeContract.display_name }}
                 </span>
               </div>
               <input
@@ -97,7 +111,12 @@
             </button>
           </ng-template>
         </tab>
-        <tab heading="Mint" id="tab1" (selectTab)="onSelect($event)">
+        <tab
+          heading="Mint"
+          id="tab-mint"
+          [active]="selectedTab === 'tab-mint'"
+          (selectTab)="onSelect($event)"
+        >
           <div class="my-5">
             <label>Receiving Address</label>
             <div class="form-group mb-3">
@@ -127,13 +146,13 @@
                     width="32px"
                     height="32px"
                     [src]="
-                      (asset$ | async) == 'tzBTC'
+                      activeContract.display_name == 'tzBTC'
                         ? '/assets/img/tzbtc.svg'
                         : '/assets/img/tzeth.svg'
                     "
                     class="mr-2"
                   />
-                  {{ asset$ | async }}
+                  {{ activeContract.display_name }}
                 </span>
               </div>
               <input
@@ -165,7 +184,12 @@
             </button>
           </ng-container>
         </tab>
-        <tab heading="Burn" id="tab2" (selectTab)="onSelect($event)">
+        <tab
+          heading="Burn"
+          id="tab-burn"
+          [active]="selectedTab === 'tab-burn'"
+          (selectTab)="onSelect($event)"
+        >
           <div class="my-5">
             <label>Enter amount to burn</label>
             <div class="input-group input-group__two-items">
@@ -175,13 +199,13 @@
                     width="32px"
                     height="32px"
                     [src]="
-                      (asset$ | async) == 'tzBTC'
+                      activeContract.display_name == 'tzBTC'
                         ? '/assets/img/tzbtc.svg'
                         : '/assets/img/tzeth.svg'
                     "
                     class="mr-2"
                   />
-                  {{ asset$ | async }}
+                  {{ activeContract.display_name }}
                 </span>
               </div>
               <input
@@ -226,7 +250,8 @@
 >
   <ng-container
     *ngIf="
-      (userType.isGatekeeper || userType.isKeyholder) && selectedTab === 'tab1'
+      (userType.isGatekeeper || userType.isKeyholder) &&
+      (selectedTab$ | async) === 'tab-mint'
     "
   >
     <div
@@ -266,10 +291,30 @@
         </operation-request>
       </div>
     </div>
+
+    <div
+      class="card mt-5"
+      *ngIf="(injectedMintOperationRequests$ | async).length != 0"
+    >
+      <div class="card-body">
+        <h5>Injected Mint Requests</h5>
+        <operation-request
+          *ngFor="let request of injectedMintOperationRequests$ | async"
+          [operationRequest]="request"
+          [address]="address$ | async"
+          [isGatekeeper]="userType.isGatekeeper"
+          [isKeyholder]="userType.isKeyholder"
+          [keyholders]="keyholders$ | async"
+          [contract]="activeContract$ | async"
+        >
+        </operation-request>
+      </div>
+    </div>
   </ng-container>
   <ng-container
     *ngIf="
-      (userType.isGatekeeper || userType.isKeyholder) && selectedTab === 'tab2'
+      (userType.isGatekeeper || userType.isKeyholder) &&
+      (selectedTab$ | async) === 'tab-burn'
     "
   >
     <div class="card mt-5" *ngIf="(openBurnRequests$ | async).length != 0">
@@ -293,6 +338,22 @@
         <h5>Approved Burn Requests</h5>
         <operation-request
           *ngFor="let request of approvedBurnRequests$ | async"
+          [operationRequest]="request"
+          [address]="address$ | async"
+          [isGatekeeper]="userType.isGatekeeper"
+          [isKeyholder]="userType.isKeyholder"
+          [keyholders]="keyholders$ | async"
+          [contract]="activeContract$ | async"
+        >
+        </operation-request>
+      </div>
+    </div>
+
+    <div class="card mt-5" *ngIf="(injectedBurnRequests$ | async).length != 0">
+      <div class="card-body">
+        <h5>Injected Burn Requests</h5>
+        <operation-request
+          *ngFor="let request of injectedBurnRequests$ | async"
           [operationRequest]="request"
           [address]="address$ | async"
           [isGatekeeper]="userType.isGatekeeper"
