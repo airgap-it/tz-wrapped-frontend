@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core'
 import { BsModalRef } from 'ngx-bootstrap/modal'
 import { SignableMessageInfo } from 'src/app/services/api/api.service'
+import { CopyService } from 'src/app/services/copy/copy-service.service'
 
 @Component({
   selector: 'app-modal-item',
@@ -11,7 +12,14 @@ export class ModalItemComponent implements OnInit {
   @Input()
   signableMessage!: SignableMessageInfo
 
-  constructor(public bsModalRef: BsModalRef) {}
+  constructor(
+    public bsModalRef: BsModalRef,
+    private readonly copyService: CopyService
+  ) {}
 
   ngOnInit(): void {}
+
+  copyToClipboard(val: string) {
+    this.copyService.copyToClipboard(val)
+  }
 }

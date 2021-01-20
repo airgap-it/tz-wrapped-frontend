@@ -3,6 +3,7 @@ import { NgModule } from '@angular/core'
 import { TabsModule } from 'ngx-bootstrap/tabs'
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown'
 import { ModalModule } from 'ngx-bootstrap/modal'
+import { AccordionModule } from 'ngx-bootstrap/accordion'
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
 
 import { AppRoutingModule } from './app-routing.module'
@@ -23,6 +24,7 @@ import { OperationRequestComponent } from './components/operation-request/operat
 import { ModalItemComponent } from './components/modal-item/modal-item.component'
 import { AmountConverterPipe } from './pipes/amount.pipe'
 import { ShortenPipe } from './pipes/shorten.pipe'
+import { CopyService } from './services/copy/copy-service.service'
 
 @NgModule({
   declarations: [
@@ -39,6 +41,7 @@ import { ShortenPipe } from './pipes/shorten.pipe'
   imports: [
     BrowserAnimationsModule,
     BsDropdownModule.forRoot(),
+    AccordionModule.forRoot(),
     ModalModule.forRoot(),
     BrowserModule,
     CommonModule,
@@ -55,7 +58,7 @@ import { ShortenPipe } from './pipes/shorten.pipe'
     HttpClientModule,
     ReactiveFormsModule,
   ],
-  providers: [BeaconService, Store],
+  providers: [BeaconService, Store, CopyService],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
