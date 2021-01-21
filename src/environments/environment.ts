@@ -2,8 +2,13 @@
 // `ng build --prod` replaces `environment.ts` with `environment.prod.ts`.
 // The list of file replacements can be found in `angular.json`.
 
+import { NetworkType } from '@airgap/beacon-sdk'
+
 export const environment = {
   production: false,
+  nodeUrl: 'https://testnet-tezos.giganode.io',
+  wrappedBackendUrl: 'https://tz-wrapped.dev.gke.papers.tech',
+  tezosNetworktype: NetworkType.DELPHINET,
 }
 
 /*

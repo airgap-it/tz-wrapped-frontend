@@ -1,9 +1,7 @@
 import { Injectable } from '@angular/core'
 import { HttpClient } from '@angular/common/http'
 import { Observable } from 'rxjs'
-
-const URL = 'https://tz-wrapped.dev.gke.papers.tech'
-// const URL = 'http://localhost'
+import { environment } from 'src/environments/environment'
 
 export enum UserState {
   ACTIVE = 'active',
@@ -220,6 +218,6 @@ export class ApiService {
 
   // method created to ease testing
   private getUrl(path: string): string {
-    return `${URL}/api/v1${path}`
+    return `${environment.wrappedBackendUrl}/api/v1${path}`
   }
 }
