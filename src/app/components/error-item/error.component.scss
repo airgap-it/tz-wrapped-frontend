@@ -1,0 +1,34 @@
+#betaBanner {
+  margin-top: 8%;
+  margin-left: 10%;
+  margin-right: 10%;
+  top: 0;
+  opacity: 95%;
+  color: rgb(231, 0, 0);
+}
+
+#betaBanner p {
+  margin: 0;
+}
+
+#betaBanner.alert-dismissible .close {
+  top: 50%;
+  transform: translateY(-55%);
+}
+
+h6 {
+  display: inline;
+  font-weight: bold;
+}
+p {
+  display: inline;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: MODAL_ZINDEX - 1;
+}

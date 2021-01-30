@@ -3,11 +3,11 @@ import {
   Action,
   ActionReducer,
   ActionReducerMap,
+  createFeatureSelector,
   createSelector,
   MetaReducer,
   Store,
 } from '@ngrx/store'
-import { take } from 'rxjs/operators'
 
 import { environment } from '../../environments/environment'
 
@@ -48,13 +48,5 @@ export const metaReducers: MetaReducer<State>[] = !environment.production
   ? [logger]
   : []
 
-export const getState = (store: Store<State>): State => {
-  let state: State | undefined = undefined
-
-  store.pipe(take(1)).subscribe((s) => (state = s))
-
-  return state as any // TODO: does this make sense because subscribe is always async?
-}
-
-export const selectGlobal = (state: State) => state
-export const selectApp = (state: State) => state.app
+export const appKey = 'app'
+export const selectApp = createFeatureSelector<State, fromApp.State>(appKey)

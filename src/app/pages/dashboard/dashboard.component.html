@@ -74,10 +74,9 @@
               />
               <span class="input-group-prepend">
                 <button
-                  *ngIf="balance$"
                   type="button"
                   class="btn btn-primary"
-                  (click)="setMaxValue()"
+                  (click)="setTransferMaxValue()"
                 >
                   Max
                 </button>
@@ -191,8 +190,34 @@
           (selectTab)="onSelect($event)"
         >
           <div class="my-5">
-            <label>Enter amount to burn</label>
-            <div class="input-group input-group__two-items">
+            <label>Balance on burn address</label>
+            <ng-container *ngIf="redeemAddress$ | async as address">
+              <h3>
+                <span *ngIf="redeemAddressBalance$ | async as balance">
+                  {{
+                    balance
+                      | amountConverter
+                        : {
+                            decimals: activeContract.decimals,
+                            symbol: activeContract.display_name
+                          }
+                      | async
+                  }}
+                </span>
+              </h3>
+              <a
+                href="https://tezblock.io/account/{{ address }}"
+                class="text-muted d-block"
+                target="_blank"
+                >{{ address | shorten
+                }}<img
+                  class="ml-1"
+                  src="/assets/img/external-link.svg"
+                  width="14px"
+              /></a>
+            </ng-container>
+            <label class="pt-3">Enter amount to burn</label>
+            <div class="input-group">
               <div class="input-group-prepend">
                 <span class="input-group-text">
                   <img
@@ -209,17 +234,26 @@
                 </span>
               </div>
               <input
-                [formControl]="amountControl"
+                [formControl]="amountBurnControl"
                 type="text"
                 class="form-control"
                 placeholder="0.0"
                 aria-label="Amount"
                 [ngClass]="{
                   'is-invalid':
-                    amountControl.errors &&
-                    (amountControl.touched || amountControl.dirty)
+                    amountBurnControl.errors &&
+                    (amountBurnControl.touched || amountBurnControl.dirty)
                 }"
               />
+              <span class="input-group-prepend">
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  (click)="setMaxBurnableValue()"
+                >
+                  Max
+                </button>
+              </span>
               <div class="invalid-feedback px-3 py-2">
                 <strong>Invalid Amount</strong>
               </div>
@@ -231,7 +265,7 @@
               type="button"
               class="btn btn-primary btn-block"
               (click)="burn()"
-              [disabled]="amountControl.invalid"
+              [disabled]="amountBurnControl.invalid"
             >
               Request Burn
             </button>
@@ -254,62 +288,45 @@
       (selectedTab$ | async) === 'tab-mint'
     "
   >
-    <div
-      class="card mt-5"
-      *ngIf="(openMintOperationRequests$ | async).length != 0"
+    <operation-request-list
+      *ngIf="(openMintOperationRequests$ | async) !== undefined"
+      [title]="'Open Mint Requests'"
+      [kind]="'mint'"
+      [state]="'open'"
+      [address]="address$ | async"
+      [operationRequestList]="openMintOperationRequests$ | async"
+      [isGatekeeper]="userType.isGatekeeper"
+      [isKeyholder]="userType.isKeyholder"
+      [keyholders]="keyholders$ | async"
+      [contract]="activeContract$ | async"
     >
-      <div class="card-body">
-        <h5>Open Mint Requests</h5>
-        <operation-request
-          *ngFor="let request of openMintOperationRequests$ | async"
-          [operationRequest]="request"
-          [address]="address$ | async"
-          [isGatekeeper]="userType.isGatekeeper"
-          [isKeyholder]="userType.isKeyholder"
-          [keyholders]="keyholders$ | async"
-          [contract]="activeContract$ | async"
-        >
-        </operation-request>
-      </div>
-    </div>
-
-    <div
-      class="card mt-5"
-      *ngIf="(approvedMintOperationRequests$ | async).length != 0"
+    </operation-request-list>
+    <operation-request-list
+      *ngIf="(approvedMintOperationRequests$ | async) !== undefined"
+      [title]="'Approved Mint Requests'"
+      [kind]="'mint'"
+      [state]="'approved'"
+      [address]="address$ | async"
+      [operationRequestList]="approvedMintOperationRequests$ | async"
+      [isGatekeeper]="userType.isGatekeeper"
+      [isKeyholder]="userType.isKeyholder"
+      [keyholders]="keyholders$ | async"
+      [contract]="activeContract$ | async"
     >
-      <div class="card-body">
-        <h5>Approved Mint Requests</h5>
-        <operation-request
-          *ngFor="let request of approvedMintOperationRequests$ | async"
-          [operationRequest]="request"
-          [address]="address$ | async"
-          [isGatekeeper]="userType.isGatekeeper"
-          [isKeyholder]="userType.isKeyholder"
-          [keyholders]="keyholders$ | async"
-          [contract]="activeContract$ | async"
-        >
-        </operation-request>
-      </div>
-    </div>
-
-    <div
-      class="card mt-5"
-      *ngIf="(injectedMintOperationRequests$ | async).length != 0"
+    </operation-request-list>
+    <operation-request-list
+      *ngIf="(injectedMintOperationRequests$ | async) !== undefined"
+      [title]="'Injected Mint Requests'"
+      [kind]="'mint'"
+      [state]="'injected'"
+      [address]="address$ | async"
+      [operationRequestList]="injectedMintOperationRequests$ | async"
+      [isGatekeeper]="userType.isGatekeeper"
+      [isKeyholder]="userType.isKeyholder"
+      [keyholders]="keyholders$ | async"
+      [contract]="activeContract$ | async"
     >
-      <div class="card-body">
-        <h5>Injected Mint Requests</h5>
-        <operation-request
-          *ngFor="let request of injectedMintOperationRequests$ | async"
-          [operationRequest]="request"
-          [address]="address$ | async"
-          [isGatekeeper]="userType.isGatekeeper"
-          [isKeyholder]="userType.isKeyholder"
-          [keyholders]="keyholders$ | async"
-          [contract]="activeContract$ | async"
-        >
-        </operation-request>
-      </div>
-    </div>
+    </operation-request-list>
   </ng-container>
   <ng-container
     *ngIf="
@@ -317,52 +334,44 @@
       (selectedTab$ | async) === 'tab-burn'
     "
   >
-    <div class="card mt-5" *ngIf="(openBurnRequests$ | async).length != 0">
-      <div class="card-body">
-        <h5>Open Burn Requests</h5>
-        <operation-request
-          *ngFor="let request of openBurnRequests$ | async"
-          [operationRequest]="request"
-          [address]="address$ | async"
-          [isGatekeeper]="userType.isGatekeeper"
-          [isKeyholder]="userType.isKeyholder"
-          [keyholders]="keyholders$ | async"
-          [contract]="activeContract$ | async"
-        >
-        </operation-request>
-      </div>
-    </div>
-
-    <div class="card mt-5" *ngIf="(approvedBurnRequests$ | async).length != 0">
-      <div class="card-body">
-        <h5>Approved Burn Requests</h5>
-        <operation-request
-          *ngFor="let request of approvedBurnRequests$ | async"
-          [operationRequest]="request"
-          [address]="address$ | async"
-          [isGatekeeper]="userType.isGatekeeper"
-          [isKeyholder]="userType.isKeyholder"
-          [keyholders]="keyholders$ | async"
-          [contract]="activeContract$ | async"
-        >
-        </operation-request>
-      </div>
-    </div>
-
-    <div class="card mt-5" *ngIf="(injectedBurnRequests$ | async).length != 0">
-      <div class="card-body">
-        <h5>Injected Burn Requests</h5>
-        <operation-request
-          *ngFor="let request of injectedBurnRequests$ | async"
-          [operationRequest]="request"
-          [address]="address$ | async"
-          [isGatekeeper]="userType.isGatekeeper"
-          [isKeyholder]="userType.isKeyholder"
-          [keyholders]="keyholders$ | async"
-          [contract]="activeContract$ | async"
-        >
-        </operation-request>
-      </div>
-    </div>
+    <operation-request-list
+      *ngIf="(openBurnOperationRequests$ | async) !== undefined"
+      [title]="'Open Burn Requests'"
+      [kind]="'burn'"
+      [state]="'open'"
+      [address]="address$ | async"
+      [operationRequestList]="openBurnOperationRequests$ | async"
+      [isGatekeeper]="userType.isGatekeeper"
+      [isKeyholder]="userType.isKeyholder"
+      [keyholders]="keyholders$ | async"
+      [contract]="activeContract$ | async"
+    >
+    </operation-request-list>
+    <operation-request-list
+      *ngIf="(approvedBurnOperationRequests$ | async) !== undefined"
+      [title]="'Approved Burn Requests'"
+      [kind]="'burn'"
+      [state]="'approved'"
+      [address]="address$ | async"
+      [operationRequestList]="approvedBurnOperationRequests$ | async"
+      [isGatekeeper]="userType.isGatekeeper"
+      [isKeyholder]="userType.isKeyholder"
+      [keyholders]="keyholders$ | async"
+      [contract]="activeContract$ | async"
+    >
+    </operation-request-list>
+    <operation-request-list
+      *ngIf="(injectedBurnOperationRequests$ | async) !== undefined"
+      [title]="'Injected Burn Requests'"
+      [kind]="'burn'"
+      [state]="'injected'"
+      [address]="address$ | async"
+      [operationRequestList]="injectedBurnOperationRequests$ | async"
+      [isGatekeeper]="userType.isGatekeeper"
+      [isKeyholder]="userType.isKeyholder"
+      [keyholders]="keyholders$ | async"
+      [contract]="activeContract$ | async"
+    >
+    </operation-request-list>
   </ng-container>
 </ng-container>

@@ -23,21 +23,23 @@
       <p class="text-right text-muted m-0">
         {{ operationRequest.created_at | date: 'HH:mm' }}
       </p>
+      <p class="text-right text-muted m-0">#{{ operationRequest.nonce }}</p>
     </div>
   </div>
-  <p class="text-muted">{{ operationRequest.state }}</p>
   <p
     class="text-muted"
     *ngIf="
-      operationRequest.nonce !== (contractNonce$ | async) &&
+      operationRequest.nonce > (contractNonce$ | async) &&
       operationRequest.state === 'approved' &&
       isGatekeeper
     "
   >
     This request can only be handled after the previous requests are completed.
   </p>
-  <div>
-    <p>
+  <div
+    class="d-flex justify-content-between align-items-center btn--container__more pb-3"
+  >
+    <p class="m-0">
       <strong
         >{{ currentOperationApprovals$ | async }}/{{
           contract.min_approvals
@@ -45,6 +47,31 @@
         Confirmations</strong
       >
     </p>
+    <div class="btn-group" dropdown>
+      <button dropdownToggle type="button" class="btn btn-link">
+        <img src="/assets/img/three-dot.svg" height="18px" />
+      </button>
+      <ul
+        id="dropdown-basic"
+        *dropdownMenu
+        class="dropdown-menu dropdown-menu-right"
+        role="menu"
+        aria-labelledby="button-basic"
+      >
+        <li role="menuitem">
+          <a class="dropdown-item" (click)="delete()">Delete request</a>
+        </li>
+        <li
+          role="menuitem"
+          *ngIf="
+            operationRequest.state === 'approved' &&
+            operationRequest.nonce < (contractNonce$ | async)
+          "
+        >
+          <a class="dropdown-item">Confirm injection</a>
+        </li>
+      </ul>
+    </div>
   </div>
   <div class="signature--container">
     <app-multi-signature-item
@@ -58,7 +85,7 @@
       <div class="col">
         <button
           *ngIf="
-            !(currentUserApproved | async) &&
+            !(currentUserApproved$ | async) &&
             operationRequest.state === 'open' &&
             isKeyholder
           "
@@ -72,7 +99,7 @@
       <div
         class="col-md-2 pl-0"
         *ngIf="
-          !(currentUserApproved | async) &&
+          !(currentUserApproved$ | async) &&
           operationRequest.state === 'open' &&
           isKeyholder
         "

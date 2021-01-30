@@ -3,8 +3,14 @@ import { Store } from '@ngrx/store'
 import { combineLatest, Observable } from 'rxjs'
 import * as fromRoot from '../../reducers/index'
 import * as actions from '../../app.actions'
-import { Contract, User } from 'src/app/services/api/api.service'
 import { map } from 'rxjs/operators'
+import { Contract } from 'src/app/services/api/interfaces/contract'
+import {
+  getActiveAccount,
+  getActiveContract,
+  getContracts,
+  getUsers,
+} from 'src/app/app.selectors'
 
 @Component({
   selector: 'app-header-item',
@@ -12,33 +18,39 @@ import { map } from 'rxjs/operators'
   styleUrls: ['./header-item.component.scss'],
 })
 export class HeaderItemComponent implements OnInit {
-  public address$: Observable<string>
-  public users$: Observable<User[]>
-  public address: string = ''
-  public asset$: Observable<string>
-  private contracts$: Observable<Contract[]>
+  public name$: Observable<string | undefined>
+  public activeContract$: Observable<Contract | undefined>
+  public contracts$: Observable<Contract[]>
+  public imageSrcMap$: Observable<Map<string, string>>
 
   constructor(private readonly store$: Store<fromRoot.State>) {
-    this.address$ = this.store$.select(
-      (state) => state.app.activeAccount?.address ?? ''
-    )
-    this.users$ = this.store$.select((state) => state.app.users)
-    this.asset$ = this.store$.select(
-      (state) => state.app.activeContract?.display_name ?? ''
-    )
-    this.contracts$ = this.store$.select((state) => state.app.contracts)
-
-    combineLatest([this.address$, this.users$])
-      .pipe(
-        map(
-          ([address, users]) =>
-            users.find((user) => user.address === address)?.display_name ??
-            address
-        )
+    this.activeContract$ = this.store$.select(getActiveContract)
+    this.contracts$ = this.store$.select(getContracts)
+    this.imageSrcMap$ = this.contracts$.pipe(
+      map(
+        (contracts) =>
+          new Map<string, string>(
+            contracts.map((contract) => [
+              contract.id,
+              `/assets/img/${contract.display_name.toLowerCase()}.svg`,
+            ])
+          )
       )
-      .subscribe((res) => {
-        this.address = res
+    )
+    this.name$ = combineLatest([
+      this.store$.select(getActiveAccount),
+      this.store$.select(getUsers),
+    ]).pipe(
+      map(([activeAccount, users]) => {
+        if (activeAccount === undefined) {
+          return undefined
+        }
+        return (
+          users.find((user) => user.address === activeAccount.address)
+            ?.display_name ?? activeAccount.address
+        )
       })
+    )
   }
 
   ngOnInit(): void {}
