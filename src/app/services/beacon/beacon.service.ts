@@ -17,9 +17,10 @@ import { BeaconWallet } from '@taquito/beacon-wallet'
 
 import { RpcClient } from '@taquito/rpc'
 import { Uint8ArrayConsumer } from '@taquito/local-forging'
-import { Contract, ContractKind } from '../api/api.service'
 import { environment } from 'src/environments/environment'
-const codec = require('@taquito/local-forging/dist/lib/michelson/codec')
+import { Contract, ContractKind } from '../api/interfaces/contract'
+const MichelsonCodec = require('@taquito/local-forging/dist/lib/michelson/codec')
+const Codec = require('@taquito/local-forging/dist/lib/codec')
 
 @Injectable({
   providedIn: 'root',
@@ -65,42 +66,36 @@ export class BeaconService {
     receivingAddress: string,
     contract: Contract
   ): Promise<void> {
-    try {
-      let contractInstance = await this.tezos.wallet.at(contract.pkh)
-      const pkhSrc = await this.wallet.getPKH()
+    let contractInstance = await this.tezos.wallet.at(contract.pkh)
+    const pkhSrc = await this.wallet.getPKH()
 
-      try {
-        let operation: TransactionWalletOperation
-        switch (contract.kind) {
-          case ContractKind.FA1: {
-            operation = await contractInstance.methods
-              .transfer(pkhSrc, receivingAddress, amount.toFixed())
-              .send()
-          }
-          case ContractKind.FA2: {
-            operation = await contractInstance.methods
-              .transfer([
-                {
-                  from_: pkhSrc,
-                  txs: [
-                    {
-                      to_: receivingAddress,
-                      token_id: contract.token_id,
-                      amount: amount.toFixed(),
-                    },
-                  ],
-                },
-              ])
-              .send()
-          }
-        }
-        await operation.confirmation()
-      } catch (error) {
-        console.error('confirmation failed: ', error)
+    let operation: TransactionWalletOperation
+    switch (contract.kind) {
+      case ContractKind.FA1: {
+        operation = await contractInstance.methods
+          .transfer(pkhSrc, receivingAddress, amount.toFixed())
+          .send()
+        break
       }
-    } catch (error) {
-      console.error('transfer operation failed: ', error)
+      case ContractKind.FA2: {
+        operation = await contractInstance.methods
+          .transfer([
+            {
+              from_: pkhSrc,
+              txs: [
+                {
+                  to_: receivingAddress,
+                  token_id: contract.token_id,
+                  amount: amount.toFixed(),
+                },
+              ],
+            },
+          ])
+          .send()
+        break
+      }
     }
+    await operation.confirmation()
   }
 
   async sign(message: string): Promise<SignPayloadResponseOutput> {
@@ -134,6 +129,40 @@ export class BeaconService {
     }
   }
 
+  async getRedeemAddress(contract: Contract): Promise<string> {
+    switch (contract.kind) {
+      case ContractKind.FA1:
+        return await this.getFA1RedeemAddress(contract)
+      case ContractKind.FA2:
+        return await this.getFA2RedeemAddress(contract)
+    }
+  }
+
+  private async getFA1RedeemAddress(contract: Contract): Promise<string> {
+    const client = new RpcClient(this.rpcURL)
+    const packedData = await client.packData({
+      data: { string: 'redeemAddress' },
+      type: { prim: 'string' },
+    })
+
+    const contractInstance = await this.tezos.wallet.at(contract.pkh)
+    const storage: any = await contractInstance.storage()
+    const value: any = await storage['0'].get(packedData.packed)
+    const decodedValue = MichelsonCodec.valueDecoder(
+      Uint8ArrayConsumer.fromHexString(value.slice(2))
+    )
+    const address = Codec.addressDecoder(
+      Uint8ArrayConsumer.fromHexString(decodedValue.bytes)
+    )
+    return address
+  }
+
+  private async getFA2RedeemAddress(contract: Contract): Promise<string> {
+    const contractInstance = await this.tezos.wallet.at(contract.pkh)
+    const storage: any = await contractInstance.storage()
+    return storage.redeem_address
+  }
+
   private async getFA1Balance(contract: Contract, userAddress: string) {
     const client = new RpcClient(this.rpcURL)
 
@@ -152,11 +181,11 @@ export class BeaconService {
     const storage: any = await contractInstance.storage()
     const value: any = await storage['0'].get(packedData.packed)
 
-    const response = codec.valueDecoder(
+    const decodedValue = MichelsonCodec.valueDecoder(
       Uint8ArrayConsumer.fromHexString(value.slice(2))
     )
 
-    return new BigNumber(response.args[0].int)
+    return new BigNumber(decodedValue.args[0].int)
   }
 
   private async getFA2Balance(contract: Contract, userAddress: string) {

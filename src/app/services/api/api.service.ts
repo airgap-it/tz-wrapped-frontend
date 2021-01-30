@@ -2,125 +2,68 @@ import { Injectable } from '@angular/core'
 import { HttpClient } from '@angular/common/http'
 import { Observable } from 'rxjs'
 import { environment } from 'src/environments/environment'
+import { User } from './interfaces/user'
+import { Contract } from './interfaces/contract'
+import { PagedResponse, SignableMessageInfo } from './interfaces/common'
+import {
+  NewOperationRequest,
+  OperationRequest,
+  OperationRequestKind,
+  OperationRequestState,
+} from './interfaces/operationRequest'
+import {
+  NewOperationApproval,
+  OperationApproval,
+} from './interfaces/operationApproval'
+import {
+  AuthenticationChallenge,
+  AuthenticationChallengeResponse,
+  SessionUser,
+} from './interfaces/auth'
 
-export enum UserState {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-}
-
-export enum UserKind {
-  GATEKEEPER = 'gatekeeper',
-  KEYHOLDER = 'keyholder',
-}
-
-export enum OperationRequestKind {
-  MINT = 'mint',
-  BURN = 'burn',
-}
-
-export enum OperationRequestState {
-  OPEN = 'open',
-  APPROVED = 'approved',
-  INJECTED = 'injected',
-}
-
-export interface PagedResponse<T> {
-  page: number
-  total_pages: number
-  results: T[]
-}
-
-export enum ContractKind {
-  FA1 = 'fa1',
-  FA2 = 'fa2',
-}
-
-export interface Contract {
-  id: string
-  created_at: string
-  updated_at: string
-  pkh: string
-  token_id: number
-  multisig_pkh: string
-  kind: ContractKind
-  display_name: string
-  decimals: number
-  min_approvals: number
-}
-
-export interface User {
-  id: string
-  created_at: string
-  updated_at: string
-  public_key: string
-  address: string
-  contract_id: string
-  kind: UserKind
-  state: UserState
-  display_name: string
-}
-
-export interface NewOperationRequest {
-  contract_id: string
-  target_address: string | null
-  amount: number
-  kind: string
-  signature: string
-  chain_id: string
-  nonce: number
-}
-
-export interface SignableOperationRequest {
-  unsigned_operation_request: NewOperationRequest
-  signable_message_info: SignableMessageInfo
-}
-
-export interface SignableMessageInfo {
-  message: string
-  tezos_client_command: string
-  blake2b_hash: string
-}
-
-export interface OperationRequest {
-  id: string
-  created_at: string
-  updated_at: string
-  gatekeeper: User
-  contract_id: string
-  target_address: string | null
-  amount: string
-  kind: string
-  signature: string
-  chain_id: string
-  nonce: number
-  state: OperationRequestState
-  operation_hash?: any
-}
-
-export interface OperationApproval {
-  id: string
-  created_at: string
-  updated_at: string
-  keyholder: User
-  operation_request_id: string
-  signature: string
-}
-
-export interface NewOperationApproval {
-  operation_request_id: string
-  signature: string
-}
+const pageLimit = 2
 
 @Injectable({
   providedIn: 'root',
 })
 export class ApiService {
+  private static authPath = '/auth'
   private static contractsPath = '/contracts'
   private static usersPath = '/users'
   private static operationRequestsPath = '/operation-requests'
   private static operationApprovalsPath = '/operation-approvals'
 
   constructor(private readonly http: HttpClient) {}
+
+  getSignInChallenge(
+    address: string
+  ): Observable<AuthenticationChallenge | null> {
+    const path = `${this.getUrl(ApiService.authPath)}?address=${address}`
+    return this.http.get<AuthenticationChallenge | null>(path, {
+      withCredentials: true,
+    })
+  }
+
+  respondToSignInChallenge(
+    challengeResponse: AuthenticationChallengeResponse
+  ): Observable<SessionUser> {
+    return this.http.post<SessionUser>(
+      this.getUrl(ApiService.authPath),
+      challengeResponse,
+      { withCredentials: true }
+    )
+  }
+
+  getSessionUser(): Observable<SessionUser> {
+    const path = `${this.getUrl(ApiService.authPath)}/me`
+    return this.http.get<SessionUser>(path, { withCredentials: true })
+  }
+
+  signOut(): Observable<void> {
+    return this.http.delete<void>(this.getUrl(ApiService.authPath), {
+      withCredentials: true,
+    })
+  }
 
   getContracts(): Observable<PagedResponse<Contract>> {
     return this.http.get<PagedResponse<Contract>>(
@@ -133,57 +76,59 @@ export class ApiService {
     address?: string
   ): Observable<PagedResponse<User>> {
     const path = `${ApiService.usersPath}?contract_id=${contractId}${
-      address ? `&address=${address}` : ``
+      address ? `&address=${address}` : ''
     }`
-    return this.http.get<PagedResponse<User>>(this.getUrl(path))
+    return this.http.get<PagedResponse<User>>(this.getUrl(path), {
+      withCredentials: true,
+    })
   }
 
   getOperationRequests(
     contractId: string,
-    operationKind: OperationRequestKind
+    operationKind: OperationRequestKind,
+    operationState: OperationRequestState,
+    page = 1,
+    limit = pageLimit
   ): Observable<PagedResponse<OperationRequest>> {
-    const path = `${ApiService.operationRequestsPath}?kind=${operationKind}&contract_id=${contractId}`
-    return this.http.get<PagedResponse<OperationRequest>>(this.getUrl(path))
+    const path = `${ApiService.operationRequestsPath}?kind=${operationKind}&contract_id=${contractId}&state=${operationState}&page=${page}&limit=${limit}`
+    return this.http.get<PagedResponse<OperationRequest>>(this.getUrl(path), {
+      withCredentials: true,
+    })
+  }
+
+  deleteOperationRequest(operationRequestId: string): Observable<void> {
+    const path = `${ApiService.operationRequestsPath}/${operationRequestId}`
+    return this.http.delete<void>(this.getUrl(path), {
+      withCredentials: true,
+    })
   }
 
   getOperationApprovals(
     requestId: string
   ): Observable<PagedResponse<OperationApproval>> {
     const path = `${ApiService.operationApprovalsPath}?operation_request_id=${requestId}`
-    return this.http.get<PagedResponse<OperationApproval>>(this.getUrl(path))
+    return this.http.get<PagedResponse<OperationApproval>>(this.getUrl(path), {
+      withCredentials: true,
+    })
   }
 
   getSignableMessage(
     operationRequestId: string
   ): Observable<SignableMessageInfo> {
     const path = `${ApiService.operationRequestsPath}/${operationRequestId}/signable-message`
-    return this.http.get<SignableMessageInfo>(this.getUrl(path))
+    return this.http.get<SignableMessageInfo>(this.getUrl(path), {
+      withCredentials: true,
+    })
   }
 
   getParameters(operationRequestId: string): Observable<any> {
     const path = `${ApiService.operationRequestsPath}/${operationRequestId}/parameters`
-    return this.http.get<any>(this.getUrl(path))
+    return this.http.get<any>(this.getUrl(path), { withCredentials: true })
   }
 
   getContractNonce(contractId: string): Observable<any> {
     const path = `${ApiService.contractsPath}/${contractId}/nonce`
     return this.http.get<any>(this.getUrl(path))
-  }
-
-  getSignableOperationRequest(
-    contractId: string,
-    kind: OperationRequestKind,
-    amount: string,
-    targetAddress?: string
-  ): Observable<SignableOperationRequest> {
-    const path = `${
-      ApiService.contractsPath
-    }/${contractId}/signable-message?kind=${kind}&amount=${amount}${
-      kind === OperationRequestKind.MINT && targetAddress !== undefined
-        ? `&target_address=${targetAddress}`
-        : ''
-    }`
-    return this.http.get<SignableOperationRequest>(this.getUrl(path))
   }
 
   addOperationApproval(
@@ -194,7 +139,8 @@ export class ApiService {
     }
     return this.http.post<OperationApproval>(
       this.getUrl(ApiService.operationApprovalsPath),
-      approval
+      approval,
+      { withCredentials: true }
     )
   }
 
@@ -203,16 +149,21 @@ export class ApiService {
   ): Observable<OperationRequest> {
     return this.http.post<OperationRequest>(
       this.getUrl(ApiService.operationRequestsPath),
-      operation
+      operation,
+      { withCredentials: true }
     )
   }
 
-  updateOperationRequest(operationId: string, operationHash: string) {
+  updateOperationRequest(
+    operationId: string,
+    operationHash: string | null
+  ): Observable<void> {
     return this.http.patch<void>(
       this.getUrl(ApiService.operationRequestsPath + '/' + operationId),
       {
         operation_hash: operationHash,
-      }
+      },
+      { withCredentials: true }
     )
   }
 

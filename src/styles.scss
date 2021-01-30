@@ -76,7 +76,8 @@ pre {
   box-shadow: $btn-box-shadow;
 }
 
-accordion-group {
+accordion-group,
+.btn--container__more {
   .btn {
     box-shadow: none;
   }

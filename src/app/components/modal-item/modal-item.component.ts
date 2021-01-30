@@ -1,6 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core'
 import { BsModalRef } from 'ngx-bootstrap/modal'
-import { SignableMessageInfo } from 'src/app/services/api/api.service'
+import { SignableMessageInfo } from 'src/app/services/api/interfaces/common'
 import { CopyService } from 'src/app/services/copy/copy-service.service'
 
 @Component({

@@ -1,12 +1,28 @@
+import { AbstractControl, ValidatorFn } from '@angular/forms'
 import BigNumber from 'bignumber.js'
 
-export const convertBalanceToUIString = (
+export const convertBigNumberToAmount = (
   balance: BigNumber,
   decimals: number
-) => {
-  return balance.shiftedBy(-1 * decimals)
+): string => {
+  return balance.shiftedBy(-1 * decimals).toString(10)
 }
 
-export const convertUIStringToBalance = (text: string, decimals: number) => {
-  return new BigNumber(text).shiftedBy(decimals)
+export const convertAmountToBigNumber = (
+  text: string,
+  decimals: number
+): BigNumber => {
+  const bn = new BigNumber(text)
+  if (bn.isNaN()) {
+    throw new Error(`Invalid amount: ${text}`)
+  }
+  return bn.shiftedBy(decimals)
+}
+
+export function amountValidator(max: BigNumber, decimals: number): ValidatorFn {
+  return (control: AbstractControl): { [key: string]: any } | null => {
+    const current = new BigNumber(control.value).shiftedBy(decimals)
+    const isValid = current.lte(max)
+    return !isValid ? { invalidValue: { value: control.value } } : null
+  }
 }

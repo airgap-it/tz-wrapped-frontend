@@ -24,7 +24,10 @@ import { OperationRequestComponent } from './components/operation-request/operat
 import { ModalItemComponent } from './components/modal-item/modal-item.component'
 import { AmountConverterPipe } from './pipes/amount.pipe'
 import { ShortenPipe } from './pipes/shorten.pipe'
+import { ErrorItemComponent } from './components/error-item/error.component'
 import { CopyService } from './services/copy/copy-service.service'
+import { AlertModule } from 'ngx-bootstrap/alert'
+import { OperationRequestListComponent } from './components/operation-request-list/operation-request-list.component'
 
 @NgModule({
   declarations: [
@@ -37,8 +40,11 @@ import { CopyService } from './services/copy/copy-service.service'
     ShortenPipe,
     ModalItemComponent,
     AmountConverterPipe,
+    ErrorItemComponent,
+    OperationRequestListComponent,
   ],
   imports: [
+    AlertModule.forRoot(),
     BrowserAnimationsModule,
     BsDropdownModule.forRoot(),
     AccordionModule.forRoot(),

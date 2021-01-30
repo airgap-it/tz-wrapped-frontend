@@ -1,17 +1,19 @@
 import { createReducer, on } from '@ngrx/store'
 
 import * as actions from './app.actions'
-import {
-  OperationApproval,
-  Contract,
-  OperationRequest,
-  User,
-  OperationRequestKind,
-  SignableMessageInfo,
-} from './services/api/api.service'
 import BigNumber from 'bignumber.js'
 import { AccountInfo } from '@airgap/beacon-sdk'
-import { Tab } from './pages/dashboard/dashboard.component'
+import { Contract } from './services/api/interfaces/contract'
+import { User } from './services/api/interfaces/user'
+import { OperationApproval } from './services/api/interfaces/operationApproval'
+import {
+  PagedResponse,
+  SignableMessageInfo,
+} from './services/api/interfaces/common'
+import { OperationRequest } from './services/api/interfaces/operationRequest'
+import { SessionUser } from './services/api/interfaces/auth'
+import { Tab } from './pages/dashboard/tab'
+import { ErrorDescription } from './components/error-item/error-description'
 
 interface Busy {
   activeAccount: boolean
@@ -27,6 +29,8 @@ interface Busy {
 
 export interface State {
   selectedTab: Tab
+  sessionUser: SessionUser | undefined
+  canSignIn: boolean | undefined
   activeAccount: AccountInfo | undefined
   contracts: Contract[]
   activeContract: Contract | undefined
@@ -35,13 +39,25 @@ export interface State {
   operationApprovals: Map<string, OperationApproval[]>
   signableMessages: Map<string, SignableMessageInfo>
   balance: BigNumber | undefined
-  mintOperationRequests: OperationRequest[]
-  burnOperationRequests: OperationRequest[]
+
+  openMintOperationRequests: PagedResponse<OperationRequest> | undefined
+  approvedMintOperationRequests: PagedResponse<OperationRequest> | undefined
+  injectedMintOperationRequests: PagedResponse<OperationRequest> | undefined
+
+  openBurnOperationRequests: PagedResponse<OperationRequest> | undefined
+  approvedBurnOperationRequests: PagedResponse<OperationRequest> | undefined
+  injectedBurnOperationRequests: PagedResponse<OperationRequest> | undefined
+
+  redeemAddress: string | undefined
+  redeemAddressBalance: BigNumber | undefined
+  alerts: ErrorDescription[] | null
   busy: Busy
 }
 
 export const initialState: State = {
   selectedTab: Tab.TRANSFER,
+  sessionUser: undefined,
+  canSignIn: undefined,
   activeAccount: undefined,
   contracts: [],
   activeContract: undefined,
@@ -50,8 +66,18 @@ export const initialState: State = {
   operationApprovals: new Map<string, OperationApproval[]>(),
   signableMessages: new Map<string, SignableMessageInfo>(),
   balance: undefined,
-  mintOperationRequests: [],
-  burnOperationRequests: [],
+
+  openMintOperationRequests: undefined,
+  approvedMintOperationRequests: undefined,
+  injectedMintOperationRequests: undefined,
+
+  openBurnOperationRequests: undefined,
+  approvedBurnOperationRequests: undefined,
+  injectedBurnOperationRequests: undefined,
+
+  redeemAddress: undefined,
+  redeemAddressBalance: undefined,
+  alerts: null,
   busy: {
     activeAccount: false,
     balance: false,
@@ -73,6 +99,32 @@ export const reducer = createReducer(
     busy: {
       ...state.busy,
     },
+  })),
+  on(actions.handleUnauthenticatedError, (state) => ({
+    ...state,
+    sessionUser: undefined,
+    users: [],
+    operationApprovals: new Map<string, OperationApproval[]>(),
+    signableMessages: new Map<string, SignableMessageInfo>(),
+    openMintOperationRequests: undefined,
+    approvedMintOperationRequests: undefined,
+    injectedMintOperationRequests: undefined,
+    openBurnOperationRequests: undefined,
+    approvedBurnOperationRequests: undefined,
+    injectedBurnOperationRequests: undefined,
+  })),
+  on(actions.updateCanSignIn, (state, { canSignIn }) => ({
+    ...state,
+    canSignIn,
+  })),
+  on(actions.getSessionUserSucceeded, (state, { sessionUser }) => ({
+    ...state,
+    sessionUser,
+  })),
+  on(actions.signOutSucceeded, (state) => ({
+    ...state,
+    canSignIn: undefined,
+    sessionUser: undefined,
   })),
   on(actions.connectWallet, (state) => ({
     ...state,
@@ -173,14 +225,37 @@ export const reducer = createReducer(
       burnOperationRequests: true,
     },
   })),
-  on(actions.loadBurnOperationRequestsSucceeded, (state, { response }) => ({
+  on(actions.loadOpenBurnOperationRequestsSucceeded, (state, { response }) => ({
     ...state,
-    burnOperationRequests: response.results,
+    openBurnOperationRequests: response,
+
     busy: {
       ...state.busy,
       burnOperationRequests: false,
     },
   })),
+  on(
+    actions.loadApprovedBurnOperationRequestsSucceeded,
+    (state, { response }) => ({
+      ...state,
+      approvedBurnOperationRequests: response,
+      busy: {
+        ...state.busy,
+        burnOperationRequests: false,
+      },
+    })
+  ),
+  on(
+    actions.loadInjectedBurnOperationRequestsSucceeded,
+    (state, { response }) => ({
+      ...state,
+      injectedBurnOperationRequests: response,
+      busy: {
+        ...state.busy,
+        burnOperationRequests: false,
+      },
+    })
+  ),
   on(actions.loadBurnOperationRequestsFailed, (state) => ({
     ...state,
     busy: {
@@ -195,14 +270,38 @@ export const reducer = createReducer(
       mintOperationRequests: true,
     },
   })),
-  on(actions.loadMintOperationRequestsSucceeded, (state, { response }) => ({
+  on(actions.loadOpenMintOperationRequestsSucceeded, (state, { response }) => ({
     ...state,
-    mintOperationRequests: response.results,
+    openMintOperationRequests: response,
+
     busy: {
       ...state.busy,
       mintOperationRequests: false,
     },
   })),
+  on(
+    actions.loadApprovedMintOperationRequestsSucceeded,
+    (state, { response }) => ({
+      ...state,
+      approvedMintOperationRequests: response,
+      busy: {
+        ...state.busy,
+        mintOperationRequests: false,
+      },
+    })
+  ),
+  on(
+    actions.loadInjectedMintOperationRequestsSucceeded,
+    (state, { response }) => ({
+      ...state,
+      injectedMintOperationRequests: response,
+      busy: {
+        ...state.busy,
+        mintOperationRequests: false,
+      },
+    })
+  ),
+
   on(actions.loadMintOperationRequestsFailed, (state) => ({
     ...state,
     busy: {
@@ -210,7 +309,7 @@ export const reducer = createReducer(
       mintOperationRequests: false,
     },
   })),
-  on(actions.loadContractNonce, (state, { contractId }) => ({
+  on(actions.loadContractNonce, (state) => ({
     ...state,
     busy: {
       ...state.busy,
@@ -258,7 +357,7 @@ export const reducer = createReducer(
       operationApprovals: false,
     },
   })),
-  on(actions.getSignableMessage, (state, { operationRequestId }) => ({
+  on(actions.getSignableMessage, (state) => ({
     ...state,
     busy: {
       ...state.busy,
@@ -280,55 +379,51 @@ export const reducer = createReducer(
       }
     }
   ),
-  on(actions.getSignableMessageFailed, (state, { error }) => ({
+  on(actions.getSignableMessageFailed, (state) => ({
     ...state,
     busy: {
       ...state.busy,
       signableMessages: false,
     },
   })),
-  on(actions.submitSignedOperationRequestSucceeded, (state, { response }) => {
-    if (response.kind === OperationRequestKind.MINT) {
-      const operationRequests = Object.assign([], state.mintOperationRequests)
-      operationRequests.push(response)
-      return {
-        ...state,
-        mintOperationRequests: operationRequests,
-      }
-    } else {
-      const operationRequests = Object.assign([], state.burnOperationRequests)
-      operationRequests.push(response)
-      return {
-        ...state,
-        burnOperationRequests: operationRequests,
-      }
-    }
-  }),
-  on(
-    actions.submitOperationApprovalSucceeded,
-    (state, { operationApproval, operationRequest }) => {
-      const operationApprovals = new Map(state.operationApprovals)
-      const items = Object.assign(
-        [],
-        operationApprovals.get(operationApproval.operation_request_id) ?? []
-      )
-      items.push(operationApproval)
-      operationApprovals.set(operationApproval.operation_request_id, items)
-      return {
-        ...state,
-        operationApprovals,
-        busy: {
-          ...state.busy,
-          operationApprovals: false,
-        },
-      }
-    }
-  ),
   on(actions.setActiveContract, (state, { contract }) => ({
     ...state,
     activeContract: contract,
+    openMintOperationRequests: undefined,
+    approvedMintOperationRequests: undefined,
+    injectedMintOperationRequests: undefined,
+    openBurnOperationRequests: undefined,
+    approvedBurnOperationRequests: undefined,
+    injectedBurnOperationRequests: undefined,
     busy: {
       ...state.busy,
     },
+  })),
+  on(actions.showAlert, (state, { alertMessage }) => ({
+    ...state,
+    alerts: state.alerts ? [...state.alerts, alertMessage] : [alertMessage],
+    busy: {
+      ...state.busy,
+    },
+  })),
+  on(actions.clearAlerts, (state) => ({
+    ...state,
+    alerts: null,
+    busy: {
+      ...state.busy,
+    },
+  })),
+  on(actions.loadRedeemAddress, (state) => ({
+    ...state,
+    redeemAddress: undefined,
+    redeemAddressBalance: undefined,
+  })),
+  on(actions.loadRedeemAddressSucceeded, (state, { address }) => ({
+    ...state,
+    redeemAddress: address,
+  })),
+  on(actions.loadRedeemAddressBalanceSucceeded, (state, { balance }) => ({
+    ...state,
+    redeemAddressBalance: balance,
   }))
 )

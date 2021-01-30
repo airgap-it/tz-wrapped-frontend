@@ -1,13 +1,4 @@
-import { Component, Input, OnInit, OnChanges, OnDestroy } from '@angular/core'
-import {
-  ApiService,
-  Contract,
-  OperationApproval,
-  OperationRequest,
-  OperationRequestState,
-  User,
-  UserKind,
-} from 'src/app/services/api/api.service'
+import { Component, Input, OnInit, OnDestroy } from '@angular/core'
 import { BsModalService } from 'ngx-bootstrap/modal'
 import { ModalItemComponent } from 'src/app/components/modal-item/modal-item.component'
 
@@ -15,8 +6,12 @@ import * as fromRoot from '../../reducers/index'
 import * as actions from '../../app.actions'
 import { Store } from '@ngrx/store'
 import { Observable } from 'rxjs'
-import { distinct, filter, map, take, takeUntil } from 'rxjs/operators'
+import { filter, map, take } from 'rxjs/operators'
 import { Subscription } from 'rxjs'
+import { User } from 'src/app/services/api/interfaces/user'
+import { OperationRequest } from 'src/app/services/api/interfaces/operationRequest'
+import { Contract } from 'src/app/services/api/interfaces/contract'
+import { OperationApproval } from 'src/app/services/api/interfaces/operationApproval'
 
 export interface UserWithApproval extends User {
   requestId: string
@@ -31,10 +26,10 @@ export interface UserWithApproval extends User {
 })
 export class OperationRequestComponent implements OnInit, OnDestroy {
   @Input()
-  operationRequest!: OperationRequest
+  public operationRequest!: OperationRequest
 
   @Input()
-  address!: string
+  public address!: string
 
   @Input()
   public isGatekeeper: boolean = false
@@ -52,11 +47,10 @@ export class OperationRequestComponent implements OnInit, OnDestroy {
     OperationApproval[]
   > = new Observable()
 
-  public currentUserApproved: Observable<boolean> = new Observable()
+  public currentUserApproved$: Observable<boolean> = new Observable()
   public multisigItems: UserWithApproval[] = []
 
   public currentOperationApprovals$: Observable<number> = new Observable()
-  public maxOperationApprovals$: Observable<number> = new Observable()
 
   public contractNonce$: Observable<number> = new Observable()
 
@@ -68,9 +62,6 @@ export class OperationRequestComponent implements OnInit, OnDestroy {
   ) {}
 
   async ngOnInit(): Promise<void> {
-    if (this.operationRequest === undefined) {
-      throw new Error('Operation Request not loaded')
-    }
     const operationRequestId = this.operationRequest.id
     this.store$.dispatch(
       actions.loadOperationApprovals({ operationRequestId: operationRequestId })
@@ -101,17 +92,11 @@ export class OperationRequestComponent implements OnInit, OnDestroy {
         }))
       }
     )
-
-    this.maxOperationApprovals$ = this.store$.select(
-      (store) =>
-        store.app.users.filter((user) => user.kind === UserKind.KEYHOLDER)
-          .length
-    )
     this.currentOperationApprovals$ = this.store$.select(
       (store) =>
         store.app.operationApprovals.get(operationRequestId)?.length ?? 0
     )
-    this.currentUserApproved = this.store$.select(
+    this.currentUserApproved$ = this.store$.select(
       (store) =>
         store.app.operationApprovals
           .get(operationRequestId)
@@ -157,7 +142,7 @@ export class OperationRequestComponent implements OnInit, OnDestroy {
       )
   }
 
-  openModal() {
+  public openModal() {
     this.store$
       .select((state) =>
         state.app.signableMessages.get(this.operationRequest.id)
@@ -189,5 +174,22 @@ export class OperationRequestComponent implements OnInit, OnDestroy {
           },
         })
       })
+  }
+
+  delete() {
+    this.store$.dispatch(
+      actions.deleteOperationRequest({
+        operationRequest: this.operationRequest,
+      })
+    )
+  }
+
+  markInjected() {
+    this.store$.dispatch(
+      actions.updateOperationRequestStateToInjected({
+        operationRequest: this.operationRequest,
+        injectedOperationHash: null,
+      })
+    )
   }
 }
