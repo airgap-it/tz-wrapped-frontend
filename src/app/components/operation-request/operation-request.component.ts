@@ -24,7 +24,7 @@ export interface UserWithApproval extends User {
   templateUrl: './operation-request.component.html',
   styleUrls: ['./operation-request.component.scss'],
 })
-export class OperationRequestComponent implements OnInit, OnDestroy {
+export class OperationRequestComponent implements OnInit {
   @Input()
   public operationRequest!: OperationRequest
 
@@ -43,18 +43,10 @@ export class OperationRequestComponent implements OnInit, OnDestroy {
   @Input()
   public contract!: Contract
 
-  private operationApprovals$: Observable<
-    OperationApproval[]
-  > = new Observable()
-
-  public currentUserApproved$: Observable<boolean> = new Observable()
+  public currentUserApproved: boolean = false
   public multisigItems: UserWithApproval[] = []
 
-  public currentOperationApprovals$: Observable<number> = new Observable()
-
   public contractNonce$: Observable<number> = new Observable()
-
-  private operationApprovalsSubscription!: Subscription | undefined
 
   constructor(
     private readonly store$: Store<fromRoot.State>,
@@ -63,12 +55,6 @@ export class OperationRequestComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     const operationRequestId = this.operationRequest.id
-    this.store$.dispatch(
-      actions.loadOperationApprovals({ operationRequestId: operationRequestId })
-    )
-    this.operationApprovals$ = this.store$.select(
-      (state) => state.app.operationApprovals.get(operationRequestId) ?? []
-    )
     this.contractNonce$ = this.store$
       .select((state) => state.app.contractNonces.get(this.contract.id))
       .pipe(
@@ -76,37 +62,22 @@ export class OperationRequestComponent implements OnInit, OnDestroy {
         map((value) => value!)
       )
 
-    this.operationApprovalsSubscription = this.operationApprovals$.subscribe(
-      (operationApprovals) => {
-        this.multisigItems = this.keyholders.map((user) => ({
-          ...user,
-          requestId: operationRequestId,
-          isCurrentUser: user.address === this.address,
-          hasApproval: operationApprovals.some(
-            (approval) => approval.keyholder.id === user.id
-          ),
-          updated_at:
-            operationApprovals.find(
-              (operationApproval) => operationApproval.keyholder.id === user.id
-            )?.created_at ?? '',
-        }))
-      }
-    )
-    this.currentOperationApprovals$ = this.store$.select(
-      (store) =>
-        store.app.operationApprovals.get(operationRequestId)?.length ?? 0
-    )
-    this.currentUserApproved$ = this.store$.select(
-      (store) =>
-        store.app.operationApprovals
-          .get(operationRequestId)
-          ?.some((approval) => approval.keyholder.address === this.address) ??
-        false
-    )
-  }
-
-  ngOnDestroy() {
-    this.operationApprovalsSubscription?.unsubscribe()
+    this.multisigItems = this.keyholders.map((user) => ({
+      ...user,
+      requestId: operationRequestId,
+      isCurrentUser: user.address === this.address,
+      hasApproval: this.operationRequest.operation_approvals.some(
+        (approval) => approval.keyholder.id === user.id
+      ),
+      updated_at:
+        this.operationRequest.operation_approvals.find(
+          (operationApproval) => operationApproval.keyholder.id === user.id
+        )?.created_at ?? '',
+    }))
+    this.currentUserApproved =
+      this.operationRequest.operation_approvals.some(
+        (approval) => approval.keyholder.address === this.address
+      ) ?? false
   }
 
   public submitOperation() {

@@ -267,22 +267,6 @@ export const loadBurnOperationRequestsFailed = createAction(
   props<{ errorResponse: HttpErrorResponse }>()
 )
 
-export const loadOperationApprovals = createAction(
-  `[${featureName}] Load Operation Approvals`,
-  props<{ operationRequestId: string }>()
-)
-export const loadOperationApprovalsSucceeded = createAction(
-  `[${featureName}] Load Operation Approvals Succeeded`,
-  props<{
-    operationRequestId: string
-    response: PagedResponse<OperationApproval>
-  }>()
-)
-export const loadOperationApprovalsFailed = createAction(
-  `[${featureName}] Load Operation Approvals Failed`,
-  props<{ errorResponse: HttpErrorResponse }>()
-)
-
 export const transferOperation = createAction(
   `[${featureName}] Starting Transfer Operation`,
   props<{ transferAmount: BigNumber; receivingAddress: string }>()

@@ -41,7 +41,7 @@
   >
     <p class="m-0">
       <strong
-        >{{ currentOperationApprovals$ | async }}/{{
+        >{{ operationRequest.operation_approvals.length }}/{{
           contract.min_approvals
         }}
         Confirmations</strong
@@ -85,7 +85,7 @@
       <div class="col">
         <button
           *ngIf="
-            !(currentUserApproved$ | async) &&
+            !currentUserApproved &&
             operationRequest.state === 'open' &&
             isKeyholder
           "
@@ -99,7 +99,7 @@
       <div
         class="col-md-2 pl-0"
         *ngIf="
-          !(currentUserApproved$ | async) &&
+          !currentUserApproved &&
           operationRequest.state === 'open' &&
           isKeyholder
         "
