@@ -1,4 +1,5 @@
 import { SignableMessageInfo } from './common'
+import { OperationApproval } from './operationApproval'
 import { User } from './user'
 
 export enum OperationRequestKind {
@@ -25,6 +26,7 @@ export interface OperationRequest {
   chain_id: string
   nonce: number
   state: OperationRequestState
+  operation_approvals: OperationApproval[]
   operation_hash?: any
 }
 

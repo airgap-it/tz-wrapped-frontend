@@ -22,7 +22,6 @@ interface Busy {
   burnOperationRequests: boolean
   contracts: boolean
   users: boolean
-  operationApprovals: boolean
   signableMessages: boolean
   contractNonces: boolean
 }
@@ -36,7 +35,6 @@ export interface State {
   activeContract: Contract | undefined
   contractNonces: Map<string, number>
   users: User[]
-  operationApprovals: Map<string, OperationApproval[]>
   signableMessages: Map<string, SignableMessageInfo>
   balance: BigNumber | undefined
 
@@ -63,7 +61,6 @@ export const initialState: State = {
   activeContract: undefined,
   contractNonces: new Map<string, number>(),
   users: [],
-  operationApprovals: new Map<string, OperationApproval[]>(),
   signableMessages: new Map<string, SignableMessageInfo>(),
   balance: undefined,
 
@@ -85,7 +82,6 @@ export const initialState: State = {
     burnOperationRequests: false,
     contracts: false,
     users: false,
-    operationApprovals: false,
     signableMessages: false,
     contractNonces: false,
   },
@@ -328,35 +324,6 @@ export const reducer = createReducer(
       },
     }
   }),
-  on(actions.loadOperationApprovals, (state) => ({
-    ...state,
-    busy: {
-      ...state.busy,
-      operationApprovals: true,
-    },
-  })),
-  on(
-    actions.loadOperationApprovalsSucceeded,
-    (state, { operationRequestId: requestId, response }) => {
-      const operationApprovals = new Map(state.operationApprovals)
-      operationApprovals.set(requestId, response.results)
-      return {
-        ...state,
-        operationApprovals,
-        busy: {
-          ...state.busy,
-          operationApprovals: false,
-        },
-      }
-    }
-  ),
-  on(actions.loadOperationApprovalsFailed, (state) => ({
-    ...state,
-    busy: {
-      ...state.busy,
-      operationApprovals: false,
-    },
-  })),
   on(actions.getSignableMessage, (state) => ({
     ...state,
     busy: {

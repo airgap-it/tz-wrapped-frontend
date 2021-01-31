@@ -663,32 +663,6 @@ export class AppEffects {
     )
   )
 
-  loadOperationApprovals$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.loadOperationApprovals),
-      mergeMap(({ operationRequestId }) =>
-        this.apiService.getOperationApprovals(operationRequestId).pipe(
-          map((response) =>
-            actions.loadOperationApprovalsSucceeded({
-              operationRequestId,
-              response,
-            })
-          ),
-          catchError((errorResponse) =>
-            of(actions.loadOperationApprovalsFailed({ errorResponse }))
-          )
-        )
-      )
-    )
-  )
-
-  loadOperationApprovalsFailed$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.loadOperationApprovalsFailed),
-      map((value) => actions.handleHttpErrorResponse(value))
-    )
-  )
-
   transferOperation$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.transferOperation),
