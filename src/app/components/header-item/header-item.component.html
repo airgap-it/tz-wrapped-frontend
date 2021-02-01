@@ -1,0 +1,72 @@
+<nav class="navbar navbar-expand-lg navbar-light fixed-top">
+  <a class="navbar-brand text-light" href="#" routerLink="">Foundry</a>
+  <button
+    class="navbar-toggler"
+    type="button"
+    data-toggle="collapse"
+    data-target="#navbarSupportedContent"
+    aria-controls="navbarSupportedContent"
+    aria-expanded="false"
+    aria-label="Toggle navigation"
+  >
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul
+      class="navbar-nav mr-auto"
+      *ngIf="activeContract$ | async as activeContract"
+    >
+      <div class="btn-group" dropdown>
+        <button
+          id="button-animated"
+          dropdownToggle
+          type="button"
+          class="btn btn-light dropdown-toggle"
+          aria-controls="dropdown-animated"
+        >
+          <img
+            width="32px"
+            height="32px"
+            [src]="(imageSrcMap$ | async).get(activeContract.id)"
+            class="mr-2"
+          />
+          {{ activeContract.display_name }}
+        </button>
+        <ul
+          id="dropdown-animated"
+          *dropdownMenu
+          class="dropdown-menu"
+          role="menu"
+          aria-labelledby="button-animated"
+        >
+          <li role="menuitem" *ngFor="let contract of contracts$ | async">
+            <a
+              class="dropdown-item"
+              href="#"
+              (click)="changeContract(contract)"
+            >
+              <img
+                width="32px"
+                height="32px"
+                [src]="(imageSrcMap$ | async).get(contract.id)"
+                class="mr-2"
+              />
+              {{ contract.display_name }}
+            </a>
+          </li>
+        </ul>
+      </div>
+    </ul>
+    <div class="my-2 my-lg-0">
+      <span></span>
+      <button (click)="reset()" class="btn btn-light btn-rounded mr-3">
+        <img src="/assets/img/identity.svg" class="mr-2" />
+        <span *ngIf="(name$ | async) !== undefined"> {{ name$ | async }} </span>
+      </button>
+      <!-- <button class="btn btn-light btn-rounded" routerLink="/settings">
+        <img src="/assets/img/settings.svg" />
+      </button> -->
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,127 @@
+/* Manrope font imports*/
+@font-face {
+  font-family: 'Manrope';
+  src: url(/assets/fonts/Manrope/manrope-regular.woff) format('truetype');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'Manrope';
+  src: url(/assets/fonts/Manrope/manrope-light.woff) format('truetype');
+  font-weight: 200;
+}
+
+@font-face {
+  font-family: 'Manrope';
+  src: url(/assets/fonts/Manrope/manrope-bold.woff) format('truetype');
+  font-weight: 600;
+}
+
+$font-family-sans-serif: 'Manrope', sans-serif;
+$font-size-base: 14;
+
+/* custom colors */
+$theme-colors: (
+  'primary': #2c7df7,
+);
+$border-radius: 8px;
+$body-bg: map_get($theme-colors, 'primary');
+
+$card-border-color: rgba(0, 0, 0, 0.04);
+$box-shadow: 0 40px 60px 0 rgba(0, 0, 0, 0.08),
+  0 80px 160px 0 rgba(0, 0, 0, 0.04);
+$btn-box-shadow: 0 2px 4px 0 rgba(44, 39, 56, 0.08),
+  0 4px 8px 0 rgba(44, 39, 56, 0.08);
+$card-border-radius: 24px;
+$nav-tabs-border-width: 0;
+$nav-tabs-link-active-color: map_get($theme-colors, 'primary');
+$nav-tabs-link-active-bg: none;
+$input-line-height: 2;
+$input-font-weight: 600;
+$input-font-size: 18px;
+$input-border-color: #dbe2ea;
+$input-border-radius: $border-radius;
+$input-group-addon-bg: #fff;
+$input-btn-focus-box-shadow: none;
+$btn-line-height: 2.5;
+$btn-border-radius: $border-radius;
+$card-spacer-x: 1.5rem;
+$dropdown-link-active-bg: rgba(map_get($theme-colors, 'primary'), 0.54);
+
+pre {
+  white-space: pre-wrap; /* css-3 */
+  white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+  white-space: -pre-wrap; /* Opera 4-6 */
+  white-space: -o-pre-wrap; /* Opera 7 */
+  word-wrap: break-word; /* Internet Explorer 5.5+ */
+  padding: 16px;
+  background: #ececec;
+  line-height: 1.5rem;
+}
+
+.btn-icon {
+  img {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.card,
+.dropdown-menu {
+  box-shadow: $box-shadow;
+}
+.btn,
+.input-group,
+.form-group {
+  box-shadow: $btn-box-shadow;
+}
+
+accordion-group,
+.btn--container__more {
+  .btn {
+    box-shadow: none;
+  }
+  .btn-link {
+    color: #212529 !important;
+  }
+  .card-header:first-child {
+    border-radius: 23px;
+    background-color: #fff;
+  }
+}
+
+.input-group,
+.form-group {
+  border-radius: $border-radius;
+}
+
+.input-group-prepend .btn,
+.input-group__two-items input {
+  border-top-right-radius: $border-radius !important;
+  border-bottom-right-radius: $border-radius !important;
+}
+
+tabset {
+  .nav-item {
+    width: 33%;
+    text-align: center;
+    font-size: 21px;
+    font-weight: 600;
+    opacity: 0.54;
+  }
+  .nav-item.active {
+    opacity: 1;
+  }
+}
+
+.status--container {
+  width: 32px;
+  height: 32px;
+}
+
+app-multi-signature-item:last-of-type .multi-signature__border,
+operation-request:last-of-type hr {
+  display: none !important;
+}
+
+@import '../node_modules/bootstrap/scss/bootstrap';

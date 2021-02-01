@@ -1,0 +1,377 @@
+<div class="card" *ngIf="activeContract$ | async as activeContract">
+  <div class="card-body">
+    <div>
+      <tabset *ngIf="selectedTab$ | async as selectedTab">
+        <tab
+          heading="Transfer"
+          id="tab-transfer"
+          [active]="selectedTab === 'tab-transfer'"
+          (selectTab)="onSelect($event)"
+        >
+          <div class="my-5">
+            <label>Receiving Address</label>
+            <div class="form-group mb-3">
+              <input
+                [formControl]="receivingAddressControl"
+                type="text"
+                class="form-control"
+                placeholder="tz1.."
+                aria-label="Address"
+                [ngClass]="{
+                  'is-invalid':
+                    receivingAddressControl.errors &&
+                    (receivingAddressControl.touched ||
+                      receivingAddressControl.dirty)
+                }"
+              />
+              <div class="invalid-feedback px-3 py-2 px-3 py-2">
+                <strong>Invalid Address</strong>
+              </div>
+            </div>
+            <label class="d-flex justify-content-between"
+              >Amount
+              <span *ngIf="balance$ | async as balance"
+                >Balance:
+                {{
+                  balance
+                    | amountConverter
+                      : {
+                          decimals: activeContract.decimals,
+                          symbol: activeContract.display_name
+                        }
+                    | async
+                }}
+              </span>
+            </label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text">
+                  <img
+                    width="32px"
+                    height="32px"
+                    [src]="
+                      activeContract.display_name == 'tzBTC'
+                        ? '/assets/img/tzbtc.svg'
+                        : '/assets/img/tzeth.svg'
+                    "
+                    class="mr-2"
+                  />
+                  {{ activeContract.display_name }}
+                </span>
+              </div>
+              <input
+                [formControl]="amountTransferControl"
+                type="text"
+                class="form-control"
+                placeholder="0.0"
+                aria-label="Amount"
+                [ngClass]="{
+                  'is-invalid':
+                    amountTransferControl.errors &&
+                    (amountTransferControl.touched ||
+                      amountTransferControl.dirty)
+                }"
+              />
+              <span class="input-group-prepend">
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  (click)="setTransferMaxValue()"
+                >
+                  Max
+                </button>
+              </span>
+              <div class="invalid-feedback px-3 py-2">
+                <strong>Invalid Amount</strong>
+              </div>
+            </div>
+          </div>
+
+          <ng-container *ngIf="address$ | async as address; else connectButton">
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              (click)="transfer()"
+              [disabled]="
+                amountTransferControl.invalid && receivingAddressControl.invalid
+              "
+            >
+              Transfer
+            </button>
+          </ng-container>
+
+          <ng-template #connectButton>
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              (click)="connectWallet()"
+            >
+              Connect Wallet
+            </button>
+          </ng-template>
+        </tab>
+        <tab
+          heading="Mint"
+          id="tab-mint"
+          [active]="selectedTab === 'tab-mint'"
+          (selectTab)="onSelect($event)"
+        >
+          <div class="my-5">
+            <label>Receiving Address</label>
+            <div class="form-group mb-3">
+              <input
+                [formControl]="receivingAddressControl"
+                type="text"
+                class="form-control"
+                placeholder="tz1.."
+                aria-label="Address"
+                [ngClass]="{
+                  'is-invalid':
+                    receivingAddressControl.errors &&
+                    (receivingAddressControl.touched ||
+                      receivingAddressControl.dirty)
+                }"
+              />
+              <div class="invalid-feedback px-3 py-2">
+                <strong>Invalid Address</strong>
+              </div>
+            </div>
+
+            <label>Enter amount to mint</label>
+            <div class="input-group input-group__two-items">
+              <div class="input-group-prepend">
+                <span class="input-group-text">
+                  <img
+                    width="32px"
+                    height="32px"
+                    [src]="
+                      activeContract.display_name == 'tzBTC'
+                        ? '/assets/img/tzbtc.svg'
+                        : '/assets/img/tzeth.svg'
+                    "
+                    class="mr-2"
+                  />
+                  {{ activeContract.display_name }}
+                </span>
+              </div>
+              <input
+                [formControl]="amountControl"
+                type="text"
+                class="form-control"
+                placeholder="0.0"
+                aria-label="Amount"
+                [ngClass]="{
+                  'is-invalid':
+                    amountControl.errors &&
+                    (amountControl.touched || amountControl.dirty)
+                }"
+              />
+              <div class="invalid-feedback px-3 py-2">
+                <strong>Invalid Amount</strong>
+              </div>
+            </div>
+          </div>
+
+          <ng-container *ngIf="address$ | async as address; else connectButton">
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              (click)="mint()"
+              [disabled]="amountControl.invalid"
+            >
+              Request Mint
+            </button>
+          </ng-container>
+        </tab>
+        <tab
+          heading="Burn"
+          id="tab-burn"
+          [active]="selectedTab === 'tab-burn'"
+          (selectTab)="onSelect($event)"
+        >
+          <div class="my-5">
+            <label>Balance on burn address</label>
+            <ng-container *ngIf="redeemAddress$ | async as address">
+              <h3>
+                <span *ngIf="redeemAddressBalance$ | async as balance">
+                  {{
+                    balance
+                      | amountConverter
+                        : {
+                            decimals: activeContract.decimals,
+                            symbol: activeContract.display_name
+                          }
+                      | async
+                  }}
+                </span>
+              </h3>
+              <a
+                href="https://tezblock.io/account/{{ address }}"
+                class="text-muted d-block"
+                target="_blank"
+                >{{ address | shorten
+                }}<img
+                  class="ml-1"
+                  src="/assets/img/external-link.svg"
+                  width="14px"
+              /></a>
+            </ng-container>
+            <label class="pt-3">Enter amount to burn</label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text">
+                  <img
+                    width="32px"
+                    height="32px"
+                    [src]="
+                      activeContract.display_name == 'tzBTC'
+                        ? '/assets/img/tzbtc.svg'
+                        : '/assets/img/tzeth.svg'
+                    "
+                    class="mr-2"
+                  />
+                  {{ activeContract.display_name }}
+                </span>
+              </div>
+              <input
+                [formControl]="amountBurnControl"
+                type="text"
+                class="form-control"
+                placeholder="0.0"
+                aria-label="Amount"
+                [ngClass]="{
+                  'is-invalid':
+                    amountBurnControl.errors &&
+                    (amountBurnControl.touched || amountBurnControl.dirty)
+                }"
+              />
+              <span class="input-group-prepend">
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  (click)="setMaxBurnableValue()"
+                >
+                  Max
+                </button>
+              </span>
+              <div class="invalid-feedback px-3 py-2">
+                <strong>Invalid Amount</strong>
+              </div>
+            </div>
+          </div>
+
+          <ng-container *ngIf="address$ | async as address; else connectButton">
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              (click)="burn()"
+              [disabled]="amountBurnControl.invalid"
+            >
+              Request Burn
+            </button>
+          </ng-container>
+        </tab>
+      </tabset>
+    </div>
+  </div>
+</div>
+
+<ng-container
+  *ngIf="{
+    isGatekeeper: isGatekeeper$ | async,
+    isKeyholder: isKeyholder$ | async
+  } as userType"
+>
+  <ng-container
+    *ngIf="
+      (userType.isGatekeeper || userType.isKeyholder) &&
+      (selectedTab$ | async) === 'tab-mint'
+    "
+  >
+    <operation-request-list
+      *ngIf="(openMintOperationRequests$ | async) !== undefined"
+      [title]="'Open Mint Requests'"
+      [kind]="'mint'"
+      [state]="'open'"
+      [address]="address$ | async"
+      [operationRequestList]="openMintOperationRequests$ | async"
+      [isGatekeeper]="userType.isGatekeeper"
+      [isKeyholder]="userType.isKeyholder"
+      [keyholders]="keyholders$ | async"
+      [contract]="activeContract$ | async"
+    >
+    </operation-request-list>
+    <operation-request-list
+      *ngIf="(approvedMintOperationRequests$ | async) !== undefined"
+      [title]="'Approved Mint Requests'"
+      [kind]="'mint'"
+      [state]="'approved'"
+      [address]="address$ | async"
+      [operationRequestList]="approvedMintOperationRequests$ | async"
+      [isGatekeeper]="userType.isGatekeeper"
+      [isKeyholder]="userType.isKeyholder"
+      [keyholders]="keyholders$ | async"
+      [contract]="activeContract$ | async"
+    >
+    </operation-request-list>
+    <operation-request-list
+      *ngIf="(injectedMintOperationRequests$ | async) !== undefined"
+      [title]="'Injected Mint Requests'"
+      [kind]="'mint'"
+      [state]="'injected'"
+      [address]="address$ | async"
+      [operationRequestList]="injectedMintOperationRequests$ | async"
+      [isGatekeeper]="userType.isGatekeeper"
+      [isKeyholder]="userType.isKeyholder"
+      [keyholders]="keyholders$ | async"
+      [contract]="activeContract$ | async"
+    >
+    </operation-request-list>
+  </ng-container>
+  <ng-container
+    *ngIf="
+      (userType.isGatekeeper || userType.isKeyholder) &&
+      (selectedTab$ | async) === 'tab-burn'
+    "
+  >
+    <operation-request-list
+      *ngIf="(openBurnOperationRequests$ | async) !== undefined"
+      [title]="'Open Burn Requests'"
+      [kind]="'burn'"
+      [state]="'open'"
+      [address]="address$ | async"
+      [operationRequestList]="openBurnOperationRequests$ | async"
+      [isGatekeeper]="userType.isGatekeeper"
+      [isKeyholder]="userType.isKeyholder"
+      [keyholders]="keyholders$ | async"
+      [contract]="activeContract$ | async"
+    >
+    </operation-request-list>
+    <operation-request-list
+      *ngIf="(approvedBurnOperationRequests$ | async) !== undefined"
+      [title]="'Approved Burn Requests'"
+      [kind]="'burn'"
+      [state]="'approved'"
+      [address]="address$ | async"
+      [operationRequestList]="approvedBurnOperationRequests$ | async"
+      [isGatekeeper]="userType.isGatekeeper"
+      [isKeyholder]="userType.isKeyholder"
+      [keyholders]="keyholders$ | async"
+      [contract]="activeContract$ | async"
+    >
+    </operation-request-list>
+    <operation-request-list
+      *ngIf="(injectedBurnOperationRequests$ | async) !== undefined"
+      [title]="'Injected Burn Requests'"
+      [kind]="'burn'"
+      [state]="'injected'"
+      [address]="address$ | async"
+      [operationRequestList]="injectedBurnOperationRequests$ | async"
+      [isGatekeeper]="userType.isGatekeeper"
+      [isKeyholder]="userType.isKeyholder"
+      [keyholders]="keyholders$ | async"
+      [contract]="activeContract$ | async"
+    >
+    </operation-request-list>
+  </ng-container>
+</ng-container>

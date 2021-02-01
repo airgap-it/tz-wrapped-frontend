@@ -1,0 +1,23 @@
+<div
+  class="overlay"
+  (click)="clearAlerts()"
+  *ngIf="(errors$ | async) !== null"
+></div>
+<div class="container fixed-top" id="betaBanner">
+  <alert
+    class="alert"
+    (onClosed)="clearAlerts()"
+    [dismissible]="true"
+    type="danger"
+    [dismissOnTimeout]="9000"
+    *ngFor="let error of errors$ | async"
+  >
+    <h5 class="alert-heading">Oh no, something went wrong!</h5>
+    <div>
+      <h6>{{ error.status }}:</h6>
+      <p>
+        {{ error.message }}
+      </p>
+    </div>
+  </alert>
+</div>

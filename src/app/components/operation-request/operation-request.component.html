@@ -1,0 +1,131 @@
+<ng-container *ngIf="operationRequest">
+  <div class="row py-3 align-items-center">
+    <div class="col col-md-6">
+      <h5 class="m-0">
+        <strong
+          >{{
+            operationRequest.amount
+              | amountConverter
+                : { decimals: contract.decimals, symbol: contract.display_name }
+              | async
+          }}
+        </strong>
+      </h5>
+      <p class="m-0">{{ operationRequest.gatekeeper.display_name }}</p>
+      <p class="text-muted m-0">
+        {{ operationRequest.gatekeeper.address | shorten }}
+      </p>
+    </div>
+    <div class="col col-md-6">
+      <p class="text-right m-0">
+        {{ operationRequest.created_at | date: 'dd.MM.yy' }}
+      </p>
+      <p class="text-right text-muted m-0">
+        {{ operationRequest.created_at | date: 'HH:mm' }}
+      </p>
+      <p class="text-right text-muted m-0">#{{ operationRequest.nonce }}</p>
+    </div>
+  </div>
+  <p
+    class="text-muted"
+    *ngIf="
+      operationRequest.nonce > (contractNonce$ | async) &&
+      operationRequest.state === 'approved' &&
+      isGatekeeper
+    "
+  >
+    This request can only be handled after the previous requests are completed.
+  </p>
+  <div
+    class="d-flex justify-content-between align-items-center btn--container__more pb-3"
+  >
+    <p class="m-0">
+      <strong
+        >{{ operationRequest.operation_approvals.length }}/{{
+          contract.min_approvals
+        }}
+        Confirmations</strong
+      >
+    </p>
+    <div class="btn-group" dropdown>
+      <button dropdownToggle type="button" class="btn btn-link">
+        <img src="/assets/img/three-dot.svg" height="18px" />
+      </button>
+      <ul
+        id="dropdown-basic"
+        *dropdownMenu
+        class="dropdown-menu dropdown-menu-right"
+        role="menu"
+        aria-labelledby="button-basic"
+      >
+        <li role="menuitem">
+          <a class="dropdown-item" (click)="delete()">Delete request</a>
+        </li>
+        <li
+          role="menuitem"
+          *ngIf="
+            operationRequest.state === 'approved' &&
+            operationRequest.nonce < (contractNonce$ | async)
+          "
+        >
+          <a class="dropdown-item">Confirm injection</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div class="signature--container">
+    <app-multi-signature-item
+      *ngFor="let multisigItem of multisigItems"
+      [multisigItem]="multisigItem"
+    >
+    </app-multi-signature-item>
+  </div>
+  <div class="pt-3">
+    <div class="row">
+      <div class="col">
+        <button
+          *ngIf="
+            !currentUserApproved &&
+            operationRequest.state === 'open' &&
+            isKeyholder
+          "
+          type="button"
+          class="btn btn-primary btn-block"
+          (click)="approveOperationRequest()"
+        >
+          Approve Request
+        </button>
+      </div>
+      <div
+        class="col-md-2 pl-0"
+        *ngIf="
+          !currentUserApproved &&
+          operationRequest.state === 'open' &&
+          isKeyholder
+        "
+      >
+        <button
+          type="button"
+          class="btn btn-light btn-block"
+          (click)="openModal()"
+        >
+          <img src="/assets/img/info-circle.svg" width="18px" />
+        </button>
+      </div>
+    </div>
+
+    <button
+      *ngIf="
+        operationRequest.nonce === (contractNonce$ | async) &&
+        operationRequest.state === 'approved' &&
+        isGatekeeper
+      "
+      type="button"
+      class="btn btn-primary btn-block"
+      (click)="submitOperation()"
+    >
+      Submit Operation
+    </button>
+  </div>
+  <hr />
+</ng-container>
