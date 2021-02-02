@@ -177,7 +177,7 @@
               type="button"
               class="btn btn-primary btn-block"
               (click)="mint()"
-              [disabled]="amountControl.invalid && !(isGatekeeper$ | async)"
+              [disabled]="amountControl.invalid || !(isGatekeeper$ | async)"
             >
               Request Mint
             </button>
@@ -265,7 +265,7 @@
               type="button"
               class="btn btn-primary btn-block"
               (click)="burn()"
-              [disabled]="amountBurnControl.invalid && !(isGatekeeper$ | async)"
+              [disabled]="amountBurnControl.invalid || !(isGatekeeper$ | async)"
             >
               Request Burn
             </button>
