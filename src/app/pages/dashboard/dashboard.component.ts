@@ -25,9 +25,11 @@ import {
   getApprovedBurnOperationRequests,
   getApprovedMintOperationRequests,
   getBalance,
+  getBusyBurnOperationRequests,
   getInjectedBurnOperationRequests,
   getInjectedMintOperationRequests,
   getKeyholders,
+  getBusyMintOperationRequests,
   getOpenBurnOperationRequests,
   getOpenMintOperationRequests,
   getRedeemAddress,
@@ -92,6 +94,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private subscriptions: Subscription[] = []
 
+  public busyMintOpeartionRequests$: Observable<boolean>
+  public busyBurnOpeartionRequests$: Observable<boolean>
+
   constructor(
     private readonly store$: Store<fromRoot.State>,
     private readonly route: ActivatedRoute,
@@ -151,6 +156,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.redeemAddress$ = this.store$.select(getRedeemAddress)
     this.redeemAddressBalance$ = this.store$.select(getRedeemAddressBalance)
+    this.busyMintOpeartionRequests$ = this.store$.select(
+      getBusyMintOperationRequests
+    )
+    this.busyBurnOpeartionRequests$ = this.store$.select(
+      getBusyBurnOperationRequests
+    )
 
     const loadDataSub = combineLatest([
       this.activeContract$,

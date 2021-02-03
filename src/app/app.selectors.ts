@@ -148,3 +148,13 @@ export const getRedeemAddressBalance = createSelector(
 )
 
 export const getAlerts = createSelector(selectApp, (state) => state.alerts)
+
+export const getBusyMintOperationRequests = createSelector(
+  selectApp,
+  (state) => state.busy.mintOperationRequests
+)
+
+export const getBusyBurnOperationRequests = createSelector(
+  selectApp,
+  (state) => state.busy.burnOperationRequests
+)
