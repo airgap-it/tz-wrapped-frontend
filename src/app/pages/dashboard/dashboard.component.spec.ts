@@ -1,3 +1,4 @@
+import { RouterTestingModule } from '@angular/router/testing'
 import { ComponentFixture, TestBed } from '@angular/core/testing'
 import { provideMockStore, MockStore } from '@ngrx/store/testing'
 import { TestScheduler } from 'rxjs/testing'
@@ -22,6 +23,7 @@ describe('DashboardComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
+      imports: [RouterTestingModule.withRoutes([])],
       providers: [
         provideMockStore({ initialState }),
         { provide: Actions, useValue: EMPTY },
