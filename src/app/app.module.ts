@@ -28,6 +28,7 @@ import { ErrorItemComponent } from './components/error-item/error.component'
 import { CopyService } from './services/copy/copy-service.service'
 import { AlertModule } from 'ngx-bootstrap/alert'
 import { OperationRequestListComponent } from './components/operation-request-list/operation-request-list.component'
+import { DeleteModalItemComponent } from './components/delete-modal-item/delete-modal-item.component'
 
 @NgModule({
   declarations: [
@@ -42,6 +43,7 @@ import { OperationRequestListComponent } from './components/operation-request-li
     AmountConverterPipe,
     ErrorItemComponent,
     OperationRequestListComponent,
+    DeleteModalItemComponent,
   ],
   imports: [
     AlertModule.forRoot(),
