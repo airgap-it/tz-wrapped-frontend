@@ -11,7 +11,7 @@ import {
   amountValidator,
 } from 'src/app/utils/amount'
 import { filter, map, take } from 'rxjs/operators'
-import { ActivatedRoute } from '@angular/router'
+import { ActivatedRoute, Router } from '@angular/router'
 import {
   OperationRequest,
   OperationRequestKind,
@@ -94,7 +94,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private readonly store$: Store<fromRoot.State>,
-    private readonly route: ActivatedRoute
+    private readonly route: ActivatedRoute,
+    private router: Router
   ) {
     this.activeContract$ = this.store$
       .select(getActiveContract)
@@ -289,6 +290,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   onSelect(event: any): void {
+    this.router.navigate(['/', `${event.heading.toLowerCase()}`])
     this.store$.dispatch(actions.selectTab({ tab: event.id }))
   }
 

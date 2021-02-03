@@ -41,11 +41,7 @@
           aria-labelledby="button-animated"
         >
           <li role="menuitem" *ngFor="let contract of contracts$ | async">
-            <a
-              class="dropdown-item"
-              href="#"
-              (click)="changeContract(contract)"
-            >
+            <a class="dropdown-item" (click)="changeContract(contract)">
               <img
                 width="32px"
                 height="32px"
