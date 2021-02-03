@@ -1,0 +1,56 @@
+<div class="modal-header">
+  <h4 class="modal-title pull-left">Confirm Deletion</h4>
+  <button
+    type="button"
+    class="close pull-right"
+    aria-label="Close"
+    (click)="bsModalRef.hide()"
+  >
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="modal-body">
+  <h5 class="mb-3">
+    Are you sure you want to delete {{ operationRequest.kind }} request #{{
+      operationRequest.nonce
+    }}?
+  </h5>
+  <ng-container *ngIf="contractNonces$ | async as contractNonces">
+    <div
+      *ngIf="
+        contractNonces.get(operationRequest.contract_id) <
+        operationRequest.nonce
+      "
+      class="alert alert-warning"
+      role="alert"
+    >
+      <h4 class="alert-heading">Warning</h4>
+      All the subsequent operation requests' approvals will be deleted and will
+      have to be approved again.
+    </div>
+  </ng-container>
+
+  <div class="pt-3">
+    <div class="row justify-content-between">
+      <div class="col-md-2">
+        <button
+          type="button"
+          class="btn btn-primary btn-block"
+          (click)="bsModalRef.hide()"
+        >
+          Cancel
+        </button>
+      </div>
+
+      <div class="col-md-3">
+        <button
+          type="button"
+          class="btn btn-block"
+          (click)="delete(); bsModalRef.hide()"
+        >
+          Delete Request
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

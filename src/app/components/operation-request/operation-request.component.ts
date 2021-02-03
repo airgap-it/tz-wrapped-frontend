@@ -12,6 +12,7 @@ import { User } from 'src/app/services/api/interfaces/user'
 import { OperationRequest } from 'src/app/services/api/interfaces/operationRequest'
 import { Contract } from 'src/app/services/api/interfaces/contract'
 import { OperationApproval } from 'src/app/services/api/interfaces/operationApproval'
+import { DeleteModalItemComponent } from '../delete-modal-item/delete-modal-item.component'
 
 export interface UserWithApproval extends User {
   requestId: string
@@ -148,11 +149,17 @@ export class OperationRequestComponent implements OnInit {
   }
 
   delete() {
-    this.store$.dispatch(
-      actions.deleteOperationRequest({
-        operationRequest: this.operationRequest,
-      })
+    const contractNonces$ = this.store$.select(
+      (state) => state.app.contractNonces
     )
+
+    this.modalService.show(DeleteModalItemComponent, {
+      class: 'modal-lg',
+      initialState: {
+        operationRequest: this.operationRequest,
+        contractNonces$: contractNonces$,
+      },
+    })
   }
 
   markInjected() {
