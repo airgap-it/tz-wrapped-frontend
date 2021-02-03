@@ -10,7 +10,10 @@ import {
   PagedResponse,
   SignableMessageInfo,
 } from './services/api/interfaces/common'
-import { OperationRequest } from './services/api/interfaces/operationRequest'
+import {
+  OperationRequest,
+  OperationRequestKind,
+} from './services/api/interfaces/operationRequest'
 import { SessionUser } from './services/api/interfaces/auth'
 import { Tab } from './pages/dashboard/tab'
 import { ErrorDescription } from './components/error-item/error-description'
@@ -392,5 +395,15 @@ export const reducer = createReducer(
   on(actions.loadRedeemAddressBalanceSucceeded, (state, { balance }) => ({
     ...state,
     redeemAddressBalance: balance,
+  })),
+  on(actions.submitOperationRequest, (state, { newOperationRequest }) => ({
+    ...state,
+    busy: {
+      ...state.busy,
+      mintOperationRequests:
+        newOperationRequest.kind === OperationRequestKind.MINT,
+      burnOperationRequests:
+        newOperationRequest.kind === OperationRequestKind.BURN,
+    },
   }))
 )

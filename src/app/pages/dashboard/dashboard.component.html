@@ -177,8 +177,19 @@
               type="button"
               class="btn btn-primary btn-block"
               (click)="mint()"
-              [disabled]="amountControl.invalid || !(isGatekeeper$ | async)"
+              [disabled]="
+                amountControl.invalid ||
+                (busyMintOpeartionRequests$ | async) ||
+                !(isGatekeeper$ | async)
+              "
             >
+              <ng-container *ngIf="busyMintOpeartionRequests$ | async"
+                ><span
+                  class="spinner-border spinner-border-sm mr-1"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+              </ng-container>
               Request Mint
             </button>
           </ng-container>
@@ -265,8 +276,19 @@
               type="button"
               class="btn btn-primary btn-block"
               (click)="burn()"
-              [disabled]="amountBurnControl.invalid || !(isGatekeeper$ | async)"
+              [disabled]="
+                amountBurnControl.invalid ||
+                (busyBurnOpeartionRequests$ | async) ||
+                !(isGatekeeper$ | async)
+              "
             >
+              <ng-container *ngIf="busyBurnOpeartionRequests$ | async"
+                ><span
+                  class="spinner-border spinner-border-sm mr-1"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+              </ng-container>
               Request Burn
             </button>
           </ng-container>
