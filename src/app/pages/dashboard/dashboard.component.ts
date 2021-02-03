@@ -213,7 +213,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    const routeSub = this.route.params.subscribe((params) => {
+    this.route.params.pipe(take(1)).subscribe((params) => {
       if (params.tab === 'mint') {
         this.store$.dispatch(actions.selectTab({ tab: Tab.MINT }))
       } else if (params.tab === 'burn') {
@@ -222,7 +222,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.store$.dispatch(actions.selectTab({ tab: Tab.TRANSFER }))
       }
     })
-    this.subscriptions.push(routeSub)
   }
 
   ngOnDestroy() {
