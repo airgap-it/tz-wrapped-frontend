@@ -2,7 +2,7 @@ import { Component, Input, OnDestroy, OnInit } from '@angular/core'
 import { Store } from '@ngrx/store'
 import * as fromRoot from '../../reducers/index'
 import * as actions from '../../app.actions'
-import { FormControl, Validators } from '@angular/forms'
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 import { combineLatest, Observable, Subscription } from 'rxjs'
 import BigNumber from 'bignumber.js'
 import {
@@ -39,6 +39,7 @@ import {
   getUsers,
   isGatekeeper,
   isKeyholder,
+  getGatekeepers,
 } from 'src/app/app.selectors'
 import { Tab } from './tab'
 import { isNotNullOrUndefined } from 'src/app/app.operators'
@@ -97,10 +98,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   public busyMintOpeartionRequests$: Observable<boolean>
   public busyBurnOpeartionRequests$: Observable<boolean>
 
+  public gatekeepers$: Observable<User[]>
+  public formGroup: FormGroup
+
   constructor(
     private readonly store$: Store<fromRoot.State>,
     private readonly route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private formBuilder: FormBuilder
   ) {
     this.activeContract$ = this.store$
       .select(getActiveContract)
@@ -162,6 +167,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.busyBurnOpeartionRequests$ = this.store$.select(
       getBusyBurnOperationRequests
     )
+    this.gatekeepers$ = this.store$.select(getGatekeepers)
 
     const loadDataSub = combineLatest([
       this.activeContract$,
@@ -221,6 +227,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.amountBurnControl.updateValueAndValidity()
       })
     )
+
+    this.formGroup = this.formBuilder.group({
+      gatekeeperForm: ['', Validators.required],
+    })
+    this.setDefaults()
   }
 
   ngOnInit(): void {
@@ -239,6 +250,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
     for (const subscription of this.subscriptions) {
       subscription.unsubscribe()
     }
+  }
+
+  setDefaults() {
+    combineLatest([this.store$.select(getActiveAccount), this.gatekeepers$])
+      .pipe(
+        map(([activeAccount, gatekeepers]) => {
+          if (activeAccount === undefined) {
+            return undefined
+          }
+          return gatekeepers.find(
+            (gatekeeper) => gatekeeper.address === activeAccount.address
+          )
+        })
+      )
+      .subscribe((activeAccount) => {
+        this.formGroup
+          .get('gatekeeperForm')!
+          .patchValue(activeAccount ? activeAccount?.address : '')
+      })
   }
 
   connectWallet() {
@@ -262,7 +292,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private submitOperationRequest(kind: OperationRequestKind, value: string) {
     let targetAddress: string | null = null
     if (kind === OperationRequestKind.MINT) {
-      targetAddress = this.receivingAddressControl.value
+      targetAddress = this.formGroup.get('gatekeeperForm')!.value
+
       validateAddress(targetAddress)
     }
     this.activeContract$.pipe(take(1)).subscribe((contract) => {

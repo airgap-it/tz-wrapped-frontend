@@ -118,20 +118,27 @@
         >
           <div class="my-5">
             <label>Receiving Address</label>
+
             <div class="form-group mb-3">
-              <input
-                [formControl]="receivingAddressControl"
-                type="text"
-                class="form-control"
-                placeholder="tz1.."
-                aria-label="Address"
-                [ngClass]="{
-                  'is-invalid':
-                    receivingAddressControl.errors &&
-                    (receivingAddressControl.touched ||
-                      receivingAddressControl.dirty)
-                }"
-              />
+              <form [formGroup]="formGroup" (ngSubmit)="submit()">
+                <div class="form-group">
+                  <select formControlName="gatekeeperForm" class="form-control">
+                    <option [ngValue]="null" disabled>Select Address</option>
+                    <option hidden value="" disabled selected>
+                      Select Address
+                    </option>
+
+                    <option
+                      *ngFor="let gatekeeper of gatekeepers$ | async"
+                      [ngValue]="gatekeeper.address"
+                    >
+                      {{ gatekeeper.display_name }} -
+                      {{ gatekeeper.address | shorten }}
+                    </option>
+                  </select>
+                </div>
+              </form>
+
               <div class="invalid-feedback px-3 py-2">
                 <strong>Invalid Address</strong>
               </div>
@@ -180,7 +187,8 @@
               [disabled]="
                 amountControl.invalid ||
                 (busyMintOpeartionRequests$ | async) ||
-                !(isGatekeeper$ | async)
+                !(isGatekeeper$ | async) ||
+                !formGroup.valid
               "
             >
               <ng-container *ngIf="busyMintOpeartionRequests$ | async"
