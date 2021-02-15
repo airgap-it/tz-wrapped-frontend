@@ -9,6 +9,7 @@ import { EMPTY } from 'rxjs'
 import { DashboardComponent } from './dashboard.component'
 import { initialState as appInitialState } from '../../app.reducer'
 import { ActivatedRoute } from '@angular/router'
+import { FormBuilder } from '@angular/forms'
 
 const fakeActivatedRoute = {
   snapshot: { data: {} },
@@ -28,6 +29,7 @@ describe('DashboardComponent', () => {
         provideMockStore({ initialState }),
         { provide: Actions, useValue: EMPTY },
         { provide: ActivatedRoute, useValue: fakeActivatedRoute },
+        FormBuilder,
       ],
       declarations: [DashboardComponent],
       schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],

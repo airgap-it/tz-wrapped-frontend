@@ -18,7 +18,7 @@ import { EffectsModule } from '@ngrx/effects'
 import { AppEffects } from './app.effects'
 import { metaReducers, ROOT_REDUCERS } from './reducers'
 import { CommonModule } from '@angular/common'
-import { ReactiveFormsModule } from '@angular/forms'
+import { FormsModule, ReactiveFormsModule } from '@angular/forms'
 import { HttpClientModule } from '@angular/common/http'
 import { OperationRequestComponent } from './components/operation-request/operation-request.component'
 import { ModalItemComponent } from './components/modal-item/modal-item.component'
@@ -52,6 +52,7 @@ import { DeleteModalItemComponent } from './components/delete-modal-item/delete-
     AccordionModule.forRoot(),
     ModalModule.forRoot(),
     BrowserModule,
+    FormsModule,
     CommonModule,
     TabsModule.forRoot(),
     AppRoutingModule,
