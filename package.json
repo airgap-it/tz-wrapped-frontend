@@ -38,6 +38,7 @@
     "@angular/router": "~11.2.0",
     "@ngrx/effects": "^10.0.1",
     "@ngrx/store": "^10.0.1",
+    "@ngx-pwa/local-storage": "^11.1.0",
     "@taquito/beacon-wallet": "^8.0.1-beta.1",
     "@taquito/local-forging": "^8.0.1-beta.1",
     "@taquito/rpc": "^8.0.1-beta.1",
