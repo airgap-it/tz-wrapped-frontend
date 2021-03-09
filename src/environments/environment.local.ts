@@ -4,5 +4,5 @@ export const environment = {
   production: false,
   nodeUrl: 'https://testnet-tezos.giganode.io',
   wrappedBackendUrl: 'http://localhost',
-  tezosNetworktype: NetworkType.DELPHINET,
+  tezosNetworktype: NetworkType.EDONET,
 }

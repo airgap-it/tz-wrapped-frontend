@@ -120,11 +120,11 @@ export class BeaconService {
   ): Promise<BigNumber | undefined> {
     if (contract.kind === ContractKind.FA1) {
       return await this.getFA1Balance(contract, address).catch(
-        (error) => undefined
+        (error) => new BigNumber(0)
       )
     } else if (contract.kind === ContractKind.FA2) {
       return await this.getFA2Balance(contract, address).catch(
-        (error) => undefined
+        (error) => new BigNumber(0)
       )
     }
   }
@@ -199,7 +199,8 @@ export class BeaconService {
       { prim: 'string' }
     )
     const storage: any = await this.fetchStorage(contract)
-    const value: any = await storage['0'].get(packedData.packed)
+    const bigMap = storage['0'] ?? storage.dataMap
+    const value: any = await bigMap.get(packedData.packed)
     const decodedValue = MichelsonCodec.valueDecoder(
       Uint8ArrayConsumer.fromHexString(value.slice(2))
     )
@@ -230,7 +231,8 @@ export class BeaconService {
     )
 
     const storage: any = await this.fetchStorage(contract)
-    const value: any = await storage['0'].get(packedData.packed)
+    const bigMap = storage['0'] ?? storage.dataMap
+    const value: any = await bigMap.get(packedData.packed)
 
     const decodedValue = MichelsonCodec.valueDecoder(
       Uint8ArrayConsumer.fromHexString(value.slice(2))
@@ -240,17 +242,11 @@ export class BeaconService {
   }
 
   private async getFA2Balance(contract: Contract, userAddress: string) {
-    try {
-      const storage: Storage = await this.fetchStorage(contract)
-
-      return new BigNumber(
-        await storage.ledger.get({
-          token_id: contract.token_id,
-          owner: userAddress,
-        })
-      )
-    } catch (e) {
-      console.error(e)
-    }
+    const storage: Storage = await this.fetchStorage(contract)
+    const balance = await storage.ledger.get({
+      token_id: contract.token_id,
+      owner: userAddress,
+    })
+    return new BigNumber(balance ?? 0)
   }
 }

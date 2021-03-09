@@ -313,6 +313,11 @@ export class AppEffects {
         if (cachedContract$) {
           return cachedContract$.pipe(
             map((cachedContract) => {
+              if (cachedContract === undefined) {
+                return actions.setActiveContract({
+                  contract: response.results[0],
+                })
+              }
               const activeContract = contracts.find(
                 (contract) => contract.id === cachedContract.id
               )
