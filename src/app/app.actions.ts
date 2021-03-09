@@ -408,6 +408,10 @@ export const setActiveContractSucceeded = createAction(
   `[${featureName}] Setting Active Contract Succeeded`,
   props<{ contract: Contract }>()
 )
+export const setActiveContractFailed = createAction(
+  `[${featureName}] Setting Active Contract Failed`,
+  props<{ errorResponse: HttpErrorResponse }>()
+)
 
 export const loadRedeemAddress = createAction(
   `[${featureName}] Load Redeem Address`,

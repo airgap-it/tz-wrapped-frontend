@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http'
 import { Injectable } from '@angular/core'
 import { Actions, createEffect, ofType } from '@ngrx/effects'
 import { Store } from '@ngrx/store'
-import { from, of } from 'rxjs'
+import { from, Observable, of } from 'rxjs'
 import {
   map,
   catchError,
@@ -34,6 +34,8 @@ import {
   OperationRequestState,
 } from './services/api/interfaces/operationRequest'
 import { BeaconService } from './services/beacon/beacon.service'
+import { CacheService } from './services/cache/cache.service'
+import { Contract } from './services/api/interfaces/contract'
 
 @Injectable()
 export class AppEffects {
@@ -41,7 +43,8 @@ export class AppEffects {
     private readonly actions$: Actions,
     private readonly beaconService: BeaconService,
     private readonly apiService: ApiService,
-    private readonly store$: Store<fromRoot.State>
+    private readonly store$: Store<fromRoot.State>,
+    private readonly cacheService: CacheService
   ) {}
 
   setupBeacon$ = createEffect(() =>
@@ -300,9 +303,33 @@ export class AppEffects {
   loadContractsSucceeded$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.loadContractsSucceeded),
-      map(({ response }) =>
-        actions.setActiveContract({ contract: response.results[0] })
-      )
+      switchMap(({ response }) => {
+        const contracts: Contract[] = response.results
+
+        const cachedContract$ = this.cacheService.get(
+          'activeContract'
+        ) as Observable<Contract>
+
+        if (cachedContract$) {
+          return cachedContract$.pipe(
+            map((cachedContract) => {
+              const activeContract = contracts.find(
+                (contract) => contract.id === cachedContract.id
+              )
+              return actions.setActiveContract({
+                contract:
+                  activeContract !== undefined
+                    ? activeContract
+                    : response.results[0],
+              })
+            })
+          )
+        } else {
+          return of(
+            actions.setActiveContract({ contract: response.results[0] })
+          )
+        }
+      })
     )
   )
 
@@ -954,7 +981,15 @@ export class AppEffects {
   setActiveContract$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.setActiveContract),
-      map(({ contract }) => actions.setActiveContractSucceeded({ contract }))
+
+      switchMap(({ contract }) =>
+        this.cacheService.set('activeContract', contract).pipe(
+          map(() => actions.setActiveContractSucceeded({ contract })),
+          catchError((errorResponse) =>
+            of(actions.setActiveContractFailed({ errorResponse }))
+          )
+        )
+      )
     )
   )
 

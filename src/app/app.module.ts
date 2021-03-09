@@ -28,6 +28,7 @@ import { ErrorItemComponent } from './components/error-item/error.component'
 import { CopyService } from './services/copy/copy-service.service'
 import { AlertModule } from 'ngx-bootstrap/alert'
 import { OperationRequestListComponent } from './components/operation-request-list/operation-request-list.component'
+import { CacheService } from './services/cache/cache.service'
 import { DeleteModalItemComponent } from './components/delete-modal-item/delete-modal-item.component'
 
 @NgModule({
@@ -67,7 +68,7 @@ import { DeleteModalItemComponent } from './components/delete-modal-item/delete-
     HttpClientModule,
     ReactiveFormsModule,
   ],
-  providers: [BeaconService, Store, CopyService],
+  providers: [BeaconService, Store, CopyService, CacheService],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
