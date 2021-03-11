@@ -119,10 +119,13 @@
           <div class="my-5">
             <label>Receiving Address</label>
 
-            <div class="form-group mb-3">
+            <div class="mb-3">
               <form [formGroup]="formGroup" (ngSubmit)="submit()">
                 <div class="form-group">
-                  <select formControlName="gatekeeperForm" class="form-control">
+                  <select
+                    formControlName="gatekeeperForm"
+                    class="form-control custom-select"
+                  >
                     <option [ngValue]="null" disabled>Select Address</option>
                     <option hidden value="" disabled selected>
                       Select Address
