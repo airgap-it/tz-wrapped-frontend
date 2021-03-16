@@ -8,7 +8,9 @@
       </div>
     </div>
     <div class="col col-md-5 pr-0">
-      <p class="m-0">{{ multisigItem.display_name }}</p>
+      <p *ngIf="multisigItem.display_name.length > 0" class="m-0">
+        {{ multisigItem.display_name }}
+      </p>
       <p class="text-muted m-0">{{ multisigItem.address | shorten }}</p>
     </div>
     <div class="col col-md-5 pl-0">

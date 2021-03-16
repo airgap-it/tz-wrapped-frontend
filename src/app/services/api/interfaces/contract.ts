@@ -13,5 +13,6 @@ export interface Contract {
   kind: ContractKind
   display_name: string
   decimals: number
+  symbol: string
   min_approvals: number
 }

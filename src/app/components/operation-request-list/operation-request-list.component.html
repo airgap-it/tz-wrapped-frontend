@@ -4,11 +4,6 @@
     <operation-request
       *ngFor="let request of operationRequestList.results"
       [operationRequest]="request"
-      [address]="address"
-      [isGatekeeper]="isGatekeeper"
-      [isKeyholder]="isKeyholder"
-      [keyholders]="keyholders"
-      [contract]="contract"
     >
     </operation-request>
     <div class="pt-3" *ngIf="operationRequestList.total_pages > 1">

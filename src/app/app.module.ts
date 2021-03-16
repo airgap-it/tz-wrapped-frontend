@@ -30,6 +30,7 @@ import { AlertModule } from 'ngx-bootstrap/alert'
 import { OperationRequestListComponent } from './components/operation-request-list/operation-request-list.component'
 import { CacheService } from './services/cache/cache.service'
 import { DeleteModalItemComponent } from './components/delete-modal-item/delete-modal-item.component'
+import { OperationRequestGroupComponent } from './components/operation-request-group/operation-request-group.component'
 
 @NgModule({
   declarations: [
@@ -45,6 +46,7 @@ import { DeleteModalItemComponent } from './components/delete-modal-item/delete-
     ErrorItemComponent,
     OperationRequestListComponent,
     DeleteModalItemComponent,
+    OperationRequestGroupComponent,
   ],
   imports: [
     AlertModule.forRoot(),

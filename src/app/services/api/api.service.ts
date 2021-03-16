@@ -59,6 +59,21 @@ export class ApiService {
     return this.http.get<SessionUser>(path, { withCredentials: true })
   }
 
+  updateSessionUser(
+    name: string,
+    email: string | null
+  ): Observable<SessionUser> {
+    const path = `${this.getUrl(ApiService.authPath)}/me`
+    return this.http.patch<SessionUser>(
+      path,
+      {
+        display_name: name,
+        email,
+      },
+      { withCredentials: true }
+    )
+  }
+
   signOut(): Observable<void> {
     return this.http.delete<void>(this.getUrl(ApiService.authPath), {
       withCredentials: true,

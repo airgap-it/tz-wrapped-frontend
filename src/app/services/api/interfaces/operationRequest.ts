@@ -5,6 +5,7 @@ import { User } from './user'
 export enum OperationRequestKind {
   MINT = 'mint',
   BURN = 'burn',
+  UPDATE_KEYHOLDERS = 'update_keyholders',
 }
 
 export enum OperationRequestState {
@@ -20,19 +21,22 @@ export interface OperationRequest {
   gatekeeper: User
   contract_id: string
   target_address: string | null
-  amount: string
+  amount: string | null
+  threshold: number | null
+  proposed_keyholders: User[] | null
   kind: string
-  signature: string
   chain_id: string
   nonce: number
   state: OperationRequestState
   operation_approvals: OperationApproval[]
-  operation_hash?: any
+  operation_hash: string | null
 }
 
 export interface NewOperationRequest {
   contract_id: string
   target_address: string | null
-  amount: string
+  amount: string | null
+  threshold: number | null
+  proposed_keyholders: string[] | null
   kind: string
 }

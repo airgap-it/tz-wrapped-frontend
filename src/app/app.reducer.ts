@@ -23,6 +23,7 @@ interface Busy {
   balance: boolean
   mintOperationRequests: boolean
   burnOperationRequests: boolean
+  updateKeyholdersOperationRequests: boolean
   contracts: boolean
   users: boolean
   signableMessages: boolean
@@ -49,9 +50,24 @@ export interface State {
   approvedBurnOperationRequests: PagedResponse<OperationRequest> | undefined
   injectedBurnOperationRequests: PagedResponse<OperationRequest> | undefined
 
+  openUpdateKeyholdersOperationRequests:
+    | PagedResponse<OperationRequest>
+    | undefined
+  approvedUpdateKeyholdersOperationRequests:
+    | PagedResponse<OperationRequest>
+    | undefined
+  injectedUpdateKeyholdersOperationRequests:
+    | PagedResponse<OperationRequest>
+    | undefined
+
   redeemAddress: string | undefined
   redeemAddressBalance: BigNumber | undefined
   alerts: ErrorDescription[] | null
+
+  keyholdersToRemove: User[]
+  keyholdersToAdd: string[]
+  newThreshold: number | undefined
+
   busy: Busy
 }
 
@@ -75,14 +91,24 @@ export const initialState: State = {
   approvedBurnOperationRequests: undefined,
   injectedBurnOperationRequests: undefined,
 
+  openUpdateKeyholdersOperationRequests: undefined,
+  approvedUpdateKeyholdersOperationRequests: undefined,
+  injectedUpdateKeyholdersOperationRequests: undefined,
+
   redeemAddress: undefined,
   redeemAddressBalance: undefined,
   alerts: null,
+
+  keyholdersToRemove: [],
+  keyholdersToAdd: [],
+  newThreshold: undefined,
+
   busy: {
     activeAccount: false,
     balance: false,
     mintOperationRequests: false,
     burnOperationRequests: false,
+    updateKeyholdersOperationRequests: false,
     contracts: false,
     users: false,
     signableMessages: false,
@@ -117,6 +143,10 @@ export const reducer = createReducer(
     canSignIn,
   })),
   on(actions.getSessionUserSucceeded, (state, { sessionUser }) => ({
+    ...state,
+    sessionUser,
+  })),
+  on(actions.updateSessionUserSucceeded, (state, { sessionUser }) => ({
     ...state,
     sessionUser,
   })),
@@ -190,6 +220,7 @@ export const reducer = createReducer(
   })),
   on(actions.loadContractsFailed, (state) => ({
     ...state,
+    contracts: [],
     busy: {
       ...state.busy,
       contracts: false,
@@ -212,6 +243,7 @@ export const reducer = createReducer(
   })),
   on(actions.loadUsersFailed, (state) => ({
     ...state,
+    users: [],
     busy: {
       ...state.busy,
       users: false,
@@ -227,7 +259,6 @@ export const reducer = createReducer(
   on(actions.loadOpenBurnOperationRequestsSucceeded, (state, { response }) => ({
     ...state,
     openBurnOperationRequests: response,
-
     busy: {
       ...state.busy,
       burnOperationRequests: false,
@@ -308,6 +339,53 @@ export const reducer = createReducer(
       mintOperationRequests: false,
     },
   })),
+  on(actions.loadUpdateKeyholdersOperationRequests, (state) => ({
+    ...state,
+    busy: {
+      ...state.busy,
+      updateKeyholdersOperationRequests: true,
+    },
+  })),
+  on(
+    actions.loadOpenUpdateKeyholdersOperationRequestsSucceeded,
+    (state, { response }) => ({
+      ...state,
+      openUpdateKeyholdersOperationRequests: response,
+      busy: {
+        ...state.busy,
+        updateKeyholdersOperationRequests: false,
+      },
+    })
+  ),
+  on(
+    actions.loadApprovedUpdateKeyholdersOperationRequestsSucceeded,
+    (state, { response }) => ({
+      ...state,
+      approvedUpdateKeyholdersOperationRequests: response,
+      busy: {
+        ...state.busy,
+        updateKeyholdersOperationRequests: false,
+      },
+    })
+  ),
+  on(
+    actions.loadInjectedUpdateKeyholdersOperationRequestsSucceeded,
+    (state, { response }) => ({
+      ...state,
+      injectedUpdateKeyholdersOperationRequests: response,
+      busy: {
+        ...state.busy,
+        updateKeyholdersOperationRequests: false,
+      },
+    })
+  ),
+  on(actions.loadUpdateKeyholdersOperationRequestsFailed, (state) => ({
+    ...state,
+    busy: {
+      ...state.busy,
+      updateKeyholdersOperationRequests: false,
+    },
+  })),
   on(actions.loadContractNonce, (state) => ({
     ...state,
     busy: {
@@ -365,6 +443,8 @@ export const reducer = createReducer(
     openBurnOperationRequests: undefined,
     approvedBurnOperationRequests: undefined,
     injectedBurnOperationRequests: undefined,
+    keyholdersToRemove: [],
+    keyholdersToAdd: [],
     busy: {
       ...state.busy,
     },
@@ -382,6 +462,48 @@ export const reducer = createReducer(
     busy: {
       ...state.busy,
     },
+  })),
+  on(actions.updateKeyholdersToRemove, (state, { keyholder }) => {
+    const removeIndex = state.keyholdersToRemove.indexOf(keyholder)
+    const keyholdersToRemove = [...state.keyholdersToRemove]
+    if (removeIndex !== -1) {
+      keyholdersToRemove.splice(removeIndex, 1)
+    } else {
+      keyholdersToRemove.push(keyholder)
+    }
+    return {
+      ...state,
+      keyholdersToRemove,
+    }
+  }),
+  on(actions.resetKeyholdersToRemove, (state) => ({
+    ...state,
+    keyholdersToRemove: [],
+  })),
+  on(actions.updateKeyholdersToAdd, (state, { keyholder }) => {
+    const removeIndex = state.keyholdersToAdd.indexOf(keyholder)
+    const keyholdersToAdd = [...state.keyholdersToAdd]
+    if (removeIndex !== -1) {
+      keyholdersToAdd.splice(removeIndex, 1)
+    } else {
+      keyholdersToAdd.push(keyholder)
+    }
+    return {
+      ...state,
+      keyholdersToAdd,
+    }
+  }),
+  on(actions.resetKeyholdersToAdd, (state) => ({
+    ...state,
+    keyholdersToAdd: [],
+  })),
+  on(actions.updateThreshold, (state, { threshold }) => ({
+    ...state,
+    newThreshold: threshold,
+  })),
+  on(actions.resetThreshold, (state) => ({
+    ...state,
+    newThreshold: undefined,
   })),
   on(actions.loadRedeemAddress, (state) => ({
     ...state,
@@ -404,6 +526,8 @@ export const reducer = createReducer(
         newOperationRequest.kind === OperationRequestKind.MINT,
       burnOperationRequests:
         newOperationRequest.kind === OperationRequestKind.BURN,
+      updateKeyholdersOperationRequests:
+        newOperationRequest.kind === OperationRequestKind.UPDATE_KEYHOLDERS,
     },
   }))
 )

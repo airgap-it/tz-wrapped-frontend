@@ -56,6 +56,10 @@ export class BeaconService {
     }
   }
 
+  async activeAccount(): Promise<AccountInfo | undefined> {
+    return this.wallet.client.getActiveAccount()
+  }
+
   async requestPermission(): Promise<AccountInfo | undefined> {
     await this.wallet.requestPermissions({ network: this.network })
     return this.wallet.client.getActiveAccount()
