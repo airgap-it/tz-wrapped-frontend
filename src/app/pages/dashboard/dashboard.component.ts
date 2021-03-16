@@ -45,6 +45,8 @@ import { Tab } from './tab'
 import { isNotNullOrUndefined } from 'src/app/app.operators'
 import { validateAddress } from 'src/app/utils/address'
 import { PagedResponse } from 'src/app/services/api/interfaces/common'
+import { signIn } from 'src/app/common/auth'
+import { loadContractsIfNeeded } from 'src/app/common/contracts'
 
 @Component({
   selector: 'app-dashboard',
@@ -111,26 +113,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .select(getActiveContract)
       .pipe(isNotNullOrUndefined())
 
-    const authenticaitonSub = combineLatest([
-      this.store$.select(getSessionUser),
-      this.store$.select(getActiveAccount),
-    ])
-      .pipe(
-        filter(
-          ([user, account]) => user === undefined && account !== undefined
-        ),
-        map(([, account]) => account!)
-      )
-      .subscribe((account) => {
-        this.store$.dispatch(
-          actions.getSignInChallenge({ address: account.address })
-        )
-      })
-    this.subscriptions.push(authenticaitonSub)
+    const signInSub = signIn(this.store$)
+    this.subscriptions.push(signInSub)
     this.selectedTab$ = this.store$.select(getSelectedTab)
 
     this.store$.dispatch(actions.setupBeacon())
-    this.store$.dispatch(actions.loadContracts())
+    const contractSub = loadContractsIfNeeded(store$)
+    this.subscriptions.push(contractSub)
 
     this.openMintOperationRequests$ = this.store$.select(
       getOpenMintOperationRequests
@@ -171,16 +160,40 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     const loadDataSub = combineLatest([
       this.activeContract$,
+      this.store$.select(getActiveAccount),
       this.store$.select(getSessionUser),
     ])
-      .pipe(filter(([, user]) => user !== undefined))
+      .pipe(
+        filter(
+          ([, activeAccount, sessionUser]) =>
+            activeAccount !== undefined && sessionUser !== undefined
+        )
+      )
       .subscribe(([contract]) => {
         this.store$.dispatch(actions.loadUsers({ contractId: contract.id }))
         this.store$.dispatch(actions.loadMintOperationRequests())
         this.store$.dispatch(actions.loadBurnOperationRequests())
       })
     this.subscriptions.push(loadDataSub)
-    this.store$.dispatch(actions.loadBalance())
+    const balanceSub = combineLatest([
+      this.store$.select(getActiveAccount),
+      this.store$.select(getActiveContract),
+    ])
+      .pipe(
+        filter(
+          ([account, contract]) =>
+            account !== undefined && contract !== undefined
+        ),
+        map(([account, contract]) => ({
+          account: account!,
+          contract: contract!,
+        }))
+      )
+      .subscribe(({ account, contract }) => {
+        this.store$.dispatch(actions.loadBalance())
+        this.store$.dispatch(actions.loadRedeemAddress({ contract }))
+      })
+    this.subscriptions.push(balanceSub)
 
     this.receivingAddressControl = new FormControl('', [
       Validators.required,
@@ -307,6 +320,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
               contract.decimals
             ).toFixed(),
             target_address: targetAddress,
+            threshold: null,
+            proposed_keyholders: null,
           },
         })
       )

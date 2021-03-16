@@ -20,11 +20,14 @@ import {
   getActiveContract,
   getApprovedBurnOperationRequestCurrentPage,
   getApprovedMintOperationRequestCurrentPage,
+  getApprovedUpdateKeyholdersOperationRequestCurrentPage,
   getCanSignIn,
   getInjectedBurnOperationRequestCurrentPage,
   getInjectedMintOperationRequestCurrentPage,
+  getInjectedUpdateKeyholdersOperationRequestCurrentPage,
   getOpenBurnOperationRequestCurrentPage,
   getOpenMintOperationRequestCurrentPage,
+  getOpenUpdateKeyholdersOperationRequestCurrentPage,
   getRedeemAddress,
 } from './app.selectors'
 import { ApiService } from './services/api/api.service'
@@ -36,6 +39,7 @@ import {
 import { BeaconService } from './services/beacon/beacon.service'
 import { CacheService } from './services/cache/cache.service'
 import { Contract } from './services/api/interfaces/contract'
+import { Router } from '@angular/router'
 
 @Injectable()
 export class AppEffects {
@@ -44,7 +48,8 @@ export class AppEffects {
     private readonly beaconService: BeaconService,
     private readonly apiService: ApiService,
     private readonly store$: Store<fromRoot.State>,
-    private readonly cacheService: CacheService
+    private readonly cacheService: CacheService,
+    private readonly router: Router
   ) {}
 
   setupBeacon$ = createEffect(() =>
@@ -74,13 +79,6 @@ export class AppEffects {
           catchError((error) => of(actions.connectWalletFailed({ error })))
         )
       )
-    )
-  )
-
-  connectWalletSucceeded$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.connectWalletSucceeded),
-      map(() => actions.loadBalance())
     )
   )
 
@@ -213,6 +211,29 @@ export class AppEffects {
     )
   )
 
+  updateSessionUser$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.updateSessionUser),
+      switchMap(({ displayName, email }) =>
+        this.apiService.updateSessionUser(displayName, email).pipe(
+          map((sessionUser) =>
+            actions.updateSessionUserSucceeded({ sessionUser })
+          ),
+          catchError((errorResponse) =>
+            of(actions.updateSessionUserFailed({ errorResponse }))
+          )
+        )
+      )
+    )
+  )
+
+  updateSessionUserFailed$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.updateSessionUserFailed),
+      map((value) => actions.handleHttpErrorResponse(value))
+    )
+  )
+
   signOut$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.signOut),
@@ -224,6 +245,18 @@ export class AppEffects {
           )
         )
       )
+    )
+  )
+
+  signOutSucceeded$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.signOutSucceeded),
+      map(() => {
+        if (this.router.url === '/settings') {
+          this.router.navigate(['/transfer'])
+        }
+        return actions.noOp()
+      })
     )
   )
 
@@ -402,13 +435,21 @@ export class AppEffects {
           } else {
             return actions.loadInjectedMintOperationRequests(params)
           }
-        } else {
+        } else if (kind === OperationRequestKind.BURN) {
           if (state === OperationRequestState.OPEN) {
             return actions.loadOpenBurnOperationRequests(params)
           } else if (state === OperationRequestState.APPROVED) {
             return actions.loadApprovedBurnOperationRequests(params)
           } else {
             return actions.loadInjectedBurnOperationRequests(params)
+          }
+        } else {
+          if (state === OperationRequestState.OPEN) {
+            return actions.loadOpenUpdateKeyholdersOperationRequests(params)
+          } else if (state === OperationRequestState.APPROVED) {
+            return actions.loadApprovedUpdateKeyholdersOperationRequests(params)
+          } else {
+            return actions.loadInjectedUpdateKeyholdersOperationRequests(params)
           }
         }
       })
@@ -695,6 +736,168 @@ export class AppEffects {
     )
   )
 
+  loadUpdateKeyholdersOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadUpdateKeyholdersOperationRequests),
+      switchMap(() =>
+        from([
+          actions.loadOpenUpdateKeyholdersOperationRequests({}),
+          actions.loadApprovedUpdateKeyholdersOperationRequests({}),
+          actions.loadInjectedUpdateKeyholdersOperationRequests({}),
+        ])
+      )
+    )
+  )
+
+  loadOpenUpdateKeyholdersOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadOpenUpdateKeyholdersOperationRequests),
+      withLatestFrom(
+        this.store$.select(getOpenUpdateKeyholdersOperationRequestCurrentPage),
+        this.store$.select(getActiveContract)
+      ),
+      filter(([, , contract]) => contract !== undefined),
+      map(([{ page }, currentPage, contract]) => ({
+        page,
+        currentPage,
+        contract: contract!,
+      })),
+      switchMap(({ page, currentPage, contract }) =>
+        this.apiService
+          .getOperationRequests(
+            contract.id,
+            OperationRequestKind.UPDATE_KEYHOLDERS,
+            OperationRequestState.OPEN,
+            page ?? currentPage
+          )
+          .pipe(
+            map((response) => {
+              if (response.total_pages === 0 && response.page > 1) {
+                return actions.loadOpenUpdateKeyholdersOperationRequests({
+                  page: response.page - 1,
+                })
+              }
+              return actions.loadOpenUpdateKeyholdersOperationRequestsSucceeded(
+                {
+                  response,
+                }
+              )
+            }),
+            catchError((errorResponse) =>
+              of(
+                actions.loadUpdateKeyholdersOperationRequestsFailed({
+                  errorResponse,
+                })
+              )
+            )
+          )
+      )
+    )
+  )
+
+  loadApprovedUpdateKeyholdersOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadApprovedUpdateKeyholdersOperationRequests),
+      withLatestFrom(
+        this.store$.select(
+          getApprovedUpdateKeyholdersOperationRequestCurrentPage
+        ),
+        this.store$.select(getActiveContract)
+      ),
+      filter(([, , contract]) => contract !== undefined),
+      map(([{ page }, currentPage, contract]) => ({
+        page,
+        currentPage,
+        contract: contract!,
+      })),
+      switchMap(({ page, currentPage, contract }) =>
+        this.apiService
+          .getOperationRequests(
+            contract.id,
+            OperationRequestKind.UPDATE_KEYHOLDERS,
+            OperationRequestState.APPROVED,
+            page ?? currentPage
+          )
+          .pipe(
+            map((response) => {
+              if (response.total_pages === 0 && response.page > 1) {
+                return actions.loadApprovedUpdateKeyholdersOperationRequests({
+                  page: response.page - 1,
+                })
+              }
+              return actions.loadApprovedUpdateKeyholdersOperationRequestsSucceeded(
+                {
+                  response,
+                }
+              )
+            }),
+            catchError((errorResponse) =>
+              of(
+                actions.loadUpdateKeyholdersOperationRequestsFailed({
+                  errorResponse,
+                })
+              )
+            )
+          )
+      )
+    )
+  )
+
+  loadInjectedUpdateKeyholdersOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadInjectedUpdateKeyholdersOperationRequests),
+      withLatestFrom(
+        this.store$.select(
+          getInjectedUpdateKeyholdersOperationRequestCurrentPage
+        ),
+        this.store$.select(getActiveContract)
+      ),
+      filter(([, , contract]) => contract !== undefined),
+      map(([{ page }, currentPage, contract]) => ({
+        page,
+        currentPage,
+        contract: contract!,
+      })),
+      switchMap(({ page, currentPage, contract }) =>
+        this.apiService
+          .getOperationRequests(
+            contract.id,
+            OperationRequestKind.UPDATE_KEYHOLDERS,
+            OperationRequestState.INJECTED,
+            page ?? currentPage
+          )
+          .pipe(
+            map((response) => {
+              if (response.total_pages === 0 && response.page > 1) {
+                return actions.loadInjectedUpdateKeyholdersOperationRequests({
+                  page: response.page - 1,
+                })
+              }
+              return actions.loadInjectedUpdateKeyholdersOperationRequestsSucceeded(
+                {
+                  response,
+                }
+              )
+            }),
+            catchError((errorResponse) =>
+              of(
+                actions.loadUpdateKeyholdersOperationRequestsFailed({
+                  errorResponse,
+                })
+              )
+            )
+          )
+      )
+    )
+  )
+
+  loadUpdateKeyholdersOperationRequestsFailed$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadUpdateKeyholdersOperationRequestsFailed),
+      map((value) => actions.handleHttpErrorResponse(value))
+    )
+  )
+
   transferOperation$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.transferOperation),
@@ -720,13 +923,6 @@ export class AppEffects {
     )
   )
 
-  transferOperationSucceeded$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.transferOperationSucceeded),
-      map(() => actions.loadBalance())
-    )
-  )
-
   submitOperationRequest$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.submitOperationRequest),
@@ -747,10 +943,12 @@ export class AppEffects {
     this.actions$.pipe(
       ofType(actions.submitOperationRequestSucceeded),
       map(({ operationRequest }) => {
-        if (operationRequest.kind == OperationRequestKind.MINT) {
+        if (operationRequest.kind === OperationRequestKind.MINT) {
           return actions.loadOpenMintOperationRequests({})
-        } else {
+        } else if (operationRequest.kind === OperationRequestKind.BURN) {
           return actions.loadOpenBurnOperationRequests({})
+        } else {
+          return actions.loadOpenUpdateKeyholdersOperationRequests({})
         }
       })
     )
@@ -847,8 +1045,10 @@ export class AppEffects {
       map(({ operationRequest }) => {
         if (operationRequest.kind === OperationRequestKind.MINT) {
           return actions.loadMintOperationRequests()
-        } else {
+        } else if (operationRequest.kind === OperationRequestKind.BURN) {
           return actions.loadBurnOperationRequests()
+        } else {
+          return actions.loadUpdateKeyholdersOperationRequests()
         }
       })
     )
@@ -969,8 +1169,10 @@ export class AppEffects {
       map(({ operationRequest }) => {
         if (operationRequest.kind === OperationRequestKind.MINT) {
           return actions.loadMintOperationRequests()
-        } else {
+        } else if (operationRequest.kind === OperationRequestKind.BURN) {
           return actions.loadBurnOperationRequests()
+        } else {
+          return actions.loadUpdateKeyholdersOperationRequests()
         }
       })
     )
@@ -1002,9 +1204,9 @@ export class AppEffects {
     this.actions$.pipe(
       ofType(actions.setActiveContractSucceeded),
       switchMap(({ contract }) => [
-        actions.loadBalance(),
+        // actions.loadBalance(),
         actions.loadContractNonce({ contractId: contract.id }),
-        actions.loadRedeemAddress({ contract }),
+        // actions.loadRedeemAddress({ contract }),
       ])
     )
   )
@@ -1054,6 +1256,7 @@ export class AppEffects {
       switchMap(() => [
         actions.loadMintOperationRequests(),
         actions.loadBurnOperationRequests(),
+        actions.loadUpdateKeyholdersOperationRequests(),
       ])
     )
   )

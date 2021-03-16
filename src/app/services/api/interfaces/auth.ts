@@ -7,6 +7,8 @@ export interface SessionUserRole {
 
 export interface SessionUser {
   address: string
+  display_name: string
+  email: string | null
   roles: SessionUserRole[]
 }
 

@@ -43,7 +43,6 @@ describe('OperationRequestListComponent', () => {
     component.title = ''
     component.kind = OperationRequestKind.MINT
     component.state = OperationRequestState.OPEN
-    component.address = ''
     component.operationRequestList = { page: 1, total_pages: 1, results: [] }
     fixture.detectChanges()
   })

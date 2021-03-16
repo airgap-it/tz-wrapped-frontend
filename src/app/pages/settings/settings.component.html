@@ -1,114 +1,218 @@
 <div class="card">
   <div class="card-body">
-    <h4 class="text-primary pb-3"><strong>tzBTC Contract Settings</strong></h4>
-    <!-- TODO: show all multi sig owner of contracts -->
-    <div class="row align-items-center pb-3">
-      <div class="col col-md-10">
-        <!-- TODO: show human readable multi sig name -->
-        <p class="m-0">Swiss Crypto Tokens</p>
-        <!-- TODO show multi sig address -->
-        <p class="text-muted m-0">tz12M…214x</p>
-      </div>
-      <div class="col col-md-2 pr-0 d-flex justify-content-center">
-        <div
-          class="border rounded-circle border-primary bg-white status--container d-flex align-items-center justify-content-center"
-        >
-          <!-- TODO: show on click for enabling/disabling -->
-          <img src="/assets/img/check.svg" />
-        </div>
-      </div>
+    <h4 class="text-primary pb-3"><strong>Profile Details</strong></h4>
+    <div class="mb-3">
+      <label class="d-block m-0">Name</label>
+      <small
+        >The name displayed instead of your address for simpler
+        identification.</small
+      >
     </div>
-    <div class="row align-items-center pb-3">
-      <div class="col col-md-10">
-        <!-- TODO: show human readable multi sig name -->
-        <p class="m-0">Swiss Crypto Tokens</p>
-        <!-- TODO show multi sig address -->
-        <p class="text-muted m-0">tz12M…214x</p>
-      </div>
-      <div class="col col-md-2 pr-0 d-flex justify-content-center">
-        <div
-          class="border rounded-circle border-primary bg-white status--container d-flex align-items-center justify-content-center"
-        >
-          <!-- TODO: show on click for enabling/disabling -->
-          <img src="/assets/img/check.svg" />
-        </div>
-      </div>
-    </div>
-    <div class="row align-items-center pb-3">
-      <div class="col col-md-10">
-        <!-- TODO: show human readable multi sig name -->
-        <p class="m-0">Swiss Crypto Tokens</p>
-        <!-- TODO show multi sig address -->
-        <p class="text-muted m-0">tz12M…214x</p>
-      </div>
-      <div class="col col-md-2 pr-0 d-flex justify-content-center">
-        <div
-          class="border rounded-circle border-primary bg-white status--container d-flex align-items-center justify-content-center"
-        >
-          <!-- TODO: show on click for enabling/disabling -->
-          <img src="/assets/img/check.svg" />
-        </div>
-      </div>
-    </div>
-    <div class="row align-items-center pb-3">
-      <div class="col col-md-10">
-        <!-- TODO: show human readable multi sig name -->
-        <p class="m-0">Swiss Crypto Tokens</p>
-        <!-- TODO show multi sig address -->
-        <p class="text-muted m-0">tz12M…214x</p>
-      </div>
-      <div class="col col-md-2 pr-0 d-flex justify-content-center">
-        <div
-          class="border rounded-circle border-primary bg-white status--container d-flex align-items-center justify-content-center"
-        >
-          <!-- TODO: show on click for enabling/disabling -->
-          <img src="/assets/img/check.svg" />
-        </div>
-      </div>
-    </div>
-    <label>Add Account</label>
     <div class="input-group mb-3">
       <input
+        [formControl]="displayNameControl"
         type="text"
         class="form-control"
-        placeholder="tz1.."
-        aria-label="Address"
+        placeholder="tz1..."
+        aria-label="name"
       />
     </div>
-    <button type="button" class="btn btn-primary btn-block mt-5">
-      Update Contract
+    <div class="mb-3">
+      <label class="d-block m-0">Notficiation Email address</label>
+      <small>The email address that receives notficiations about events.</small>
+    </div>
+    <div class="input-group mb-3">
+      <input
+        [formControl]="emailControl"
+        type="text"
+        class="form-control"
+        placeholder="hi@email.com"
+        aria-label="email"
+        [ngClass]="{
+          'is-invalid':
+            emailControl.errors && (emailControl.touched || emailControl.dirty)
+        }"
+      />
+      <div class="invalid-feedback px-3 py-2">
+        <strong>Invalid Email</strong>
+      </div>
+    </div>
+    <button
+      (click)="updateSessionUser()"
+      type="button"
+      class="btn btn-primary btn-block mt-5"
+      [disabled]="emailControl.invalid"
+    >
+      Update Profile Details
     </button>
   </div>
 </div>
-
-<div class="card mt-5">
-  <div class="card-body">
-    <h5>Multi Signature Update</h5>
-    <div class="row py-3 align-items-center">
-      <div class="col col-md-6">
-        <!-- TODO: requested minting amount -->
-        <h5 class="m-0">
-          <strong>Remove</strong><span class="pl-3">LEXR</span>
-        </h5>
-        <h5 class="m-0"><strong>Add</strong><span class="pl-5">tz1..</span></h5>
-        <!-- TODO: human readable name of requestee -->
-        <p class="m-0">Bitcoin Suisse</p>
-        <!-- TODO: requestee address -->
-        <p class="text-muted">tz12M…214x</p>
-      </div>
-      <div class="col col-md-6">
-        <p class="text-right">10.10.20 15:30</p>
-      </div>
-    </div>
-    <div>
-      <!-- TODO: number of confirmations and required confirmations -->
-      <p><strong>3/4 Confirmations</strong></p>
-    </div>
-    <div class="signature--container">
-      <app-multi-signature-item></app-multi-signature-item>
-      <app-multi-signature-item></app-multi-signature-item>
-      <app-multi-signature-item></app-multi-signature-item>
-      <app-multi-signature-item></app-multi-signature-item>
+<ng-container *ngIf="(isGatekeeper$ | async) || (isKeyholder$ | async)">
+  <div class="card mt-5" *ngIf="activeContract$ | async as activeContract">
+    <div class="card-body">
+      <h4 class="text-primary pb-4">
+        <strong>Gatekeepers</strong>
+      </h4>
+      <ng-container *ngIf="gatekeepers$ | async as gatekeepers">
+        <div *ngFor="let gatekeeper of gatekeepers">
+          <div class="row align-items-center pb-4">
+            <div class="col col-md-10">
+              <h6 class="m-0">
+                <strong>{{ gatekeeper.display_name }}</strong>
+              </h6>
+              <p class="text-muted m-0">{{ gatekeeper.address }}</p>
+            </div>
+          </div>
+        </div>
+      </ng-container>
     </div>
   </div>
-</div>
+  <div
+    class="card mt-5 keyholders--container"
+    *ngIf="activeContract$ | async as activeContract"
+  >
+    <div class="card-body">
+      <h4 class="text-primary pb-4">
+        <strong>{{ activeContract.display_name }} Contract Settings</strong>
+      </h4>
+      <ng-container *ngIf="keyholders$ | async as keyholders">
+        <h5 class="pb-3">Keyholders</h5>
+        <div *ngFor="let keyholder of keyholders">
+          <div class="row align-items-center pb-4">
+            <div class="col col-md-10">
+              <h6 *ngIf="keyholder.display_name.length > 0" class="m-0">
+                <strong>{{ keyholder.display_name }}</strong>
+              </h6>
+              <p class="text-muted m-0">{{ keyholder.address }}</p>
+            </div>
+            <div
+              *ngIf="isGatekeeper$ | async"
+              class="col col-md-2 pr-0 d-flex justify-content-center"
+            >
+              <div
+                (click)="toggleKeyholder(keyholder)"
+                class="border rounded-circle border-primary bg-white status--container d-flex align-items-center justify-content-center"
+              >
+                <img
+                  *ngIf="isToggledOn(keyholder) | async"
+                  src="/assets/img/check.svg"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <ng-container *ngIf="isGatekeeper$ | async" [formGroup]="formGroup">
+          <div class="my-3">
+            <label class="d-block m-0">Add Keyholder</label>
+            <small>
+              Enter the <strong>public key</strong> of the new Keyholder.
+            </small>
+          </div>
+          <div
+            class="input-group mb-3"
+            [formArray]="publicKeysControls"
+            *ngFor="
+              let publicKey of publicKeysControls.controls;
+              let idx = index
+            "
+          >
+            <input
+              [formControl]="publicKey"
+              type="text"
+              class="form-control"
+              placeholder="edpk..."
+              aria-label="public key"
+              [ngClass]="{
+                'is-invalid': publicKey.invalid
+              }"
+            />
+            <span *ngIf="idx > 0" class="input-group-prepend">
+              <button
+                type="button"
+                class="btn btn-light"
+                (click)="removePublicKeyControl(idx)"
+              >
+                Remove
+              </button>
+            </span>
+            <div class="invalid-feedback px-3 py-2">
+              <strong>Invalid public key</strong>
+            </div>
+          </div>
+          <button
+            (click)="addPulicKeyControl()"
+            type="button"
+            class="btn btn-light btn-block mt-3"
+            [disabled]="publicKeysControls.invalid"
+          >
+            Add Another Keyholder
+          </button>
+          <div class="my-3">
+            <label class="d-block m-0">Threshold</label>
+            <small>
+              The minimum number of Keyholders needed for successfull
+              confirmation.
+            </small>
+          </div>
+          <div class="row">
+            <div class="col col-md-6">
+              <div class="input-group mb-3">
+                <input
+                  [formControl]="thresholdControl"
+                  type="text"
+                  class="form-control"
+                  placeholder="{{ activeContract.min_approvals }}"
+                  aria-label="threshold"
+                  [ngClass]="{
+                    'is-invalid': thresholdControl.invalid
+                  }"
+                />
+                <div class="input-group-prepend">
+                  <span class="input-group-text bg-light">
+                    out of <strong>&nbsp;{{ keyholdersCount$ | async }}</strong>
+                  </span>
+                </div>
+                <div class="invalid-feedback px-3 py-2">
+                  <strong>Invalid threshold</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button
+            (click)="updateContract()"
+            type="button"
+            class="btn btn-primary btn-block mt-3"
+            [disabled]="
+              formGroup.invalid || !(isUpdateContractEnabled$ | async)
+            "
+          >
+            <ng-container
+              *ngIf="busyUpdateKeyholdersOperationRequests$ | async"
+            >
+              <span
+                class="spinner-border spinner-border-sm mr-1"
+                role="status"
+                aria-hidden="true"
+              >
+              </span>
+            </ng-container>
+            Update Contract
+          </button>
+        </ng-container>
+      </ng-container>
+    </div>
+  </div>
+
+  <operation-request-group
+    name="Multi Signature Update"
+    [kind]="'update_keyholders'"
+    [openOperationRequestList]="openUpdateKeyholdersOperationRequests$ | async"
+    [approvedOperationRequestList]="
+      approvedUpdateKeyholdersOperationRequests$ | async
+    "
+    [injectedOperationRequestList]="
+      injectedUpdateKeyholdersOperationRequests$ | async
+    "
+  >
+  </operation-request-group>
+</ng-container>

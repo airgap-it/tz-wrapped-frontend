@@ -1,0 +1,24 @@
+<operation-request-list
+  *ngIf="openOperationRequestList !== undefined"
+  title="Open {{ name }} Requests"
+  [kind]="kind"
+  [state]="'open'"
+  [operationRequestList]="openOperationRequestList"
+>
+</operation-request-list>
+<operation-request-list
+  *ngIf="approvedOperationRequestList !== undefined"
+  title="Approved {{ name }} Requests"
+  [kind]="kind"
+  [state]="'approved'"
+  [operationRequestList]="approvedOperationRequestList"
+>
+</operation-request-list>
+<operation-request-list
+  *ngIf="injectedOperationRequestList !== undefined"
+  title="Injected {{ name }} Requests"
+  [kind]="kind"
+  [state]="'injected'"
+  [operationRequestList]="injectedOperationRequestList"
+>
+</operation-request-list>
