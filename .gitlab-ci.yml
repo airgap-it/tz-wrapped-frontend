@@ -1,17 +1,19 @@
 image: docker:latest
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
-  GOOGLE_TAG: eu.gcr.io/papers-kubernetes/dapp-frontend:$CI_COMMIT_SHA
-  TEST_TAG: tezblock_frontend_test_$CI_COMMIT_SHA
-  GOOGLE_TAG_LATEST: eu.gcr.io/papers-kubernetes/dapp-frontend:latest
+  DEV_GOOGLE_TAG: eu.gcr.io/papers-kubernetes/tz-wrapped-frontend-dev:$CI_COMMIT_SHA
+  PROD_GOOGLE_TAG: eu.gcr.io/papers-kubernetes/tz-wrapped-frontend:$CI_COMMIT_SHA
+  TEST_TAG: tz_wrapped_frontend_test_$CI_COMMIT_SHA
+  DEV_GOOGLE_TAG_LATEST: eu.gcr.io/papers-kubernetes/tz-wrapped-frontend-dev:latest
+  PROD_GOOGLE_TAG_LATEST: eu.gcr.io/papers-kubernetes/tz-wrapped-frontend:latest
 
 stages:
   - build
   - test
-#   - qa
+  #   - qa
   - build_serve
   - publish
-#   - deploy
+  - deploy
 
 build:
   stage: build
@@ -20,15 +22,19 @@ build:
   tags:
     - docker
 
-build_serve:
+build_serve_dev:
   stage: build_serve
   when: manual
-  before_script:
-    - which git || (apk --no-cache add git)
-    - git submodule sync --recursive
-    - git submodule update  --remote --recursive
   script:
-    - docker build -t $GOOGLE_TAG .
+    - docker build --build-arg RUN_ENV=development -t $DEV_GOOGLE_TAG .
+  tags:
+    - docker
+
+build_serve_prod:
+  stage: build_serve
+  when: manual
+  script:
+    - docker build --build-arg RUN_ENV=production -t $PROD_GOOGLE_TAG .
   tags:
     - docker
 
@@ -75,66 +81,86 @@ test:
 #   tags:
 #     - docker
 
-publish:
+publish_dev:
   stage: publish
   when: manual
   image: google/cloud-sdk
   before_script:
     - echo $GCLOUD_GOOGLE_KEY > key.json
     - gcloud auth activate-service-account $GCLOUD_ACCOUNT --key-file key.json
+    - gcloud config set project $GCLOUD_PROJECT
     - gcloud config set account $GCLOUD_ACCOUNT
     - gcloud config set compute/zone $GCLOUD_ZONE
-    - gcloud config set project $GCLOUD_PROJECT
     - gcloud auth configure-docker
   script:
-    - docker tag $GOOGLE_TAG $GOOGLE_TAG_LATEST
-    - docker push $GOOGLE_TAG
-    - docker push $GOOGLE_TAG_LATEST
+    - docker tag $DEV_GOOGLE_TAG $DEV_GOOGLE_TAG_LATEST
+    - docker push $DEV_GOOGLE_TAG
+    - docker push $DEV_GOOGLE_TAG_LATEST
   only:
     - master
     - develop
   tags:
     - docker
 
-# k8s-deploy-development:
-#   stage: deploy
-#   when: manual
-#   image: google/cloud-sdk
-#   before_script:
-#     - echo $GCLOUD_GOOGLE_KEY > key.json
-#     - gcloud auth activate-service-account $GCLOUD_ACCOUNT --key-file key.json
-#     - gcloud config set account $GCLOUD_ACCOUNT
-#     - gcloud config set project $GCLOUD_PROJECT
-#     - gcloud config set compute/zone $GCLOUD_ZONE_DEVELOPMENT
-#     - gcloud container clusters get-credentials papers-cluster-development
-#   script:
-#     - sed -i "s|_TO_BE_REPLACED_BY_IMAGE_TAG_|"$GOOGLE_TAG"|g" k8s/tezblock/common/frontend/deployment.yaml
-#     - kubectl apply -f k8s/tezblock/common/namespace.yaml
-#     - kubectl apply -f k8s/tezblock/development/ --recursive
-#     - kubectl apply -f k8s/tezblock/common/ --recursive
-#   only:
-#     - develop
-#     - master
-#   tags:
-#     - docker
+publish_prod:
+  stage: publish
+  when: manual
+  image: google/cloud-sdk
+  before_script:
+    - echo $GCLOUD_GOOGLE_KEY > key.json
+    - gcloud auth activate-service-account $GCLOUD_ACCOUNT --key-file key.json
+    - gcloud config set project $GCLOUD_PROJECT
+    - gcloud config set account $GCLOUD_ACCOUNT
+    - gcloud config set compute/zone $GCLOUD_ZONE
+    - gcloud auth configure-docker
+  script:
+    - docker tag $PROD_GOOGLE_TAG $PROD_GOOGLE_TAG_LATEST
+    - docker push $PROD_GOOGLE_TAG
+    - docker push $PROD_GOOGLE_TAG_LATEST
+  only:
+    - master
+  tags:
+    - docker
 
-# k8s-deploy-production:
-#   stage: deploy
-#   when: manual
-#   image: google/cloud-sdk
-#   before_script:
-#     - echo $GCLOUD_GOOGLE_KEY > key.json
-#     - gcloud auth activate-service-account $GCLOUD_ACCOUNT --key-file key.json
-#     - gcloud config set account $GCLOUD_ACCOUNT
-#     - gcloud config set project $GCLOUD_PROJECT
-#     - gcloud config set compute/zone $GCLOUD_ZONE
-#     - gcloud container clusters get-credentials papers-cluster-production
-#   script:
-#     - sed -i "s|_TO_BE_REPLACED_BY_IMAGE_TAG_|"$GOOGLE_TAG"|g" k8s/tezblock/common/frontend/deployment.yaml
-#     - kubectl apply -f k8s/tezblock/common/namespace.yaml
-#     - kubectl apply -f k8s/tezblock/production/ --recursive
-#     - kubectl apply -f k8s/tezblock/common/ --recursive
-#   only:
-#     - master
-#   tags:
-#     - docker
+k8s-deploy-development:
+  stage: deploy
+  when: manual
+  image: google/cloud-sdk
+  before_script:
+    - echo $GCLOUD_GOOGLE_KEY > key.json
+    - gcloud auth activate-service-account $GCLOUD_ACCOUNT --key-file key.json
+    - gcloud config set project $GCLOUD_PROJECT
+    - gcloud config set account $GCLOUD_ACCOUNT
+    - gcloud config set compute/zone $GCLOUD_ZONE_DEVELOPMENT
+    - gcloud container clusters get-credentials papers-cluster-development
+  script:
+    - sed -i "s|_TO_BE_REPLACED_BY_IMAGE_TAG_|"$DEV_GOOGLE_TAG"|g" k8s/foundry/common/frontend/deployment.yaml
+    - kubectl apply -f k8s/foundry/common/namespace.yaml
+    - kubectl apply -f k8s/foundry/development/ --recursive
+    - kubectl apply -f k8s/foundry/common/ --recursive
+  only:
+    - develop
+    - master
+  tags:
+    - docker
+
+k8s-deploy-production:
+  stage: deploy
+  when: manual
+  image: google/cloud-sdk
+  before_script:
+    - echo $GCLOUD_GOOGLE_KEY > key.json
+    - gcloud auth activate-service-account $GCLOUD_ACCOUNT --key-file key.json
+    - gcloud config set account $GCLOUD_ACCOUNT
+    - gcloud config set project $GCLOUD_PROJECT
+    - gcloud config set compute/zone $GCLOUD_ZONE
+    - gcloud container clusters get-credentials papers-cluster-production
+  script:
+    - sed -i "s|_TO_BE_REPLACED_BY_IMAGE_TAG_|"$PROD_GOOGLE_TAG"|g" k8s/foundry/common/frontend/deployment.yaml
+    - kubectl apply -f k8s/foundry/common/namespace.yaml
+    - kubectl apply -f k8s/foundry/production/ --recursive
+    - kubectl apply -f k8s/foundry/common/ --recursive
+  only:
+    - master
+  tags:
+    - docker

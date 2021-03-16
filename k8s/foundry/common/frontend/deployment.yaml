@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tz-wrapped-frontend
+  namespace: tz-wrapped
+  labels:
+    app: tz-wrapped-frontend
+spec:
+  selector:
+    matchLabels:
+      app: tz-wrapped-frontend
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: tz-wrapped-frontend
+    spec:
+      containers:
+        - name: tz-wrapped-frontend
+          image: _TO_BE_REPLACED_BY_IMAGE_TAG_
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: tz-wrapped-frontend-config-map
+            # - secretRef:
+            #     name: tz-wrapped-frontend-secret
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+      imagePullSecrets:
+        - name: regsecret
+      restartPolicy: Always
+status: {}

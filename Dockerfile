@@ -35,8 +35,10 @@ COPY . /app/
 # post-install hook, to be safe if it got cached
 RUN node config/patch_crypto.js
 
+ARG RUN_ENV
+
 # compile to check for errors
-RUN npm run build:prod
+RUN npm run build -- --configuration=${RUN_ENV}
 
 ###################################
 
