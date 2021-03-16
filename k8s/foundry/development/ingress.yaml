@@ -10,7 +10,7 @@ spec:
   tls:
     - hosts:
         - tz-wrapped-frontend.dev.gke.papers.tech
-      secretName: tz-wrapped-dev-tls
+      secretName: tz-wrapped-frontend-dev-tls
   rules:
     - host: tz-wrapped-frontend.dev.gke.papers.tech
       http:
