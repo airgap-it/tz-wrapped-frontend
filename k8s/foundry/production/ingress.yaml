@@ -10,7 +10,7 @@ spec:
   tls:
     - hosts:
         - tz-wrapped-frontend.prod.gke.papers.tech
-      secretName: tz-wrapped-prod-tls
+      secretName: tz-wrapped-frontend-prod-tls
     # - hosts:
     #     - foundry.wrappedtz.io
     #   secretName: tz-wrapped-mvp-prod-tls
