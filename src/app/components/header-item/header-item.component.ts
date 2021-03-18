@@ -34,7 +34,7 @@ export class HeaderItemComponent implements OnInit {
           new Map<string, string>(
             contracts.map((contract) => [
               contract.id,
-              `/assets/img/${contract.display_name.toLowerCase()}.svg`,
+              `/assets/img/${contract.symbol.toLowerCase()}.svg`,
             ])
           )
       )
