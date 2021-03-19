@@ -51,7 +51,7 @@
   <div class="card mt-5" *ngIf="activeContract$ | async as activeContract">
     <div class="card-body">
       <h4 class="text-primary pb-4">
-        <strong>Gatekeepers</strong>
+        <strong>Injectors</strong>
       </h4>
       <ng-container *ngIf="gatekeepers$ | async as gatekeepers">
         <div *ngFor="let gatekeeper of gatekeepers">
@@ -60,7 +60,16 @@
               <h6 class="m-0">
                 <strong>{{ gatekeeper.display_name }}</strong>
               </h6>
-              <p class="text-muted m-0">{{ gatekeeper.address }}</p>
+              <p class="m-0">{{ gatekeeper.address }}</p>
+              <p class="text-muted m-0">
+                {{ gatekeeper.public_key | shorten }}
+                <a
+                  class="btn btn-sm btn-icon btn-light rounded-circle ml-2"
+                  (click)="copyToClipboard(gatekeeper.public_key)"
+                >
+                  <img src="/assets/img/copy.svg" />
+                </a>
+              </p>
             </div>
           </div>
         </div>
@@ -73,20 +82,31 @@
   >
     <div class="card-body">
       <h4 class="text-primary pb-4">
-        <strong>{{ activeContract.display_name }} Contract Settings</strong>
+        <strong
+          >{{ activeContract.display_name }} Multisig Contract Details</strong
+        >
       </h4>
       <ng-container *ngIf="keyholders$ | async as keyholders">
-        <h5 class="pb-3">Keyholders</h5>
+        <h5 class="pb-3">Signers</h5>
         <div *ngFor="let keyholder of keyholders">
           <div class="row align-items-center pb-4">
             <div class="col col-md-10">
               <h6 *ngIf="keyholder.display_name.length > 0" class="m-0">
                 <strong>{{ keyholder.display_name }}</strong>
               </h6>
-              <p class="text-muted m-0">{{ keyholder.address }}</p>
+              <p class="m-0">{{ keyholder.address }}</p>
+              <p class="text-muted m-0">
+                {{ keyholder.public_key | shorten }}
+                <a
+                  class="btn btn-sm btn-icon btn-light rounded-circle ml-2"
+                  (click)="copyToClipboard(keyholder.public_key)"
+                >
+                  <img src="/assets/img/copy.svg" />
+                </a>
+              </p>
             </div>
             <div
-              *ngIf="isGatekeeper$ | async"
+              *ngIf="canUpdateKeyholders$ | async"
               class="col col-md-2 pr-0 d-flex justify-content-center"
             >
               <div
@@ -101,11 +121,14 @@
             </div>
           </div>
         </div>
-        <ng-container *ngIf="isGatekeeper$ | async" [formGroup]="formGroup">
+        <ng-container
+          *ngIf="canUpdateKeyholders$ | async"
+          [formGroup]="formGroup"
+        >
           <div class="my-3">
-            <label class="d-block m-0">Add Keyholder</label>
+            <label class="d-block m-0">Change Multisig Signers</label>
             <small>
-              Enter the <strong>public key</strong> of the new Keyholder.
+              Enter the <strong>public key</strong> of the new Signer.
             </small>
           </div>
           <div
@@ -145,13 +168,12 @@
             class="btn btn-light btn-block mt-3"
             [disabled]="publicKeysControls.invalid"
           >
-            Add Another Keyholder
+            Add Another Signer
           </button>
           <div class="my-3">
             <label class="d-block m-0">Threshold</label>
             <small>
-              The minimum number of Keyholders needed for successfull
-              confirmation.
+              The minimum number of Signers needed for successfull confirmation.
             </small>
           </div>
           <div class="row">

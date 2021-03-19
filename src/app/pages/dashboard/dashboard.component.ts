@@ -89,8 +89,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   public isGatekeeper$: Observable<boolean>
   public isKeyholder$: Observable<boolean>
+  public canMint$: Observable<boolean>
+  public canBurn$: Observable<boolean>
   public balance$: Observable<BigNumber | undefined>
   public activeContract$: Observable<Contract>
+  public activeContractImagePath$: Observable<string>
 
   public redeemAddress$: Observable<string | undefined>
   public redeemAddressBalance$: Observable<BigNumber | undefined>
@@ -112,6 +115,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.activeContract$ = this.store$
       .select(getActiveContract)
       .pipe(isNotNullOrUndefined())
+    this.activeContractImagePath$ = this.activeContract$.pipe(
+      map((contract) => `assets/img/${contract.symbol.toLowerCase()}.svg`)
+    )
 
     const signInSub = signIn(this.store$)
     this.subscriptions.push(signInSub)
@@ -146,6 +152,26 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.address$ = this.store$.select(getAddress)
     this.isGatekeeper$ = this.store$.select(isGatekeeper)
     this.isKeyholder$ = this.store$.select(isKeyholder)
+    this.canMint$ = combineLatest([
+      this.activeContract$,
+      this.store$.select(getSessionUser),
+    ]).pipe(
+      map(
+        ([contract, sessionUser]) =>
+          sessionUser !== undefined &&
+          contract.capabilities.includes(OperationRequestKind.MINT)
+      )
+    )
+    this.canBurn$ = combineLatest([
+      this.activeContract$,
+      this.store$.select(getSessionUser),
+    ]).pipe(
+      map(
+        ([contract, sessionUser]) =>
+          sessionUser !== undefined &&
+          contract.capabilities.includes(OperationRequestKind.BURN)
+      )
+    )
     this.balance$ = this.store$.select(getBalance)
 
     this.redeemAddress$ = this.store$.select(getRedeemAddress)
@@ -157,43 +183,56 @@ export class DashboardComponent implements OnInit, OnDestroy {
       getBusyBurnOperationRequests
     )
     this.gatekeepers$ = this.store$.select(getGatekeepers)
-
-    const loadDataSub = combineLatest([
-      this.activeContract$,
-      this.store$.select(getActiveAccount),
-      this.store$.select(getSessionUser),
-    ])
-      .pipe(
-        filter(
-          ([, activeAccount, sessionUser]) =>
-            activeAccount !== undefined && sessionUser !== undefined
+    this.subscriptions.push(
+      combineLatest([
+        this.activeContract$,
+        this.store$.select(getActiveAccount),
+        this.store$.select(getSessionUser),
+      ])
+        .pipe(
+          filter(
+            ([, activeAccount, sessionUser]) =>
+              activeAccount !== undefined && sessionUser !== undefined
+          )
         )
-      )
-      .subscribe(([contract]) => {
-        this.store$.dispatch(actions.loadUsers({ contractId: contract.id }))
-        this.store$.dispatch(actions.loadMintOperationRequests())
-        this.store$.dispatch(actions.loadBurnOperationRequests())
+        .subscribe(([contract]) => {
+          this.store$.dispatch(actions.loadUsers({ contractId: contract.id }))
+          this.store$.dispatch(actions.loadMintOperationRequests())
+          this.store$.dispatch(actions.loadBurnOperationRequests())
+        })
+    )
+    this.subscriptions.push(
+      combineLatest([
+        this.store$.select(getActiveAccount),
+        this.store$.select(getActiveContract),
+      ])
+        .pipe(
+          filter(
+            ([account, contract]) =>
+              account !== undefined && contract !== undefined
+          ),
+          map(([account, contract]) => ({
+            account: account!,
+            contract: contract!,
+          }))
+        )
+        .subscribe(({ account, contract }) => {
+          this.store$.dispatch(actions.loadBalance())
+          this.store$.dispatch(actions.loadRedeemAddress({ contract }))
+        })
+    )
+    this.subscriptions.push(
+      combineLatest([
+        this.canMint$,
+        this.canBurn$,
+        this.selectedTab$,
+      ]).subscribe(([canMint, canBurn, tab]) => {
+        if ((!canMint && tab == Tab.MINT) || (!canBurn && tab == Tab.BURN)) {
+          this.router.navigate(['/', 'transfer'])
+          this.store$.dispatch(actions.selectTab({ tab: Tab.TRANSFER }))
+        }
       })
-    this.subscriptions.push(loadDataSub)
-    const balanceSub = combineLatest([
-      this.store$.select(getActiveAccount),
-      this.store$.select(getActiveContract),
-    ])
-      .pipe(
-        filter(
-          ([account, contract]) =>
-            account !== undefined && contract !== undefined
-        ),
-        map(([account, contract]) => ({
-          account: account!,
-          contract: contract!,
-        }))
-      )
-      .subscribe(({ account, contract }) => {
-        this.store$.dispatch(actions.loadBalance())
-        this.store$.dispatch(actions.loadRedeemAddress({ contract }))
-      })
-    this.subscriptions.push(balanceSub)
+    )
 
     this.receivingAddressControl = new FormControl('', [
       Validators.required,

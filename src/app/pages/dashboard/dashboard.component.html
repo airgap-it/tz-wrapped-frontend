@@ -49,14 +49,10 @@
                   <img
                     width="32px"
                     height="32px"
-                    [src]="
-                      activeContract.symbol == 'tzBTC'
-                        ? '/assets/img/tzbtc.svg'
-                        : '/assets/img/tzeth.svg'
-                    "
+                    [src]="activeContractImagePath$ | async"
                     class="mr-2"
                   />
-                  {{ activeContract.display_name }}
+                  {{ activeContract.symbol }}
                 </span>
               </div>
               <input
@@ -111,6 +107,7 @@
           </ng-template>
         </tab>
         <tab
+          *ngIf="canMint$ | async"
           heading="Mint"
           id="tab-mint"
           [active]="selectedTab === 'tab-mint'"
@@ -135,7 +132,11 @@
                       *ngFor="let gatekeeper of gatekeepers$ | async"
                       [ngValue]="gatekeeper.address"
                     >
-                      {{ gatekeeper.display_name }} -
+                      {{
+                        gatekeeper.display_name.length > 0
+                          ? gatekeeper.display_name + ' -'
+                          : ''
+                      }}
                       {{ gatekeeper.address | shorten }}
                     </option>
                   </select>
@@ -154,14 +155,10 @@
                   <img
                     width="32px"
                     height="32px"
-                    [src]="
-                      activeContract.symbol == 'tzBTC'
-                        ? '/assets/img/tzbtc.svg'
-                        : '/assets/img/tzeth.svg'
-                    "
+                    [src]="activeContractImagePath$ | async"
                     class="mr-2"
                   />
-                  {{ activeContract.display_name }}
+                  {{ activeContract.symbol }}
                 </span>
               </div>
               <input
@@ -206,6 +203,7 @@
           </ng-container>
         </tab>
         <tab
+          *ngIf="canBurn$ | async"
           heading="Burn"
           id="tab-burn"
           [active]="selectedTab === 'tab-burn'"
@@ -245,14 +243,10 @@
                   <img
                     width="32px"
                     height="32px"
-                    [src]="
-                      activeContract.symbol == 'tzBTC'
-                        ? '/assets/img/tzbtc.svg'
-                        : '/assets/img/tzeth.svg'
-                    "
+                    [src]="activeContractImagePath$ | async"
                     class="mr-2"
                   />
-                  {{ activeContract.display_name }}
+                  {{ activeContract.symbol }}
                 </span>
               </div>
               <input

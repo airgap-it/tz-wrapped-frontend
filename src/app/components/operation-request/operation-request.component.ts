@@ -1,16 +1,15 @@
-import { Component, Input, OnInit, OnDestroy } from '@angular/core'
+import { Component, Input, OnInit } from '@angular/core'
 import { BsModalService } from 'ngx-bootstrap/modal'
 import { ModalItemComponent } from 'src/app/components/modal-item/modal-item.component'
 
 import * as fromRoot from '../../reducers/index'
 import * as actions from '../../app.actions'
 import { Store } from '@ngrx/store'
-import { combineLatest, Observable, of } from 'rxjs'
+import { combineLatest, Observable } from 'rxjs'
 import { filter, map, switchMap, take } from 'rxjs/operators'
 import { User } from 'src/app/services/api/interfaces/user'
 import {
   OperationRequest,
-  OperationRequestKind,
   OperationRequestState,
 } from 'src/app/services/api/interfaces/operationRequest'
 import { Contract } from 'src/app/services/api/interfaces/contract'
@@ -18,12 +17,14 @@ import { DeleteModalItemComponent } from '../delete-modal-item/delete-modal-item
 import {
   getActiveContract,
   getAddress,
+  getGatekeepers,
   getKeyholders,
   isGatekeeper,
   isKeyholder,
 } from 'src/app/app.selectors'
 import { isNotNullOrUndefined } from 'src/app/app.operators'
 import { CopyService } from 'src/app/services/copy/copy-service.service'
+import { ShortenPipe } from 'src/app/pipes/shorten.pipe'
 
 export interface UserWithApproval extends User {
   requestId: string
@@ -45,6 +46,7 @@ export class OperationRequestComponent implements OnInit {
   public isKeyholder$: Observable<boolean>
   public keyholders$: Observable<User[]>
   public contract$: Observable<Contract>
+  public receivingAddress$!: Observable<string | undefined>
 
   public currentUserApproved$: Observable<boolean>
   public multisigItems$!: Observable<UserWithApproval[]>
@@ -54,7 +56,8 @@ export class OperationRequestComponent implements OnInit {
   constructor(
     private readonly store$: Store<fromRoot.State>,
     private readonly modalService: BsModalService,
-    private readonly copyService: CopyService
+    private readonly copyService: CopyService,
+    private readonly shortenPipe: ShortenPipe
   ) {
     this.address$ = this.store$.select(getAddress).pipe(isNotNullOrUndefined())
     this.isGatekeeper$ = this.store$.select(isGatekeeper)
@@ -73,6 +76,24 @@ export class OperationRequestComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
+    this.receivingAddress$ = this.store$.select(getGatekeepers).pipe(
+      map((gatekeepers) => {
+        const targetAddress = this.operationRequest.target_address
+        if (!targetAddress) {
+          return undefined
+        }
+        const gatekeeper = gatekeepers.find(
+          (gatekeeper) => gatekeeper.address == targetAddress
+        )
+        if (gatekeeper) {
+          return `${gatekeeper.display_name} - ${this.shortenPipe.transform(
+            targetAddress
+          )}`
+        } else {
+          return this.shortenPipe.transform(targetAddress)
+        }
+      })
+    )
     const operationRequestId = this.operationRequest.id
     const proposed_keyholders = this.operationRequest.proposed_keyholders
     if (this.operationRequest.state !== OperationRequestState.INJECTED) {
@@ -168,20 +189,26 @@ export class OperationRequestComponent implements OnInit {
           )
         }
       })
-    this.store$
-      .select((state) =>
+    combineLatest([
+      this.store$.select((state) =>
         state.app.signableMessages.get(this.operationRequest.id)
-      )
+      ),
+      this.contract$,
+    ])
       .pipe(
-        filter((signableMessage) => signableMessage !== undefined),
-        map((signableMessage) => signableMessage!),
+        filter(([signableMessage]) => signableMessage !== undefined),
+        map(([signableMessage, contract]) => ({
+          signableMessage: signableMessage!,
+          contract,
+        })),
         take(1)
       )
-      .subscribe((signableMessage) => {
+      .subscribe(({ signableMessage, contract }) => {
         const modalRef = this.modalService.show(ModalItemComponent, {
           class: 'modal-lg',
           initialState: {
             signableMessage,
+            contract,
           },
         })
       })
