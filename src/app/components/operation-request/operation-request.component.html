@@ -14,6 +14,12 @@
           }}
         </strong>
       </h5>
+      <ng-container *ngIf="operationRequest.target_address !== null">
+        <strong>Receiving Address</strong>
+        <p class="text-muted m-0">
+          {{ receivingAddress$ | async }}
+        </p>
+      </ng-container>
       <ng-container *ngIf="operationRequest.threshold !== null">
         <h5 class="m-0">
           <strong>Threshold</strong>
@@ -25,7 +31,7 @@
 
       <ng-container *ngIf="operationRequest.proposed_keyholders !== null">
         <h5>
-          <strong>Keyholders</strong>
+          <strong>Signers</strong>
           <p
             *ngFor="let proposed of operationRequest.proposed_keyholders"
             class="text-muted m-0"
@@ -38,6 +44,7 @@
           </p>
         </h5>
       </ng-container>
+      <strong>Injector</strong>
       <p
         *ngIf="operationRequest.gatekeeper.display_name.length > 0"
         class="m-0"

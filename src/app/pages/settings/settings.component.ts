@@ -49,6 +49,7 @@ import {
 } from 'src/app/services/api/interfaces/operationRequest'
 import { PagedResponse } from 'src/app/services/api/interfaces/common'
 import { BeaconService } from 'src/app/services/beacon/beacon.service'
+import { CopyService } from 'src/app/services/copy/copy-service.service'
 
 @Component({
   selector: 'app-settings',
@@ -77,6 +78,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   public keyholdersCount$: Observable<number>
   public newThreshold$: Observable<number>
   public isUpdateContractEnabled$: Observable<boolean>
+  public canUpdateKeyholders$: Observable<boolean>
 
   public openUpdateKeyholdersOperationRequests$: Observable<
     PagedResponse<OperationRequest> | undefined
@@ -98,6 +100,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   constructor(
     private readonly store$: Store<fromRoot.State>,
     private readonly router: Router,
+    private readonly copyService: CopyService,
     formBuilder: FormBuilder
   ) {
     this.store$.dispatch(actions.setupBeacon())
@@ -118,6 +121,16 @@ export class SettingsComponent implements OnInit, OnDestroy {
       .pipe(isNotNullOrUndefined())
     this.isGatekeeper$ = this.store$.select(isGatekeeper)
     this.isKeyholder$ = this.store$.select(isKeyholder)
+    this.canUpdateKeyholders$ = combineLatest([
+      this.isGatekeeper$,
+      this.activeContract$,
+    ]).pipe(
+      map(
+        ([isGatekeeper, contract]) =>
+          isGatekeeper &&
+          contract.capabilities.includes(OperationRequestKind.UPDATE_KEYHOLDERS)
+      )
+    )
     this.sessionUser$ = this.store$
       .select(getSessionUser)
       .pipe(isNotNullOrUndefined())
@@ -348,6 +361,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
     return this.keyholdersToRemove$.pipe(
       map((keyholdersToRemove) => !keyholdersToRemove.includes(keyholder))
     )
+  }
+
+  public copyToClipboard(val: string) {
+    this.copyService.copyToClipboard(val)
   }
 
   private reset() {
