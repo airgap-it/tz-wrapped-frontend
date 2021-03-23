@@ -95,7 +95,6 @@ export class OperationRequestComponent implements OnInit {
       })
     )
     const operationRequestId = this.operationRequest.id
-    const proposed_keyholders = this.operationRequest.proposed_keyholders
     if (this.operationRequest.state !== OperationRequestState.INJECTED) {
       this.multisigItems$ = combineLatest([
         this.keyholders$,

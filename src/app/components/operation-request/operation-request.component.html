@@ -44,7 +44,7 @@
           </p>
         </h5>
       </ng-container>
-      <strong>Injector</strong>
+      <strong>Gatekeeper</strong>
       <p
         *ngIf="operationRequest.gatekeeper.display_name.length > 0"
         class="m-0"
@@ -175,7 +175,7 @@
       *ngIf="
         operationRequest.nonce === (contractNonce$ | async) &&
         operationRequest.state === 'approved' &&
-        (isGatekeeper$ | async)
+        (isKeyholder$ | async)
       "
       type="button"
       class="btn btn-primary btn-block"

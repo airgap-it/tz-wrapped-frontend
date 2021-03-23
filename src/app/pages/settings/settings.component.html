@@ -51,7 +51,7 @@
   <div class="card mt-5" *ngIf="activeContract$ | async as activeContract">
     <div class="card-body">
       <h4 class="text-primary pb-4">
-        <strong>Injectors</strong>
+        <strong>Gatekeepers</strong>
       </h4>
       <ng-container *ngIf="gatekeepers$ | async as gatekeepers">
         <div *ngFor="let gatekeeper of gatekeepers">
