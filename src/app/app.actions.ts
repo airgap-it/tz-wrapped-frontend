@@ -339,7 +339,10 @@ export const submitOperationRequestSucceeded = createAction(
 )
 export const submitOperationRequestFailed = createAction(
   `[${featureName}] Submit Operation Request Failed`,
-  props<{ errorResponse: HttpErrorResponse }>()
+  props<{
+    errorResponse: HttpErrorResponse
+    newOperationRequest: NewOperationRequest
+  }>()
 )
 
 export const getSignableMessage = createAction(

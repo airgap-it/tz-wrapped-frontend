@@ -18,7 +18,7 @@ export interface OperationRequest {
   id: string
   created_at: string
   updated_at: string
-  gatekeeper: User
+  user: User
   contract_id: string
   target_address: string | null
   amount: string | null

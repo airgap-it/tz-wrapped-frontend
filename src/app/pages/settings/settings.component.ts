@@ -122,12 +122,12 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.isGatekeeper$ = this.store$.select(isGatekeeper)
     this.isKeyholder$ = this.store$.select(isKeyholder)
     this.canUpdateKeyholders$ = combineLatest([
-      this.isGatekeeper$,
+      this.isKeyholder$,
       this.activeContract$,
     ]).pipe(
       map(
-        ([isGatekeeper, contract]) =>
-          isGatekeeper &&
+        ([isKeyholder, contract]) =>
+          isKeyholder &&
           contract.capabilities.includes(OperationRequestKind.UPDATE_KEYHOLDERS)
       )
     )
@@ -344,7 +344,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
           target_address: null,
           amount: null,
           threshold,
-          proposed_keyholders: proposedKeyholders,
+          proposed_keyholders: proposedKeyholders.sort(),
         }
         this.store$.dispatch(
           actions.submitOperationRequest({ newOperationRequest })

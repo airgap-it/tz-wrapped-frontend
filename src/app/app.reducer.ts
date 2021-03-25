@@ -137,6 +137,9 @@ export const reducer = createReducer(
     openBurnOperationRequests: undefined,
     approvedBurnOperationRequests: undefined,
     injectedBurnOperationRequests: undefined,
+    openUpdateKeyholdersOperationRequests: undefined,
+    approvedUpdateKeyholdersOperationRequests: undefined,
+    injectedUpdateKeyholdersOperationRequests: undefined,
   })),
   on(actions.updateCanSignIn, (state, { canSignIn }) => ({
     ...state,
@@ -436,6 +439,7 @@ export const reducer = createReducer(
   })),
   on(actions.setActiveContract, (state, { contract }) => ({
     ...state,
+    users: [],
     activeContract: contract,
     openMintOperationRequests: undefined,
     approvedMintOperationRequests: undefined,
@@ -443,6 +447,9 @@ export const reducer = createReducer(
     openBurnOperationRequests: undefined,
     approvedBurnOperationRequests: undefined,
     injectedBurnOperationRequests: undefined,
+    openUpdateKeyholdersOperationRequests: undefined,
+    approvedUpdateKeyholdersOperationRequests: undefined,
+    injectedUpdateKeyholdersOperationRequests: undefined,
     keyholdersToRemove: [],
     keyholdersToAdd: [],
     busy: {
@@ -523,11 +530,32 @@ export const reducer = createReducer(
     busy: {
       ...state.busy,
       mintOperationRequests:
-        newOperationRequest.kind === OperationRequestKind.MINT,
+        newOperationRequest.kind === OperationRequestKind.MINT ||
+        state.busy.mintOperationRequests,
       burnOperationRequests:
-        newOperationRequest.kind === OperationRequestKind.BURN,
+        newOperationRequest.kind === OperationRequestKind.BURN ||
+        state.busy.burnOperationRequests,
       updateKeyholdersOperationRequests:
-        newOperationRequest.kind === OperationRequestKind.UPDATE_KEYHOLDERS,
+        newOperationRequest.kind === OperationRequestKind.UPDATE_KEYHOLDERS ||
+        state.busy.updateKeyholdersOperationRequests,
     },
-  }))
+  })),
+  on(
+    actions.submitOperationRequestFailed,
+    (state, { newOperationRequest }) => ({
+      ...state,
+      busy: {
+        ...state.busy,
+        mintOperationRequests:
+          newOperationRequest.kind !== OperationRequestKind.MINT &&
+          state.busy.mintOperationRequests,
+        burnOperationRequests:
+          newOperationRequest.kind !== OperationRequestKind.BURN &&
+          state.busy.burnOperationRequests,
+        updateKeyholdersOperationRequests:
+          newOperationRequest.kind !== OperationRequestKind.UPDATE_KEYHOLDERS &&
+          state.busy.updateKeyholdersOperationRequests,
+      },
+    })
+  )
 )
