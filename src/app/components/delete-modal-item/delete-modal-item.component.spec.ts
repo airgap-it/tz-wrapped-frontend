@@ -40,7 +40,7 @@ describe('DeleteModalItemComponent', () => {
       id: '',
       created_at: '',
       updated_at: '',
-      gatekeeper: {
+      user: {
         id: '',
         created_at: '',
         updated_at: '',

@@ -44,15 +44,12 @@
           </p>
         </h5>
       </ng-container>
-      <strong>Gatekeeper</strong>
-      <p
-        *ngIf="operationRequest.gatekeeper.display_name.length > 0"
-        class="m-0"
-      >
-        {{ operationRequest.gatekeeper.display_name }}
+      <strong>Requester</strong>
+      <p *ngIf="operationRequest.user.display_name.length > 0" class="m-0">
+        {{ operationRequest.user.display_name }}
       </p>
       <p class="text-muted m-0">
-        {{ operationRequest.gatekeeper.address | shorten }}
+        {{ operationRequest.user.address | shorten }}
       </p>
       <ng-container
         *ngIf="

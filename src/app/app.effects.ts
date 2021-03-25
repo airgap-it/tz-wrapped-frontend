@@ -932,7 +932,12 @@ export class AppEffects {
             actions.submitOperationRequestSucceeded({ operationRequest })
           ),
           catchError((errorResponse) =>
-            of(actions.submitOperationRequestFailed({ errorResponse }))
+            of(
+              actions.submitOperationRequestFailed({
+                errorResponse,
+                newOperationRequest,
+              })
+            )
           )
         )
       )
@@ -957,7 +962,9 @@ export class AppEffects {
   submitSignedOperationRequestFailed$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.submitOperationRequestFailed),
-      map((value) => actions.handleHttpErrorResponse(value))
+      map(({ errorResponse }) =>
+        actions.handleHttpErrorResponse({ errorResponse })
+      )
     )
   )
 
