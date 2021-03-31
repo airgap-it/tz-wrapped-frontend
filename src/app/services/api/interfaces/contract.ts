@@ -1,3 +1,5 @@
+import { OperationRequestKind } from './operationRequest'
+
 export enum ContractKind {
   FA1 = 'fa1',
   FA2 = 'fa2',
@@ -13,5 +15,7 @@ export interface Contract {
   kind: ContractKind
   display_name: string
   decimals: number
+  symbol: string
   min_approvals: number
+  capabilities: OperationRequestKind[]
 }

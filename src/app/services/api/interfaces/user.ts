@@ -13,6 +13,7 @@ export interface User {
   created_at: string
   updated_at: string
   address: string
+  public_key: string
   contract_id: string
   kind: UserKind
   state: UserState

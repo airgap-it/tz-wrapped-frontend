@@ -4,20 +4,15 @@
     <operation-request
       *ngFor="let request of operationRequestList.results"
       [operationRequest]="request"
-      [address]="address"
-      [isGatekeeper]="isGatekeeper"
-      [isKeyholder]="isKeyholder"
-      [keyholders]="keyholders"
-      [contract]="contract"
     >
     </operation-request>
     <div class="pt-3" *ngIf="operationRequestList.total_pages > 1">
       <hr />
-      <div class="row justify-content-between">
+      <div class="row justify-content-between align-items-center">
         <div class="col-md-2">
           <button
             type="button"
-            class="btn btn-primary btn-block"
+            class="btn btn-light btn-block"
             (click)="loadPreviousPage()"
             [disabled]="operationRequestList.page <= 1"
           >
@@ -33,7 +28,7 @@
         <div class="col-md-2">
           <button
             type="button"
-            class="btn btn-primary btn-block"
+            class="btn btn-light btn-block"
             (click)="loadNextPage()"
             [disabled]="
               operationRequestList.page >= operationRequestList.total_pages

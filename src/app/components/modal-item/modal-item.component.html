@@ -59,25 +59,25 @@
     </div>
   </div>
   <accordion class="mb-3" [isAnimated]="true">
-    <accordion-group class="pb-3">
+    <accordion-group class="pb-3" *ngIf="isFA1">
       <button class="btn btn-link btn-block" accordion-heading type="button">
         <div class="pull-left float-left"><strong>tzBTC</strong></div>
       </button>
       <p>Message Data Template</p>
 
       <pre>
-(Pair (Pair "&lt;CHAIN_ID&gt;" "&lt;MULTISIG_CONTRACT_ADDRESS&gt;") (Pair &lt;COUNTER&gt; (Left (Pair &lt;CALL&gt; "&lt;CONTRACT_ADDRESS&gt;"))))</pre
+Pair "&lt;MULTISIG_CONTRACT_ADDRESS&gt;" (Pair &lt;COUNTER&gt; (Left (Pair &lt;CALL&gt; "&lt;CONTRACT_ADDRESS&gt;")))</pre
       >
 
       <p>Message Type</p>
 
       <pre>
-pair (pair chain_id address) (pair nat (or (pair (or (or (or (or (pair string bytes) (pair (pair nat nat) (pair (lambda (big_map bytes bytes) (big_map bytes bytes)) (pair (option (lambda (pair (pair string bytes) (big_map bytes bytes)) (pair (list operation) (big_map bytes bytes)))) (option (lambda (pair unit (big_map bytes bytes)) (pair (list operation) (big_map bytes bytes)))))))) (or (pair nat nat) (lambda (big_map bytes bytes) (big_map bytes bytes)))) (or (or (lambda (pair (pair string bytes) (big_map bytes bytes)) (pair (list operation) (big_map bytes bytes))) unit) (or (pair address (pair address nat)) (pair address nat)))) (or (or (or (pair address nat) nat) (or address address)) (or (or address unit) (or unit (or address unit))))) address) (or (pair address mutez) (pair nat (list key))))))</pre
+pair address (pair nat (or (pair (or (or (or (or (pair string bytes) (pair (pair nat nat) (pair (lambda (big_map bytes bytes) (big_map bytes bytes)) (pair (option (lambda (pair (pair string bytes) (big_map bytes bytes)) (pair (list operation) (big_map bytes bytes)))) (option (lambda (pair unit (big_map bytes bytes)) (pair (list operation) (big_map bytes bytes)))))))) (or (pair nat nat) (lambda (big_map bytes bytes) (big_map bytes bytes)))) (or (or (lambda (pair (pair string bytes) (big_map bytes bytes)) (pair (list operation) (big_map bytes bytes))) unit) (or (pair address (pair address nat)) (pair address nat)))) (or (or (or (pair address nat) nat) (or address address)) (or (or address unit) (or unit (or address unit))))) address) (or (pair address mutez) (pair nat (list key))))))</pre
       >
       <p><code>&lt;CALL&gt;</code> in case of Mint</p>
 
       <pre>
-(Right (Left (Left (Left (Pair "&lt;ADDRESS&gt;" &lt;AMOUNT&gt;)))))</pre
+Right (Left (Left (Left (Pair "&lt;ADDRESS&gt;" &lt;AMOUNT&gt;))))</pre
       >
 
       <p><code>&lt;CALL&gt;</code> in case of Burn</p>
@@ -87,39 +87,46 @@ pair (pair chain_id address) (pair nat (or (pair (or (or (or (or (pair string by
       <p class="pt-3">
         Example <strong>Mint</strong> message for <strong>1 tzBTC</strong> to
         destination address
-        <strong>tz1NBYj7pEe9mkMoSEDzKLwtbrQHG17bwBwy</strong> on Delphinet
+        <strong>tz1NBYj7pEe9mkMoSEDzKLwtbrQHG17bwBwy</strong>
       </p>
 
       <pre>
-(Pair (Pair "NetXm8tYqnMWky1" "KT1BYMvJoM75JyqFbsLKouqkAv8dgEvViioP") (Pair 7 (Left (Pair (Right (Left (Left (Left (Pair "tz1NBYj7pEe9mkMoSEDzKLwtbrQHG17bwBwy" 100000000))))) "KT1Q66HBBQYaHGAKnxeuedkgLyJYF9jkD96H"))))</pre
+Pair "{{
+          contract.multisig_pkh
+        }}" (Pair 7 (Left (Pair (Right (Left (Left (Left (Pair "tz1NBYj7pEe9mkMoSEDzKLwtbrQHG17bwBwy" 100000000))))) "{{
+          contract.pkh
+        }}")))</pre
       >
       <p>
         tzBTC tokens have 8 decimals, so 1 tzBTC becomes 1 * 10^8 = 100000000.
       </p>
 
       <p class="pt-3">
-        Example <strong>Burn</strong> message for <strong>1 tzBTC</strong> on
-        Delphinet
+        Example <strong>Burn</strong> message for <strong>1 tzBTC</strong>
       </p>
 
       <pre>
-(Pair (Pair "NetXm8tYqnMWky1" "KT1BYMvJoM75JyqFbsLKouqkAv8dgEvViioP") (Pair 8 (Left (Pair (Right (Left (Left (Right 100000000)))) "KT1Q66HBBQYaHGAKnxeuedkgLyJYF9jkD96H"))))</pre
+Pair "{{
+          contract.multisig_pkh
+        }}" (Pair 8 (Left (Pair (Right (Left (Left (Right 100000000)))) "{{
+          contract.pkh
+        }}")))</pre
       >
     </accordion-group>
-    <accordion-group>
+    <accordion-group class="pb-3" *ngIf="isFA2">
       <button class="btn btn-link btn-block" accordion-heading type="button">
         <div class="pull-left float-left"><strong>tzETH</strong></div>
       </button>
       <p>Message Data Template</p>
 
       <pre>
-(Pair "&lt;CHAIN_ID&gt;" (Pair "&lt;MULTISIG_CONTRACT_ADDRESS&gt;" (Pair 3 &lt;CONTRACT_CALL_LAMBDA&gt;)))</pre
+Pair "&lt;CHAIN_ID&gt;" (Pair "&lt;MULTISIG_CONTRACT_ADDRESS&gt;" (Pair 3 &lt;CONTRACT_CALL_LAMBDA&gt;))</pre
       >
 
       <p>Message Type</p>
 
       <pre>
-(pair chain_id (pair address (pair nat (lambda unit (list operation)))))</pre
+pair chain_id (pair address (pair nat (lambda unit (list operation))))</pre
       >
       <p><code>&lt;CONTRACT_CALL_LAMBDA&gt;</code> in case of Mint</p>
 
@@ -136,11 +143,15 @@ pair (pair chain_id address) (pair nat (or (pair (or (or (or (or (pair string by
       <p class="pt-3">
         Example <strong>Mint</strong> message for <strong>1 tzETH</strong> to
         destination address
-        <strong>tz1NBYj7pEe9mkMoSEDzKLwtbrQHG17bwBwy</strong> on Delphinet
+        <strong>tz1NBYj7pEe9mkMoSEDzKLwtbrQHG17bwBwy</strong>
       </p>
 
       <pre>
-(Pair "NetXm8tYqnMWky1" (Pair "KT1LW1vW2XhQ2VA5xfG3cpLVVetadi65QYbP" (Pair 3 &#x0007B; DROP; NIL operation; PUSH address "KT1R9zSv54P6H4okbLQYKA6S8W3zdsKR6cTJ%mint"; CONTRACT (list (pair address (pair nat nat))); &#x0007B; IF_NONE &#x0007B; UNIT; FAILWITH&#x0007D; &#x0007B; &#x0007D;&#x0007D;; PUSH mutez 0; NIL (pair address (pair nat nat)); PUSH nat 1000000000000000000; PUSH nat 0; PAIR; PUSH address "tz1NBYj7pEe9mkMoSEDzKLwtbrQHG17bwBwy"; PAIR; CONS; TRANSFER_TOKENS; CONS&#x0007D;)))</pre
+Pair "NetXm8tYqnMWky1" (Pair "{{
+          contract.multisig_pkh
+        }}" (Pair 3 &#x0007B; DROP; NIL operation; PUSH address "{{
+          contract.pkh
+        }}%mint"; CONTRACT (list (pair address (pair nat nat))); &#x0007B; IF_NONE &#x0007B; UNIT; FAILWITH&#x0007D; &#x0007B; &#x0007D;&#x0007D;; PUSH mutez 0; NIL (pair address (pair nat nat)); PUSH nat 1000000000000000000; PUSH nat 0; PAIR; PUSH address "tz1NBYj7pEe9mkMoSEDzKLwtbrQHG17bwBwy"; PAIR; CONS; TRANSFER_TOKENS; CONS&#x0007D;))</pre
       >
       <p>
         tzETH tokens have 18 decimals, so 1 tzETH becomes 1 * 10^18 =
@@ -148,12 +159,15 @@ pair (pair chain_id address) (pair nat (or (pair (or (or (or (or (pair string by
       </p>
 
       <p class="pt-3">
-        Example <strong>Burn</strong> message for <strong>1 tzETH</strong> on
-        Delphinet
+        Example <strong>Burn</strong> message for <strong>1 tzETH</strong>
       </p>
 
       <pre>
-((Pair "NetXm8tYqnMWky1" (Pair "KT1LW1vW2XhQ2VA5xfG3cpLVVetadi65QYbP" (Pair 4 &#x0007B; DROP; NIL operation; PUSH address "KT1R9zSv54P6H4okbLQYKA6S8W3zdsKR6cTJ%burn"; CONTRACT (list (pair nat nat)); &#x0007B; IF_NONE &#x0007B; UNIT; FAILWITH&#x0007D; &#x0007B; &#x0007D;&#x0007D;; PUSH mutez 0; NIL (pair nat nat); PUSH nat 1000000000000000000; PUSH nat 0; PAIR; CONS; TRANSFER_TOKENS; CONS&#x0007D;)))</pre
+Pair "NetXm8tYqnMWky1" (Pair "{{
+          contract.multisig_pkh
+        }}" (Pair 4 &#x0007B; DROP; NIL operation; PUSH address "{{
+          contract.pkh
+        }}%burn"; CONTRACT (list (pair nat nat)); &#x0007B; IF_NONE &#x0007B; UNIT; FAILWITH&#x0007D; &#x0007B; &#x0007D;&#x0007D;; PUSH mutez 0; NIL (pair nat nat); PUSH nat 1000000000000000000; PUSH nat 0; PAIR; CONS; TRANSFER_TOKENS; CONS&#x0007D;))</pre
       >
     </accordion-group>
   </accordion>

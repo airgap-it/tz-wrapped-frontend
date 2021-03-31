@@ -2,7 +2,7 @@ import { Component, Input, OnDestroy, OnInit } from '@angular/core'
 import { Store } from '@ngrx/store'
 import * as fromRoot from '../../reducers/index'
 import * as actions from '../../app.actions'
-import { FormControl, Validators } from '@angular/forms'
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 import { combineLatest, Observable, Subscription } from 'rxjs'
 import BigNumber from 'bignumber.js'
 import {
@@ -11,7 +11,7 @@ import {
   amountValidator,
 } from 'src/app/utils/amount'
 import { filter, map, take } from 'rxjs/operators'
-import { ActivatedRoute } from '@angular/router'
+import { ActivatedRoute, Router } from '@angular/router'
 import {
   OperationRequest,
   OperationRequestKind,
@@ -25,9 +25,11 @@ import {
   getApprovedBurnOperationRequests,
   getApprovedMintOperationRequests,
   getBalance,
+  getBusyBurnOperationRequests,
   getInjectedBurnOperationRequests,
   getInjectedMintOperationRequests,
   getKeyholders,
+  getBusyMintOperationRequests,
   getOpenBurnOperationRequests,
   getOpenMintOperationRequests,
   getRedeemAddress,
@@ -37,11 +39,14 @@ import {
   getUsers,
   isGatekeeper,
   isKeyholder,
+  getGatekeepers,
 } from 'src/app/app.selectors'
 import { Tab } from './tab'
 import { isNotNullOrUndefined } from 'src/app/app.operators'
 import { validateAddress } from 'src/app/utils/address'
 import { PagedResponse } from 'src/app/services/api/interfaces/common'
+import { signIn } from 'src/app/common/auth'
+import { loadContractsIfNeeded } from 'src/app/common/contracts'
 
 @Component({
   selector: 'app-dashboard',
@@ -84,42 +89,43 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   public isGatekeeper$: Observable<boolean>
   public isKeyholder$: Observable<boolean>
+  public canMint$: Observable<boolean>
+  public canBurn$: Observable<boolean>
   public balance$: Observable<BigNumber | undefined>
   public activeContract$: Observable<Contract>
+  public activeContractImagePath$: Observable<string>
 
   public redeemAddress$: Observable<string | undefined>
   public redeemAddressBalance$: Observable<BigNumber | undefined>
 
   private subscriptions: Subscription[] = []
 
+  public busyMintOpeartionRequests$: Observable<boolean>
+  public busyBurnOpeartionRequests$: Observable<boolean>
+
+  public gatekeepers$: Observable<User[]>
+  public formGroup: FormGroup
+
   constructor(
     private readonly store$: Store<fromRoot.State>,
-    private readonly route: ActivatedRoute
+    private readonly route: ActivatedRoute,
+    private router: Router,
+    private formBuilder: FormBuilder
   ) {
     this.activeContract$ = this.store$
       .select(getActiveContract)
       .pipe(isNotNullOrUndefined())
+    this.activeContractImagePath$ = this.activeContract$.pipe(
+      map((contract) => `assets/img/${contract.symbol.toLowerCase()}.svg`)
+    )
 
-    const authenticaitonSub = combineLatest([
-      this.store$.select(getSessionUser),
-      this.store$.select(getActiveAccount),
-    ])
-      .pipe(
-        filter(
-          ([user, account]) => user === undefined && account !== undefined
-        ),
-        map(([, account]) => account!)
-      )
-      .subscribe((account) => {
-        this.store$.dispatch(
-          actions.getSignInChallenge({ address: account.address })
-        )
-      })
-    this.subscriptions.push(authenticaitonSub)
+    const signInSub = signIn(this.store$)
+    this.subscriptions.push(signInSub)
     this.selectedTab$ = this.store$.select(getSelectedTab)
 
     this.store$.dispatch(actions.setupBeacon())
-    this.store$.dispatch(actions.loadContracts())
+    const contractSub = loadContractsIfNeeded(store$)
+    this.subscriptions.push(contractSub)
 
     this.openMintOperationRequests$ = this.store$.select(
       getOpenMintOperationRequests
@@ -146,23 +152,87 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.address$ = this.store$.select(getAddress)
     this.isGatekeeper$ = this.store$.select(isGatekeeper)
     this.isKeyholder$ = this.store$.select(isKeyholder)
+    this.canMint$ = combineLatest([
+      this.activeContract$,
+      this.store$.select(getSessionUser),
+    ]).pipe(
+      map(
+        ([contract, sessionUser]) =>
+          sessionUser !== undefined &&
+          contract.capabilities.includes(OperationRequestKind.MINT)
+      )
+    )
+    this.canBurn$ = combineLatest([
+      this.activeContract$,
+      this.store$.select(getSessionUser),
+    ]).pipe(
+      map(
+        ([contract, sessionUser]) =>
+          sessionUser !== undefined &&
+          contract.capabilities.includes(OperationRequestKind.BURN)
+      )
+    )
     this.balance$ = this.store$.select(getBalance)
 
     this.redeemAddress$ = this.store$.select(getRedeemAddress)
     this.redeemAddressBalance$ = this.store$.select(getRedeemAddressBalance)
-
-    const loadDataSub = combineLatest([
-      this.activeContract$,
-      this.store$.select(getSessionUser),
-    ])
-      .pipe(filter(([, user]) => user !== undefined))
-      .subscribe(([contract]) => {
-        this.store$.dispatch(actions.loadUsers({ contractId: contract.id }))
-        this.store$.dispatch(actions.loadMintOperationRequests())
-        this.store$.dispatch(actions.loadBurnOperationRequests())
+    this.busyMintOpeartionRequests$ = this.store$.select(
+      getBusyMintOperationRequests
+    )
+    this.busyBurnOpeartionRequests$ = this.store$.select(
+      getBusyBurnOperationRequests
+    )
+    this.gatekeepers$ = this.store$.select(getGatekeepers)
+    this.subscriptions.push(
+      combineLatest([
+        this.activeContract$,
+        this.store$.select(getActiveAccount),
+        this.store$.select(getSessionUser),
+      ])
+        .pipe(
+          filter(
+            ([, activeAccount, sessionUser]) =>
+              activeAccount !== undefined && sessionUser !== undefined
+          )
+        )
+        .subscribe(([contract]) => {
+          this.store$.dispatch(actions.loadUsers({ contractId: contract.id }))
+          this.store$.dispatch(actions.loadMintOperationRequests())
+          this.store$.dispatch(actions.loadBurnOperationRequests())
+        })
+    )
+    this.subscriptions.push(
+      combineLatest([
+        this.store$.select(getActiveAccount),
+        this.store$.select(getActiveContract),
+      ])
+        .pipe(
+          filter(
+            ([account, contract]) =>
+              account !== undefined && contract !== undefined
+          ),
+          map(([account, contract]) => ({
+            account: account!,
+            contract: contract!,
+          }))
+        )
+        .subscribe(({ account, contract }) => {
+          this.store$.dispatch(actions.loadBalance())
+          this.store$.dispatch(actions.loadRedeemAddress({ contract }))
+        })
+    )
+    this.subscriptions.push(
+      combineLatest([
+        this.canMint$,
+        this.canBurn$,
+        this.selectedTab$,
+      ]).subscribe(([canMint, canBurn, tab]) => {
+        if ((!canMint && tab == Tab.MINT) || (!canBurn && tab == Tab.BURN)) {
+          this.router.navigate(['/', 'transfer'])
+          this.store$.dispatch(actions.selectTab({ tab: Tab.TRANSFER }))
+        }
       })
-    this.subscriptions.push(loadDataSub)
-    this.store$.dispatch(actions.loadBalance())
+    )
 
     this.receivingAddressControl = new FormControl('', [
       Validators.required,
@@ -209,10 +279,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.amountBurnControl.updateValueAndValidity()
       })
     )
+
+    this.formGroup = this.formBuilder.group({
+      gatekeeperForm: ['', Validators.required],
+    })
+    this.setDefaults()
   }
 
   ngOnInit(): void {
-    const routeSub = this.route.params.subscribe((params) => {
+    this.route.params.pipe(take(1)).subscribe((params) => {
       if (params.tab === 'mint') {
         this.store$.dispatch(actions.selectTab({ tab: Tab.MINT }))
       } else if (params.tab === 'burn') {
@@ -221,13 +296,31 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.store$.dispatch(actions.selectTab({ tab: Tab.TRANSFER }))
       }
     })
-    this.subscriptions.push(routeSub)
   }
 
   ngOnDestroy() {
     for (const subscription of this.subscriptions) {
       subscription.unsubscribe()
     }
+  }
+
+  setDefaults() {
+    combineLatest([this.store$.select(getActiveAccount), this.gatekeepers$])
+      .pipe(
+        map(([activeAccount, gatekeepers]) => {
+          if (activeAccount === undefined) {
+            return undefined
+          }
+          return gatekeepers.find(
+            (gatekeeper) => gatekeeper.address === activeAccount.address
+          )
+        })
+      )
+      .subscribe((activeAccount) => {
+        this.formGroup
+          .get('gatekeeperForm')!
+          .patchValue(activeAccount ? activeAccount?.address : '')
+      })
   }
 
   connectWallet() {
@@ -251,7 +344,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private submitOperationRequest(kind: OperationRequestKind, value: string) {
     let targetAddress: string | null = null
     if (kind === OperationRequestKind.MINT) {
-      targetAddress = this.receivingAddressControl.value
+      targetAddress = this.formGroup.get('gatekeeperForm')!.value
+
       validateAddress(targetAddress)
     }
     this.activeContract$.pipe(take(1)).subscribe((contract) => {
@@ -265,6 +359,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
               contract.decimals
             ).toFixed(),
             target_address: targetAddress,
+            threshold: null,
+            proposed_keyholders: null,
           },
         })
       )
@@ -289,6 +385,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   onSelect(event: any): void {
+    this.router.navigate(['/', `${event.heading.toLowerCase()}`])
     this.store$.dispatch(actions.selectTab({ tab: event.id }))
   }
 

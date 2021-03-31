@@ -1,20 +1,72 @@
 <ng-container *ngIf="operationRequest">
   <div class="row py-3 align-items-center">
     <div class="col col-md-6">
-      <h5 class="m-0">
+      <h5 *ngIf="operationRequest.amount !== null" class="m-0">
         <strong
           >{{
             operationRequest.amount
               | amountConverter
-                : { decimals: contract.decimals, symbol: contract.display_name }
+                : {
+                    decimals: (contract$ | async).decimals,
+                    symbol: (contract$ | async).symbol
+                  }
               | async
           }}
         </strong>
       </h5>
-      <p class="m-0">{{ operationRequest.gatekeeper.display_name }}</p>
-      <p class="text-muted m-0">
-        {{ operationRequest.gatekeeper.address | shorten }}
+      <ng-container *ngIf="operationRequest.target_address !== null">
+        <strong>Receiving Address</strong>
+        <p class="text-muted m-0">
+          {{ receivingAddress$ | async }}
+        </p>
+      </ng-container>
+      <ng-container *ngIf="operationRequest.threshold !== null">
+        <h5 class="m-0">
+          <strong>Threshold</strong>
+        </h5>
+        <h5>
+          <span class="text-muted">{{ operationRequest.threshold }}</span>
+        </h5>
+      </ng-container>
+
+      <ng-container *ngIf="operationRequest.proposed_keyholders !== null">
+        <h5>
+          <strong>Signers</strong>
+          <p
+            *ngFor="let proposed of operationRequest.proposed_keyholders"
+            class="text-muted m-0"
+          >
+            {{
+              proposed.display_name.length > 0
+                ? proposed.display_name
+                : (proposed.address | shorten)
+            }}
+          </p>
+        </h5>
+      </ng-container>
+      <strong>Requester</strong>
+      <p *ngIf="operationRequest.user.display_name.length > 0" class="m-0">
+        {{ operationRequest.user.display_name }}
       </p>
+      <p class="text-muted m-0">
+        {{ operationRequest.user.address | shorten }}
+      </p>
+      <ng-container
+        *ngIf="
+          operationRequest.state === 'injected' &&
+          operationRequest.operation_hash !== null
+        "
+      >
+        <p class="text-muted m-0 d-flex align-items-center">
+          {{ operationRequest.operation_hash | shorten }}
+          <a
+            class="btn btn-sm btn-icon btn-light rounded-circle ml-2"
+            (click)="copyToClipboard(operationRequest.operation_hash)"
+          >
+            <img src="/assets/img/copy.svg" />
+          </a>
+        </p>
+      </ng-container>
     </div>
     <div class="col col-md-6">
       <p class="text-right m-0">
@@ -31,7 +83,7 @@
     *ngIf="
       operationRequest.nonce > (contractNonce$ | async) &&
       operationRequest.state === 'approved' &&
-      isGatekeeper
+      (isGatekeeper$ | async)
     "
   >
     This request can only be handled after the previous requests are completed.
@@ -42,7 +94,9 @@
     <p class="m-0">
       <strong
         >{{ operationRequest.operation_approvals.length }}/{{
-          contract.min_approvals
+          operationRequest.state !== 'injected'
+            ? (contract$ | async).min_approvals
+            : operationRequest.operation_approvals.length
         }}
         Confirmations</strong
       >
@@ -75,7 +129,7 @@
   </div>
   <div class="signature--container">
     <app-multi-signature-item
-      *ngFor="let multisigItem of multisigItems"
+      *ngFor="let multisigItem of multisigItems$ | async"
       [multisigItem]="multisigItem"
     >
     </app-multi-signature-item>
@@ -85,9 +139,9 @@
       <div class="col">
         <button
           *ngIf="
-            !currentUserApproved &&
+            !(currentUserApproved$ | async) &&
             operationRequest.state === 'open' &&
-            isKeyholder
+            (isKeyholder$ | async)
           "
           type="button"
           class="btn btn-primary btn-block"
@@ -99,9 +153,9 @@
       <div
         class="col-md-2 pl-0"
         *ngIf="
-          !currentUserApproved &&
+          !(currentUserApproved$ | async) &&
           operationRequest.state === 'open' &&
-          isKeyholder
+          (isKeyholder$ | async)
         "
       >
         <button
@@ -118,7 +172,7 @@
       *ngIf="
         operationRequest.nonce === (contractNonce$ | async) &&
         operationRequest.state === 'approved' &&
-        isGatekeeper
+        (isKeyholder$ | async)
       "
       type="button"
       class="btn btn-primary btn-block"

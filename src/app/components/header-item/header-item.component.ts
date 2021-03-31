@@ -9,8 +9,9 @@ import {
   getActiveAccount,
   getActiveContract,
   getContracts,
-  getUsers,
+  getSessionUser,
 } from 'src/app/app.selectors'
+import { SessionUser } from 'src/app/services/api/interfaces/auth'
 
 @Component({
   selector: 'app-header-item',
@@ -18,7 +19,8 @@ import {
   styleUrls: ['./header-item.component.scss'],
 })
 export class HeaderItemComponent implements OnInit {
-  public name$: Observable<string | undefined>
+  public sessionUser$: Observable<SessionUser | undefined>
+  public username$: Observable<string | undefined>
   public activeContract$: Observable<Contract | undefined>
   public contracts$: Observable<Contract[]>
   public imageSrcMap$: Observable<Map<string, string>>
@@ -32,23 +34,28 @@ export class HeaderItemComponent implements OnInit {
           new Map<string, string>(
             contracts.map((contract) => [
               contract.id,
-              `/assets/img/${contract.display_name.toLowerCase()}.svg`,
+              `/assets/img/${contract.symbol.toLowerCase()}.svg`,
             ])
           )
       )
     )
-    this.name$ = combineLatest([
+    this.sessionUser$ = this.store$.select(getSessionUser)
+    this.username$ = combineLatest([
       this.store$.select(getActiveAccount),
-      this.store$.select(getUsers),
+      this.sessionUser$,
     ]).pipe(
-      map(([activeAccount, users]) => {
+      map(([activeAccount, sessionUser]) => {
         if (activeAccount === undefined) {
           return undefined
         }
-        return (
-          users.find((user) => user.address === activeAccount.address)
-            ?.display_name ?? activeAccount.address
-        )
+        let name = activeAccount.address
+        if (sessionUser !== undefined) {
+          name =
+            sessionUser.display_name.length > 0
+              ? sessionUser.display_name
+              : sessionUser.address
+        }
+        return name
       })
     )
   }

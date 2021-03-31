@@ -1,17 +1,30 @@
-import { Component, Input, OnInit, OnDestroy } from '@angular/core'
+import { Component, Input, OnInit } from '@angular/core'
 import { BsModalService } from 'ngx-bootstrap/modal'
 import { ModalItemComponent } from 'src/app/components/modal-item/modal-item.component'
 
 import * as fromRoot from '../../reducers/index'
 import * as actions from '../../app.actions'
 import { Store } from '@ngrx/store'
-import { Observable } from 'rxjs'
-import { filter, map, take } from 'rxjs/operators'
-import { Subscription } from 'rxjs'
+import { combineLatest, Observable } from 'rxjs'
+import { filter, map, switchMap, take } from 'rxjs/operators'
 import { User } from 'src/app/services/api/interfaces/user'
-import { OperationRequest } from 'src/app/services/api/interfaces/operationRequest'
+import {
+  OperationRequest,
+  OperationRequestState,
+} from 'src/app/services/api/interfaces/operationRequest'
 import { Contract } from 'src/app/services/api/interfaces/contract'
-import { OperationApproval } from 'src/app/services/api/interfaces/operationApproval'
+import { DeleteModalItemComponent } from '../delete-modal-item/delete-modal-item.component'
+import {
+  getActiveContract,
+  getAddress,
+  getGatekeepers,
+  getKeyholders,
+  isGatekeeper,
+  isKeyholder,
+} from 'src/app/app.selectors'
+import { isNotNullOrUndefined } from 'src/app/app.operators'
+import { CopyService } from 'src/app/services/copy/copy-service.service'
+import { ShortenPipe } from 'src/app/pipes/shorten.pipe'
 
 export interface UserWithApproval extends User {
   requestId: string
@@ -28,56 +41,103 @@ export class OperationRequestComponent implements OnInit {
   @Input()
   public operationRequest!: OperationRequest
 
-  @Input()
-  public address!: string
+  public address$: Observable<string>
+  public isGatekeeper$: Observable<boolean>
+  public isKeyholder$: Observable<boolean>
+  public keyholders$: Observable<User[]>
+  public contract$: Observable<Contract>
+  public receivingAddress$!: Observable<string | undefined>
 
-  @Input()
-  public isGatekeeper: boolean = false
-
-  @Input()
-  public isKeyholder: boolean = false
-
-  @Input()
-  public keyholders: User[] = []
-
-  @Input()
-  public contract!: Contract
-
-  public currentUserApproved: boolean = false
-  public multisigItems: UserWithApproval[] = []
+  public currentUserApproved$: Observable<boolean>
+  public multisigItems$!: Observable<UserWithApproval[]>
 
   public contractNonce$: Observable<number> = new Observable()
 
   constructor(
     private readonly store$: Store<fromRoot.State>,
-    private readonly modalService: BsModalService
-  ) {}
+    private readonly modalService: BsModalService,
+    private readonly copyService: CopyService,
+    private readonly shortenPipe: ShortenPipe
+  ) {
+    this.address$ = this.store$.select(getAddress).pipe(isNotNullOrUndefined())
+    this.isGatekeeper$ = this.store$.select(isGatekeeper)
+    this.isKeyholder$ = this.store$.select(isKeyholder)
+    this.keyholders$ = this.store$.select(getKeyholders)
+    this.contract$ = this.store$
+      .select(getActiveContract)
+      .pipe(isNotNullOrUndefined())
+    this.currentUserApproved$ = this.address$.pipe(
+      map((address) =>
+        this.operationRequest.operation_approvals.some(
+          (approval) => approval.keyholder.address === address
+        )
+      )
+    )
+  }
 
   async ngOnInit(): Promise<void> {
+    this.receivingAddress$ = this.store$.select(getGatekeepers).pipe(
+      map((gatekeepers) => {
+        const targetAddress = this.operationRequest.target_address
+        if (!targetAddress) {
+          return undefined
+        }
+        const gatekeeper = gatekeepers.find(
+          (gatekeeper) => gatekeeper.address == targetAddress
+        )
+        if (gatekeeper) {
+          return `${gatekeeper.display_name} - ${this.shortenPipe.transform(
+            targetAddress
+          )}`
+        } else {
+          return this.shortenPipe.transform(targetAddress)
+        }
+      })
+    )
     const operationRequestId = this.operationRequest.id
-    this.contractNonce$ = this.store$
-      .select((state) => state.app.contractNonces.get(this.contract.id))
-      .pipe(
-        filter((value) => value !== undefined),
-        map((value) => value!)
+    if (this.operationRequest.state !== OperationRequestState.INJECTED) {
+      this.multisigItems$ = combineLatest([
+        this.keyholders$,
+        this.address$,
+      ]).pipe(
+        map(([keyholders, address]) =>
+          keyholders.map((user) => ({
+            ...user,
+            requestId: operationRequestId,
+            isCurrentUser: user.address === address,
+            hasApproval: this.operationRequest.operation_approvals.some(
+              (approval) => approval.keyholder.id === user.id
+            ),
+            updated_at:
+              this.operationRequest.operation_approvals.find(
+                (operationApproval) =>
+                  operationApproval.keyholder.id === user.id
+              )?.created_at ?? '',
+          }))
+        )
       )
-
-    this.multisigItems = this.keyholders.map((user) => ({
-      ...user,
-      requestId: operationRequestId,
-      isCurrentUser: user.address === this.address,
-      hasApproval: this.operationRequest.operation_approvals.some(
-        (approval) => approval.keyholder.id === user.id
-      ),
-      updated_at:
-        this.operationRequest.operation_approvals.find(
-          (operationApproval) => operationApproval.keyholder.id === user.id
-        )?.created_at ?? '',
-    }))
-    this.currentUserApproved =
-      this.operationRequest.operation_approvals.some(
-        (approval) => approval.keyholder.address === this.address
-      ) ?? false
+    } else {
+      this.multisigItems$ = this.address$.pipe(
+        map((address) =>
+          this.operationRequest.operation_approvals.map((approval) => ({
+            ...approval.keyholder,
+            requestId: operationRequestId,
+            isCurrentUser: approval.keyholder.address === address,
+            hasApproval: true,
+          }))
+        )
+      )
+    }
+    this.contractNonce$ = this.contract$.pipe(
+      switchMap((contract) =>
+        this.store$
+          .select((state) => state.app.contractNonces.get(contract.id))
+          .pipe(
+            filter((value) => value !== undefined),
+            map((value) => value!)
+          )
+      )
+    )
   }
 
   public submitOperation() {
@@ -128,39 +188,55 @@ export class OperationRequestComponent implements OnInit {
           )
         }
       })
-    this.store$
-      .select((state) =>
+    combineLatest([
+      this.store$.select((state) =>
         state.app.signableMessages.get(this.operationRequest.id)
-      )
+      ),
+      this.contract$,
+    ])
       .pipe(
-        filter((signableMessage) => signableMessage !== undefined),
-        map((signableMessage) => signableMessage!),
+        filter(([signableMessage]) => signableMessage !== undefined),
+        map(([signableMessage, contract]) => ({
+          signableMessage: signableMessage!,
+          contract,
+        })),
         take(1)
       )
-      .subscribe((signableMessage) => {
+      .subscribe(({ signableMessage, contract }) => {
         const modalRef = this.modalService.show(ModalItemComponent, {
           class: 'modal-lg',
           initialState: {
             signableMessage,
+            contract,
           },
         })
       })
   }
 
-  delete() {
-    this.store$.dispatch(
-      actions.deleteOperationRequest({
-        operationRequest: this.operationRequest,
-      })
+  public delete() {
+    const contractNonces$ = this.store$.select(
+      (state) => state.app.contractNonces
     )
+
+    this.modalService.show(DeleteModalItemComponent, {
+      class: 'modal-lg',
+      initialState: {
+        operationRequest: this.operationRequest,
+        contractNonces$: contractNonces$,
+      },
+    })
   }
 
-  markInjected() {
+  public markInjected() {
     this.store$.dispatch(
       actions.updateOperationRequestStateToInjected({
         operationRequest: this.operationRequest,
         injectedOperationHash: null,
       })
     )
+  }
+
+  public copyToClipboard(val: string) {
+    this.copyService.copyToClipboard(val)
   }
 }

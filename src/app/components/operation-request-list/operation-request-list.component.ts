@@ -27,22 +27,7 @@ export class OperationRequestListComponent implements OnInit {
   public state!: OperationRequestState
 
   @Input()
-  public address!: string
-
-  @Input()
   public operationRequestList!: PagedResponse<OperationRequest>
-
-  @Input()
-  public isGatekeeper: boolean = false
-
-  @Input()
-  public isKeyholder: boolean = false
-
-  @Input()
-  public keyholders: User[] = []
-
-  @Input()
-  public contract!: Contract
 
   constructor(private readonly store$: Store<fromRoot.State>) {}
 

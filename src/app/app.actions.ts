@@ -83,6 +83,19 @@ export const getSessionUserFailed = createAction(
   props<{ errorResponse: HttpErrorResponse }>()
 )
 
+export const updateSessionUser = createAction(
+  `[${featureName}] Update Session User`,
+  props<{ displayName: string; email: string | null }>()
+)
+export const updateSessionUserSucceeded = createAction(
+  `[${featureName}] Update Session User Succeeded`,
+  props<{ sessionUser: SessionUser }>()
+)
+export const updateSessionUserFailed = createAction(
+  `[${featureName}] Update Session User Failed`,
+  props<{ errorResponse: HttpErrorResponse }>()
+)
+
 export const updateCanSignIn = createAction(
   `[${featureName}] Update Can Sign In`,
   props<{ canSignIn: boolean }>()
@@ -267,6 +280,41 @@ export const loadBurnOperationRequestsFailed = createAction(
   props<{ errorResponse: HttpErrorResponse }>()
 )
 
+export const loadUpdateKeyholdersOperationRequests = createAction(
+  `[${featureName}] Load Update Keyholders Operation Requests`
+)
+
+export const loadOpenUpdateKeyholdersOperationRequests = createAction(
+  `[${featureName}] Load Open Update Keyholders Operation Requests`,
+  props<{ page?: number }>()
+)
+export const loadApprovedUpdateKeyholdersOperationRequests = createAction(
+  `[${featureName}] Load Approved Update Keyholders Operation Requests`,
+  props<{ page?: number }>()
+)
+export const loadInjectedUpdateKeyholdersOperationRequests = createAction(
+  `[${featureName}] Load Injected Update Keyholders Operation Requests`,
+  props<{ page?: number }>()
+)
+
+export const loadOpenUpdateKeyholdersOperationRequestsSucceeded = createAction(
+  `[${featureName}] Load Open Update Keyholders Operation Requests Succeeded`,
+  props<{ response: PagedResponse<OperationRequest> }>()
+)
+export const loadApprovedUpdateKeyholdersOperationRequestsSucceeded = createAction(
+  `[${featureName}] Load Approved Update Keyholders Operation Requests Succeeded`,
+  props<{ response: PagedResponse<OperationRequest> }>()
+)
+export const loadInjectedUpdateKeyholdersOperationRequestsSucceeded = createAction(
+  `[${featureName}] Load Injected Update Keyholders Operation Requests Succeeded`,
+  props<{ response: PagedResponse<OperationRequest> }>()
+)
+
+export const loadUpdateKeyholdersOperationRequestsFailed = createAction(
+  `[${featureName}] Load Update Keyholders Operation Requests Failed`,
+  props<{ errorResponse: HttpErrorResponse }>()
+)
+
 export const transferOperation = createAction(
   `[${featureName}] Starting Transfer Operation`,
   props<{ transferAmount: BigNumber; receivingAddress: string }>()
@@ -291,7 +339,10 @@ export const submitOperationRequestSucceeded = createAction(
 )
 export const submitOperationRequestFailed = createAction(
   `[${featureName}] Submit Operation Request Failed`,
-  props<{ errorResponse: HttpErrorResponse }>()
+  props<{
+    errorResponse: HttpErrorResponse
+    newOperationRequest: NewOperationRequest
+  }>()
 )
 
 export const getSignableMessage = createAction(
@@ -408,6 +459,10 @@ export const setActiveContractSucceeded = createAction(
   `[${featureName}] Setting Active Contract Succeeded`,
   props<{ contract: Contract }>()
 )
+export const setActiveContractFailed = createAction(
+  `[${featureName}] Setting Active Contract Failed`,
+  props<{ errorResponse: HttpErrorResponse }>()
+)
 
 export const loadRedeemAddress = createAction(
   `[${featureName}] Load Redeem Address`,
@@ -439,6 +494,28 @@ export const showAlert = createAction(
   props<{ alertMessage: ErrorDescription }>()
 )
 export const clearAlerts = createAction(`[${featureName}] Clearing Alerts`)
+
+export const updateKeyholdersToRemove = createAction(
+  `[${featureName}] Update keyholders to remove`,
+  props<{ keyholder: User }>()
+)
+export const resetKeyholdersToRemove = createAction(
+  `[${featureName}] Reset keyholders to remove`
+)
+
+export const updateKeyholdersToAdd = createAction(
+  `[${featureName}] Update keyholders to add`,
+  props<{ keyholder: string }>()
+)
+export const resetKeyholdersToAdd = createAction(
+  `[${featureName}] Reset keyholders to add`
+)
+
+export const updateThreshold = createAction(
+  `[${featureName}] Update threshold`,
+  props<{ threshold: number }>()
+)
+export const resetThreshold = createAction(`[${featureName}] Reset threshold`)
 
 export const noOp = createAction(`[${featureName}] Nothing to do`)
 

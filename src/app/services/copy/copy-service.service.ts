@@ -5,7 +5,6 @@ import { Injectable } from '@angular/core'
 })
 export class CopyService {
   public copyToClipboard(val: string) {
-    console.log('copied: ', val)
     // This would be a nicer solution, but it doesn't work in Safari
     // (navigator as any).clipboard.writeText(val)
 

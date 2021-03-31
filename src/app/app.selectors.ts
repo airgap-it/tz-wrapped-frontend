@@ -137,6 +137,40 @@ export const getInjectedBurnOperationRequestCurrentPage = createSelector(
   (state) => state.injectedBurnOperationRequests?.page
 )
 
+export const getOpenUpdateKeyholdersOperationRequests = createSelector(
+  selectApp,
+  (state) => {
+    return state.openUpdateKeyholdersOperationRequests
+  }
+)
+
+export const getOpenUpdateKeyholdersOperationRequestCurrentPage = createSelector(
+  selectApp,
+  (state) => {
+    return state.openUpdateKeyholdersOperationRequests?.page
+  }
+)
+
+export const getApprovedUpdateKeyholdersOperationRequests = createSelector(
+  selectApp,
+  (state) => state.approvedUpdateKeyholdersOperationRequests
+)
+
+export const getApprovedUpdateKeyholdersOperationRequestCurrentPage = createSelector(
+  selectApp,
+  (state) => state.approvedUpdateKeyholdersOperationRequests?.page
+)
+
+export const getInjectedUpdateKeyholdersOperationRequests = createSelector(
+  selectApp,
+  (state) => state.injectedUpdateKeyholdersOperationRequests
+)
+
+export const getInjectedUpdateKeyholdersOperationRequestCurrentPage = createSelector(
+  selectApp,
+  (state) => state.injectedUpdateKeyholdersOperationRequests?.page
+)
+
 export const getRedeemAddress = createSelector(
   selectApp,
   (state) => state.redeemAddress
@@ -148,3 +182,33 @@ export const getRedeemAddressBalance = createSelector(
 )
 
 export const getAlerts = createSelector(selectApp, (state) => state.alerts)
+
+export const getKeyholdersToRemove = createSelector(
+  selectApp,
+  (state) => state.keyholdersToRemove
+)
+
+export const getKeyholdersToAdd = createSelector(
+  selectApp,
+  (state) => state.keyholdersToAdd
+)
+
+export const getNewThreshold = createSelector(
+  selectApp,
+  (state) => state.newThreshold
+)
+
+export const getBusyMintOperationRequests = createSelector(
+  selectApp,
+  (state) => state.busy.mintOperationRequests
+)
+
+export const getBusyBurnOperationRequests = createSelector(
+  selectApp,
+  (state) => state.busy.burnOperationRequests
+)
+
+export const getBusyUpdateKeyholdersOperationRequests = createSelector(
+  selectApp,
+  (state) => state.busy.updateKeyholdersOperationRequests
+)

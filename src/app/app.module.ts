@@ -18,7 +18,7 @@ import { EffectsModule } from '@ngrx/effects'
 import { AppEffects } from './app.effects'
 import { metaReducers, ROOT_REDUCERS } from './reducers'
 import { CommonModule } from '@angular/common'
-import { ReactiveFormsModule } from '@angular/forms'
+import { FormsModule, ReactiveFormsModule } from '@angular/forms'
 import { HttpClientModule } from '@angular/common/http'
 import { OperationRequestComponent } from './components/operation-request/operation-request.component'
 import { ModalItemComponent } from './components/modal-item/modal-item.component'
@@ -28,6 +28,9 @@ import { ErrorItemComponent } from './components/error-item/error.component'
 import { CopyService } from './services/copy/copy-service.service'
 import { AlertModule } from 'ngx-bootstrap/alert'
 import { OperationRequestListComponent } from './components/operation-request-list/operation-request-list.component'
+import { CacheService } from './services/cache/cache.service'
+import { DeleteModalItemComponent } from './components/delete-modal-item/delete-modal-item.component'
+import { OperationRequestGroupComponent } from './components/operation-request-group/operation-request-group.component'
 
 @NgModule({
   declarations: [
@@ -42,6 +45,8 @@ import { OperationRequestListComponent } from './components/operation-request-li
     AmountConverterPipe,
     ErrorItemComponent,
     OperationRequestListComponent,
+    DeleteModalItemComponent,
+    OperationRequestGroupComponent,
   ],
   imports: [
     AlertModule.forRoot(),
@@ -50,6 +55,7 @@ import { OperationRequestListComponent } from './components/operation-request-li
     AccordionModule.forRoot(),
     ModalModule.forRoot(),
     BrowserModule,
+    FormsModule,
     CommonModule,
     TabsModule.forRoot(),
     AppRoutingModule,
@@ -64,7 +70,7 @@ import { OperationRequestListComponent } from './components/operation-request-li
     HttpClientModule,
     ReactiveFormsModule,
   ],
-  providers: [BeaconService, Store, CopyService],
+  providers: [BeaconService, Store, CopyService, CacheService],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
