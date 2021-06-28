@@ -7,7 +7,8 @@ The backend can be found [here](https://github.com/airgap-it/tz-wrapped-backend)
 ## Build
 
 1. npm install
-2. npm run build:local
+2. npm run fix-crypto
+3. npm run build:local
 
 To build for different environments just change the build command to `npm run build:dev` for development or `npm run build:prod` for production.
 
