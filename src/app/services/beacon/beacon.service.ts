@@ -5,6 +5,7 @@ import {
   OperationResponseOutput,
   PermissionScope,
   RequestOperationInput,
+  SigningType,
   SignPayloadResponseOutput,
 } from '@airgap/beacon-sdk'
 import {
@@ -102,9 +103,13 @@ export class BeaconService {
     await operation.confirmation()
   }
 
-  async sign(message: string): Promise<SignPayloadResponseOutput> {
+  async sign(
+    message: string,
+    signingType: SigningType = SigningType.MICHELINE
+  ): Promise<SignPayloadResponseOutput> {
     return this.wallet.client.requestSignPayload({
       payload: message,
+      signingType,
     })
   }
 
