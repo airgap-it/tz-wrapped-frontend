@@ -1,4 +1,4 @@
-import { TezosOperationType } from '@airgap/beacon-sdk'
+import { SigningType, TezosOperationType } from '@airgap/beacon-sdk'
 import { HttpErrorResponse } from '@angular/common/http'
 import { Injectable } from '@angular/core'
 import { Actions, createEffect, ofType } from '@ngrx/effects'
@@ -141,7 +141,7 @@ export class AppEffects {
     this.actions$.pipe(
       ofType(actions.signChallenge),
       switchMap(({ challenge }) =>
-        from(this.beaconService.sign(challenge.message)).pipe(
+        from(this.beaconService.sign(challenge.message, SigningType.RAW)).pipe(
           map((signResponse) =>
             actions.signChallengeSucceeded({
               challengeResponse: {
