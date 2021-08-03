@@ -141,7 +141,9 @@ export class AppEffects {
     this.actions$.pipe(
       ofType(actions.signChallenge),
       switchMap(({ challenge }) =>
-        from(this.beaconService.sign(challenge.message, SigningType.RAW)).pipe(
+        from(
+          this.beaconService.sign(challenge.message, SigningType.OPERATION)
+        ).pipe(
           map((signResponse) =>
             actions.signChallengeSucceeded({
               challengeResponse: {
