@@ -1,10 +1,10 @@
 image: docker:latest
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
-  DEV_GOOGLE_TAG: eu.gcr.io/papers-kubernetes/tz-wrapped-frontend-dev:$CI_COMMIT_SHA
+  DEV_GOOGLE_TAG: eu.gcr.io/papers-dev-kubernetes/tz-wrapped-frontend-dev:$CI_COMMIT_SHA
   PROD_GOOGLE_TAG: eu.gcr.io/papers-kubernetes/tz-wrapped-frontend:$CI_COMMIT_SHA
   TEST_TAG: tz_wrapped_frontend_test_$CI_COMMIT_SHA
-  DEV_GOOGLE_TAG_LATEST: eu.gcr.io/papers-kubernetes/tz-wrapped-frontend-dev:latest
+  DEV_GOOGLE_TAG_LATEST: eu.gcr.io/papers-dev-kubernetes/tz-wrapped-frontend-dev:latest
   PROD_GOOGLE_TAG_LATEST: eu.gcr.io/papers-kubernetes/tz-wrapped-frontend:latest
 
 stages:
@@ -86,10 +86,10 @@ publish_dev:
   when: manual
   image: google/cloud-sdk
   before_script:
-    - echo $GCLOUD_GOOGLE_KEY > key.json
-    - gcloud auth activate-service-account $GCLOUD_ACCOUNT --key-file key.json
-    - gcloud config set project $GCLOUD_PROJECT
-    - gcloud config set account $GCLOUD_ACCOUNT
+    - echo $GCLOUD_GOOGLE_KEY_DEV > key.json
+    - gcloud auth activate-service-account $GCLOUD_ACCOUNT_DEV --key-file key.json
+    - gcloud config set project $GCLOUD_PROJECT_DEV
+    - gcloud config set account $GCLOUD_ACCOUNT_DEV
     - gcloud config set compute/zone $GCLOUD_ZONE
     - gcloud auth configure-docker
   script:
@@ -127,11 +127,11 @@ k8s-deploy-development:
   when: manual
   image: google/cloud-sdk
   before_script:
-    - echo $GCLOUD_GOOGLE_KEY > key.json
-    - gcloud auth activate-service-account $GCLOUD_ACCOUNT --key-file key.json
-    - gcloud config set project $GCLOUD_PROJECT
-    - gcloud config set account $GCLOUD_ACCOUNT
-    - gcloud config set compute/zone $GCLOUD_ZONE_DEVELOPMENT
+    - echo $GCLOUD_GOOGLE_KEY_DEV > key.json
+    - gcloud auth activate-service-account $GCLOUD_ACCOUNT_DEV --key-file key.json
+    - gcloud config set project $GCLOUD_PROJECT_DEV
+    - gcloud config set account $GCLOUD_ACCOUNT_DEV
+    - gcloud config set compute/zone $GCLOUD_ZONE
     - gcloud container clusters get-credentials papers-cluster-development
   script:
     - sed -i "s|_TO_BE_REPLACED_BY_IMAGE_TAG_|"$DEV_GOOGLE_TAG"|g" k8s/foundry/common/frontend/deployment.yaml
