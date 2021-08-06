@@ -24,17 +24,19 @@ build:
 
 build_serve_dev:
   stage: build_serve
-  when: manual
   script:
     - docker build --build-arg RUN_ENV=development -t $DEV_GOOGLE_TAG .
+  only:
+    - develop
   tags:
     - docker
 
 build_serve_prod:
   stage: build_serve
-  when: manual
   script:
     - docker build --build-arg RUN_ENV=production -t $PROD_GOOGLE_TAG .
+  only:
+    - master
   tags:
     - docker
 
@@ -83,7 +85,7 @@ test:
 
 publish_dev:
   stage: publish
-  when: manual
+  needs: ['build_serve_dev']
   image: google/cloud-sdk
   before_script:
     - echo $GCLOUD_GOOGLE_KEY_DEV > key.json
@@ -97,14 +99,13 @@ publish_dev:
     - docker push $DEV_GOOGLE_TAG
     - docker push $DEV_GOOGLE_TAG_LATEST
   only:
-    - master
     - develop
   tags:
     - docker
 
 publish_prod:
   stage: publish
-  when: manual
+  needs: ['build_serve_prod']
   image: google/cloud-sdk
   before_script:
     - echo $GCLOUD_GOOGLE_KEY > key.json
@@ -140,7 +141,6 @@ k8s-deploy-development:
     - kubectl apply -f k8s/foundry/common/ --recursive
   only:
     - develop
-    - master
   tags:
     - docker
 
