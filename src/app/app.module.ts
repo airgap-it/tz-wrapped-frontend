@@ -31,6 +31,7 @@ import { OperationRequestListComponent } from './components/operation-request-li
 import { CacheService } from './services/cache/cache.service'
 import { DeleteModalItemComponent } from './components/delete-modal-item/delete-modal-item.component'
 import { OperationRequestGroupComponent } from './components/operation-request-group/operation-request-group.component'
+import { UploadSignatureComponent } from './components/upload-signature/upload-signature.component'
 
 @NgModule({
   declarations: [
@@ -47,6 +48,7 @@ import { OperationRequestGroupComponent } from './components/operation-request-g
     OperationRequestListComponent,
     DeleteModalItemComponent,
     OperationRequestGroupComponent,
+    UploadSignatureComponent,
   ],
   imports: [
     AlertModule.forRoot(),
