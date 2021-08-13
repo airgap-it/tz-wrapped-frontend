@@ -1,0 +1,57 @@
+<div class="modal-header">
+  <h4 class="modal-title pull-left">Approve Operation</h4>
+  <button type="button" class="close pull-right" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="modal-body">
+  <h5 class="mb-2">
+    Message Signing
+    <a
+      class="btn btn-sm btn-icon btn-light rounded-circle ml-1"
+      (click)="copyToClipboard(signableMessage!.tezos_client_command)"
+    >
+      <img src="/assets/img/copy.svg" />
+    </a>
+  </h5>
+  <div class="row">
+    <div class="col-md-8">
+      <p>
+        In order to approve the operation, sign the following message in another
+        environment.
+      </p>
+    </div>
+  </div>
+
+  <pre>0x{{ signableMessage!.message }}</pre>
+
+  <label>Signature</label>
+  <div class="col" class="form-group mb-9">
+    <input
+      [formControl]="signatureControl"
+      type="text"
+      class="form-control"
+      placeholder="edsig..."
+      aria-label="Address"
+      [ngClass]="{
+        'is-invalid':
+          signatureControl.errors &&
+          (signatureControl.touched || signatureControl.dirty)
+      }"
+    />
+    <div class="invalid-feedback px-3 py-2 px-3 py-2">
+      <strong>Invalid Signature, please provide a valid edsig signature</strong>
+    </div>
+  </div>
+
+  <div class="col">
+    <button
+      type="button"
+      class="btn btn-primary btn-block"
+      [disabled]="signatureControl.invalid"
+      (click)="confirm(); bsModalRef.hide()"
+    >
+      Confirm
+    </button>
+  </div>
+</div>

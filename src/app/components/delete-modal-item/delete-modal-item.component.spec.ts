@@ -1,14 +1,7 @@
-import { InjectionToken } from '@angular/core'
 import { ComponentFixture, TestBed } from '@angular/core/testing'
-import {
-  ActionsSubject,
-  ReducerManager,
-  ReducerManagerDispatcher,
-  StateObservable,
-} from '@ngrx/store'
+import { ActionsSubject, StateObservable } from '@ngrx/store'
 import { MockStore, provideMockStore } from '@ngrx/store/testing'
 import { BsModalRef, BsModalService, ModalModule } from 'ngx-bootstrap/modal'
-import { ROOT_REDUCERS } from 'src/app/reducers'
 import { OperationRequestState } from 'src/app/services/api/interfaces/operationRequest'
 import { UserKind, UserState } from 'src/app/services/api/interfaces/user'
 

@@ -2,8 +2,8 @@
   <div class="row py-3 align-items-center">
     <div class="col col-md-6">
       <h5 *ngIf="operationRequest.amount !== null" class="m-0">
-        <strong
-          >{{
+        <strong>
+          {{
             operationRequest.amount
               | amountConverter
                 : {
@@ -92,14 +92,14 @@
     class="d-flex justify-content-between align-items-center btn--container__more pb-3"
   >
     <p class="m-0">
-      <strong
-        >{{ operationRequest.operation_approvals.length }}/{{
+      <strong>
+        {{ operationRequest.operation_approvals.length }}/{{
           operationRequest.state !== 'injected'
             ? (contract$ | async).min_approvals
             : operationRequest.operation_approvals.length
         }}
-        Confirmations</strong
-      >
+        Confirmations
+      </strong>
     </p>
     <div class="btn-group" dropdown>
       <button dropdownToggle type="button" class="btn btn-link">
@@ -131,8 +131,7 @@
     <app-multi-signature-item
       *ngFor="let multisigItem of multisigItems$ | async"
       [multisigItem]="multisigItem"
-    >
-    </app-multi-signature-item>
+    ></app-multi-signature-item>
   </div>
   <div class="pt-3">
     <div class="row">
@@ -148,6 +147,20 @@
           (click)="approveOperationRequest()"
         >
           Approve Request
+        </button>
+      </div>
+      <div class="col">
+        <button
+          *ngIf="
+            !(currentUserApproved$ | async) &&
+            operationRequest.state === 'open' &&
+            (isKeyholder$ | async)
+          "
+          type="button"
+          class="btn btn-primary btn-block"
+          (click)="openModal(true)"
+        >
+          Upload Signature
         </button>
       </div>
       <div

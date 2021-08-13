@@ -15,8 +15,9 @@
     <a
       class="btn btn-sm btn-icon btn-light rounded-circle ml-1"
       (click)="copyToClipboard(signableMessage.tezos_client_command)"
-      ><img src="/assets/img/copy.svg"
-    /></a>
+    >
+      <img src="/assets/img/copy.svg" />
+    </a>
   </h5>
   <div class="row">
     <div class="col-md-8">
@@ -30,23 +31,27 @@
   <pre>{{ signableMessage.tezos_client_command }}</pre>
   <h5 class="mb-3 pt-3">Expected results</h5>
   <p class="mb-2">
-    <strong class="mb-2"
-      >Raw packed data
+    <strong class="mb-2">
+      Raw packed data
       <a
         class="btn btn-sm btn-icon btn-light rounded-circle ml-1"
         (click)="copyToClipboard(signableMessage.message)"
-        ><img src="/assets/img/copy.svg" /></a
-    ></strong>
+      >
+        <img src="/assets/img/copy.svg" />
+      </a>
+    </strong>
   </p>
   <pre>0x{{ signableMessage.message }}</pre>
   <p class="mb-2">
-    <strong class="mb-2"
-      >Ledger Blake2b hash
+    <strong class="mb-2">
+      Ledger Blake2b hash
       <a
         class="btn btn-sm btn-icon btn-light rounded-circle ml-1"
         (click)="copyToClipboard(signableMessage.blake2b_hash)"
-        ><img src="/assets/img/copy.svg" /></a
-    ></strong>
+      >
+        <img src="/assets/img/copy.svg" />
+      </a>
+    </strong>
   </p>
   <pre>{{ signableMessage.blake2b_hash }}</pre>
   <h5 class="mb-2 py-3">Signed message details</h5>
@@ -74,19 +79,28 @@ Pair "&lt;MULTISIG_CONTRACT_ADDRESS&gt;" (Pair &lt;COUNTER&gt; (Left (Pair &lt;C
       <pre>
 pair address (pair nat (or (pair (or (or (or (or (pair string bytes) (pair (pair nat nat) (pair (lambda (big_map bytes bytes) (big_map bytes bytes)) (pair (option (lambda (pair (pair string bytes) (big_map bytes bytes)) (pair (list operation) (big_map bytes bytes)))) (option (lambda (pair unit (big_map bytes bytes)) (pair (list operation) (big_map bytes bytes)))))))) (or (pair nat nat) (lambda (big_map bytes bytes) (big_map bytes bytes)))) (or (or (lambda (pair (pair string bytes) (big_map bytes bytes)) (pair (list operation) (big_map bytes bytes))) unit) (or (pair address (pair address nat)) (pair address nat)))) (or (or (or (pair address nat) nat) (or address address)) (or (or address unit) (or unit (or address unit))))) address) (or (pair address mutez) (pair nat (list key))))))</pre
       >
-      <p><code>&lt;CALL&gt;</code> in case of Mint</p>
+      <p>
+        <code>&lt;CALL&gt;</code>
+        in case of Mint
+      </p>
 
       <pre>
 Right (Left (Left (Left (Pair "&lt;ADDRESS&gt;" &lt;AMOUNT&gt;))))</pre
       >
 
-      <p><code>&lt;CALL&gt;</code> in case of Burn</p>
+      <p>
+        <code>&lt;CALL&gt;</code>
+        in case of Burn
+      </p>
 
       <pre>(Right (Left (Left (Right &lt;AMOUNT&gt;))))</pre>
 
       <p class="pt-3">
-        Example <strong>Mint</strong> message for <strong>1 tzBTC</strong> to
-        destination address
+        Example
+        <strong>Mint</strong>
+        message for
+        <strong>1 tzBTC</strong>
+        to destination address
         <strong>tz1NBYj7pEe9mkMoSEDzKLwtbrQHG17bwBwy</strong>
       </p>
 
@@ -102,7 +116,10 @@ Pair "{{
       </p>
 
       <p class="pt-3">
-        Example <strong>Burn</strong> message for <strong>1 tzBTC</strong>
+        Example
+        <strong>Burn</strong>
+        message for
+        <strong>1 tzBTC</strong>
       </p>
 
       <pre>
@@ -128,21 +145,30 @@ Pair "&lt;CHAIN_ID&gt;" (Pair "&lt;MULTISIG_CONTRACT_ADDRESS&gt;" (Pair 3 &lt;CO
       <pre>
 pair chain_id (pair address (pair nat (lambda unit (list operation))))</pre
       >
-      <p><code>&lt;CONTRACT_CALL_LAMBDA&gt;</code> in case of Mint</p>
+      <p>
+        <code>&lt;CONTRACT_CALL_LAMBDA&gt;</code>
+        in case of Mint
+      </p>
 
       <pre>
 &#x0007B; DROP; NIL operation; PUSH address "&lt;CONTRACT_ADDRESS&gt;%mint"; CONTRACT (list (pair address (pair nat nat))); &#x0007B; IF_NONE &#x0007B; UNIT; FAILWITH&#x0007D; &#x0007B; &#x0007D;&#x0007D;; PUSH mutez 0; NIL (pair address (pair nat nat)); PUSH nat &lt;AMOUNT&gt;; PUSH nat 0; PAIR; PUSH address "&lt;ADDRESS&gt;"; PAIR; CONS; TRANSFER_TOKENS; CONS&#x0007D;</pre
       >
 
-      <p><code>&lt;CONTRACT_CALL_LAMBDA&gt;</code> in case of Burn</p>
+      <p>
+        <code>&lt;CONTRACT_CALL_LAMBDA&gt;</code>
+        in case of Burn
+      </p>
 
       <pre>
 &#x0007B; DROP; NIL operation; PUSH address "&lt;CONTRACT_ADDRESS&gt;%burn"; CONTRACT (list (pair nat nat)); &#x0007B; IF_NONE &#x0007B; UNIT; FAILWITH&#x0007D; &#x0007B; &#x0007D;&#x0007D;; PUSH mutez 0; NIL (pair nat nat); PUSH nat &lt;AMOUNT&gt;; PUSH nat 0; PAIR; CONS; TRANSFER_TOKENS; CONS&#x0007D;</pre
       >
 
       <p class="pt-3">
-        Example <strong>Mint</strong> message for <strong>1 tzETH</strong> to
-        destination address
+        Example
+        <strong>Mint</strong>
+        message for
+        <strong>1 tzETH</strong>
+        to destination address
         <strong>tz1NBYj7pEe9mkMoSEDzKLwtbrQHG17bwBwy</strong>
       </p>
 
@@ -159,7 +185,10 @@ Pair "NetXm8tYqnMWky1" (Pair "{{
       </p>
 
       <p class="pt-3">
-        Example <strong>Burn</strong> message for <strong>1 tzETH</strong>
+        Example
+        <strong>Burn</strong>
+        message for
+        <strong>1 tzETH</strong>
       </p>
 
       <pre>
