@@ -975,12 +975,12 @@ export class AppEffects {
       ofType(actions.getSignableMessage),
       mergeMap(({ operationRequestId }) =>
         this.apiService.getSignableMessage(operationRequestId).pipe(
-          map((signableMessage) =>
-            actions.getSignableMessageSucceeded({
+          map((signableMessage) => {
+            return actions.getSignableMessageSucceeded({
               signableMessage,
               operationRequestId,
             })
-          ),
+          }),
           catchError((errorResponse) =>
             of(actions.getSignableMessageFailed({ errorResponse }))
           )

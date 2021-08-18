@@ -25,6 +25,7 @@ import {
 import { isNotNullOrUndefined } from 'src/app/app.operators'
 import { CopyService } from 'src/app/services/copy/copy-service.service'
 import { ShortenPipe } from 'src/app/pipes/shorten.pipe'
+import { UploadSignatureComponent } from '../upload-signature/upload-signature.component'
 
 export interface UserWithApproval extends User {
   requestId: string
@@ -163,17 +164,17 @@ export class OperationRequestComponent implements OnInit {
         map((signableMessage) => signableMessage!),
         take(1)
       )
-      .subscribe((signableMessage) =>
-        this.store$.dispatch(
+      .subscribe((signableMessage) => {
+        return this.store$.dispatch(
           actions.approveOperationRequest({
             signableMessage,
             operationRequest: this.operationRequest,
           })
         )
-      )
+      })
   }
 
-  public openModal() {
+  public openModal(uploadSignature = false) {
     this.store$
       .select((state) =>
         state.app.signableMessages.get(this.operationRequest.id)
@@ -203,13 +204,23 @@ export class OperationRequestComponent implements OnInit {
         take(1)
       )
       .subscribe(({ signableMessage, contract }) => {
-        const modalRef = this.modalService.show(ModalItemComponent, {
-          class: 'modal-lg',
-          initialState: {
-            signableMessage,
-            contract,
-          },
-        })
+        if (uploadSignature) {
+          this.modalService.show(UploadSignatureComponent, {
+            class: 'modal-lg',
+            initialState: {
+              signableMessage,
+              operationRequest: this.operationRequest,
+            },
+          })
+        } else {
+          this.modalService.show(ModalItemComponent, {
+            class: 'modal-lg',
+            initialState: {
+              signableMessage,
+              contract,
+            },
+          })
+        }
       })
   }
 
