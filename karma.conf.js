@@ -4,7 +4,7 @@
 module.exports = function (config) {
   config.set({
     proxies: {
-      '/assets/': '/base/src/assets/'
+      '/assets/': '/base/src/assets/',
     },
     basePath: '',
     frameworks: ['jasmine', '@angular-devkit/build-angular'],
@@ -12,16 +12,20 @@ module.exports = function (config) {
       require('karma-jasmine'),
       require('karma-chrome-launcher'),
       require('karma-jasmine-html-reporter'),
-      require('karma-coverage-istanbul-reporter'),
-      require('@angular-devkit/build-angular/plugins/karma')
+      require('karma-coverage'),
+      require('@angular-devkit/build-angular/plugins/karma'),
     ],
     client: {
-      clearContext: false // leave Jasmine Spec Runner output visible in browser
+      clearContext: false, // leave Jasmine Spec Runner output visible in browser
     },
-    coverageIstanbulReporter: {
-      dir: require('path').join(__dirname, './coverage/dapp-frontend'),
-      reports: ['html', 'lcovonly', 'text-summary'],
-      fixWebpackSourcePaths: true
+    coverageReporter: {
+      // specify a common output directory
+      dir: './coverage/dapp-frontend',
+      reporters: [
+        { type: 'lcov', subdir: 'report-lcov' },
+        { type: 'text', subdir: '.', file: 'text.txt' },
+      ],
+      fixWebpackSourcePaths: true,
     },
     reporters: ['progress', 'kjhtml'],
     port: 9876,
@@ -32,10 +36,10 @@ module.exports = function (config) {
     customLaunchers: {
       ChromeHeadlessNoSandbox: {
         base: 'ChromeHeadless',
-        flags: ['--no-sandbox']
-      }
+        flags: ['--no-sandbox'],
+      },
     },
     singleRun: false,
-    restartOnFileChange: true
-  });
-};
+    restartOnFileChange: true,
+  })
+}

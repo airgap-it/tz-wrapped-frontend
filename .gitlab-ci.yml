@@ -46,7 +46,7 @@ test:
   script:
     - docker run --name unit-$CI_COMMIT_SHA $TEST_TAG npm run test-ci
     - docker run --name lint-$CI_COMMIT_SHA $TEST_TAG npm run lint-ci
-    - docker cp unit-$CI_COMMIT_SHA:/app/coverage/dapp-frontend/lcov.info lcov.info
+    - docker cp unit-$CI_COMMIT_SHA:/app/coverage/dapp-frontend/report-lcov/lcov.info lcov.info
     - docker cp lint-$CI_COMMIT_SHA:/app/lintReport.json lintReport.json
   after_script:
     - docker rm -f unit-$CI_COMMIT_SHA || true
