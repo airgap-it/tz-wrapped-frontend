@@ -20,6 +20,7 @@ import {
   AuthenticationChallengeResponse,
   SessionUser,
 } from './interfaces/auth'
+import { TezosNode } from './interfaces/nodes'
 
 const pageLimit = 2
 
@@ -29,6 +30,7 @@ const pageLimit = 2
 export class ApiService {
   private static authPath = '/auth'
   private static contractsPath = '/contracts'
+  private static nodesPath = '/nodes'
   private static usersPath = '/users'
   private static operationRequestsPath = '/operation-requests'
   private static operationApprovalsPath = '/operation-approvals'
@@ -83,6 +85,18 @@ export class ApiService {
   getContracts(): Observable<PagedResponse<Contract>> {
     return this.http.get<PagedResponse<Contract>>(
       this.getUrl(ApiService.contractsPath)
+    )
+  }
+
+  getTezosNodes(): Observable<TezosNode[]> {
+    return this.http.get<TezosNode[]>(this.getUrl(ApiService.nodesPath))
+  }
+
+  selectTezosNode(node: TezosNode): Observable<TezosNode> {
+    return this.http.post<TezosNode>(
+      `${this.getUrl(ApiService.nodesPath)}/selected`,
+      { id: node.id },
+      { withCredentials: true }
     )
   }
 

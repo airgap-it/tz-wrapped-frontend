@@ -62,6 +62,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   public amountTransferControl: FormControl
   public amountBurnControl: FormControl
   public amountControl: FormControl
+  public ledgerHashControl: FormControl
   public address$: Observable<string | undefined>
 
   public openMintOperationRequests$: Observable<
@@ -112,6 +113,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private router: Router,
     private formBuilder: FormBuilder
   ) {
+    this.store$.dispatch(actions.loadTezosNodes())
     this.activeContract$ = this.store$
       .select(getActiveContract)
       .pipe(isNotNullOrUndefined())
@@ -247,6 +249,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       Validators.pattern('^[+-]?(\\d*\\.)?\\d+$'),
     ])
 
+    this.ledgerHashControl = new FormControl()
+
     this.amountTransferControl = new FormControl()
     this.amountBurnControl = new FormControl()
 
@@ -305,43 +309,66 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   setDefaults() {
-    combineLatest([this.store$.select(getActiveAccount), this.gatekeepers$])
-      .pipe(
-        map(([activeAccount, gatekeepers]) => {
-          if (activeAccount === undefined) {
-            return undefined
-          }
-          return gatekeepers.find(
-            (gatekeeper) => gatekeeper.address === activeAccount.address
-          )
+    this.subscriptions.push(
+      combineLatest([this.store$.select(getActiveAccount), this.gatekeepers$])
+        .pipe(
+          map(([activeAccount, gatekeepers]) => {
+            if (activeAccount === undefined) {
+              return undefined
+            }
+            return gatekeepers.find(
+              (gatekeeper) => gatekeeper.address === activeAccount.address
+            )
+          })
+        )
+        .subscribe((activeAccount) => {
+          this.formGroup
+            .get('gatekeeperForm')!
+            .patchValue(activeAccount ? activeAccount?.address : '')
         })
-      )
-      .subscribe((activeAccount) => {
-        this.formGroup
-          .get('gatekeeperForm')!
-          .patchValue(activeAccount ? activeAccount?.address : '')
-      })
+    )
   }
 
   connectWallet() {
     this.store$.dispatch(actions.connectWallet())
   }
 
+  private get ledgerHash(): string | null {
+    if (this.ledgerHashControl.value === undefined) {
+      return null
+    }
+    const ledgerHash = this.ledgerHashControl.value
+    if (typeof ledgerHash !== 'string') {
+      return null
+    }
+    const ledgerHashTrimmed = ledgerHash.trim()
+    if (ledgerHashTrimmed.length === 0) {
+      return null
+    }
+    return ledgerHashTrimmed
+  }
+
   mint() {
     this.submitOperationRequest(
       OperationRequestKind.MINT,
-      this.amountControl.value
+      this.amountControl.value,
+      this.ledgerHash
     )
   }
 
   burn() {
     this.submitOperationRequest(
       OperationRequestKind.BURN,
-      this.amountBurnControl.value
+      this.amountBurnControl.value,
+      this.ledgerHash
     )
   }
 
-  private submitOperationRequest(kind: OperationRequestKind, value: string) {
+  private submitOperationRequest(
+    kind: OperationRequestKind,
+    value: string,
+    ledgerHash: string | null
+  ) {
     let targetAddress: string | null = null
     if (kind === OperationRequestKind.MINT) {
       targetAddress = this.formGroup.get('gatekeeperForm')!.value
@@ -361,6 +388,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
             target_address: targetAddress,
             threshold: null,
             proposed_keyholders: null,
+            ledger_hash: ledgerHash ?? null,
           },
         })
       )

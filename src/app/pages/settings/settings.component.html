@@ -47,6 +47,44 @@
     </button>
   </div>
 </div>
+
+<ng-container *ngIf="isAdmin$ | async">
+  <div class="card mt-5">
+    <div class="card-body">
+      <h4 class="text-primary pb-4">
+        <strong>Tezos Node</strong>
+      </h4>
+      <div class="form-group">
+        <select
+          [formControl]="tezosNodesForm"
+          class="form-control custom-select"
+        >
+          <option *ngFor="let node of tezosNodes$ | async" [ngValue]="node.id">
+            {{ node.name + ' - ' + getHostname(node) }}
+          </option>
+        </select>
+      </div>
+
+      <button
+        (click)="updateSelectedTezosNode()"
+        type="button"
+        class="btn btn-primary btn-block mt-3"
+        [disabled]="!(canUpdateSelectedTezosNode$ | async)"
+      >
+        <ng-container *ngIf="busyUpdateKeyholdersOperationRequests$ | async">
+          <span
+            class="spinner-border spinner-border-sm mr-1"
+            role="status"
+            aria-hidden="true"
+          >
+          </span>
+        </ng-container>
+        Update Selected Node
+      </button>
+    </div>
+  </div>
+</ng-container>
+
 <ng-container *ngIf="(isGatekeeper$ | async) || (isKeyholder$ | async)">
   <div class="card mt-5" *ngIf="activeContract$ | async as activeContract">
     <div class="card-body">
@@ -198,6 +236,27 @@
               </div>
             </div>
           </div>
+
+          <div class="my-3">
+            <label class="d-block m-0">Expected ledger hash (optional)</label>
+            <div class="input-group input-group__two-items">
+              <input
+                [formControl]="ledgerHashControl"
+                type="text"
+                class="form-control"
+                aria-label="Ledger Hash"
+                [ngClass]="{
+                  'is-invalid':
+                    ledgerHashControl.errors &&
+                    (ledgerHashControl.touched || ledgerHashControl.dirty)
+                }"
+              />
+              <div class="invalid-feedback px-3 py-2">
+                <strong>Invalid ledger hash</strong>
+              </div>
+            </div>
+          </div>
+
           <button
             (click)="updateContract()"
             type="button"

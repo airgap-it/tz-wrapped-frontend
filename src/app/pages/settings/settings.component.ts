@@ -13,7 +13,10 @@ import {
   getKeyholdersToRemove,
   getNewThreshold,
   getOpenUpdateKeyholdersOperationRequests,
+  getSelectedTezosNode,
   getSessionUser,
+  getTezosNodes,
+  isAdmin,
   isGatekeeper,
   isKeyholder,
 } from 'src/app/app.selectors'
@@ -50,6 +53,7 @@ import {
 import { PagedResponse } from 'src/app/services/api/interfaces/common'
 import { BeaconService } from 'src/app/services/beacon/beacon.service'
 import { CopyService } from 'src/app/services/copy/copy-service.service'
+import { TezosNode } from 'src/app/services/api/interfaces/nodes'
 
 @Component({
   selector: 'app-settings',
@@ -60,6 +64,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
   public displayNameControl: FormControl
   public emailControl: FormControl
   public formGroup: FormGroup
+  public ledgerHashControl: FormControl = new FormControl()
+  public tezosNodesForm: FormControl = new FormControl()
 
   public get publicKeysControls(): FormArray {
     return this.formGroup.get('publicKeys') as FormArray
@@ -71,6 +77,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   public isGatekeeper$: Observable<boolean>
   public isKeyholder$: Observable<boolean>
+  public isAdmin$: Observable<boolean>
   public gatekeepers$: Observable<User[]>
   public keyholders$: Observable<User[]>
   public activeContract$: Observable<Contract>
@@ -79,6 +86,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   public newThreshold$: Observable<number>
   public isUpdateContractEnabled$: Observable<boolean>
   public canUpdateKeyholders$: Observable<boolean>
+  public canUpdateSelectedTezosNode$: Observable<boolean>
 
   public openUpdateKeyholdersOperationRequests$: Observable<
     PagedResponse<OperationRequest> | undefined
@@ -89,6 +97,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
   public injectedUpdateKeyholdersOperationRequests$: Observable<
     PagedResponse<OperationRequest> | undefined
   >
+
+  public tezosNodes$: Observable<TezosNode[]>
 
   public busyUpdateKeyholdersOperationRequests$: Observable<boolean>
 
@@ -103,6 +113,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     private readonly copyService: CopyService,
     formBuilder: FormBuilder
   ) {
+    this.store$.dispatch(actions.loadTezosNodes())
     this.store$.dispatch(actions.setupBeacon())
     const canSignInSub = this.store$
       .select(getCanSignIn)
@@ -121,6 +132,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       .pipe(isNotNullOrUndefined())
     this.isGatekeeper$ = this.store$.select(isGatekeeper)
     this.isKeyholder$ = this.store$.select(isKeyholder)
+    this.isAdmin$ = this.store$.select(isAdmin)
     this.canUpdateKeyholders$ = combineLatest([
       this.isKeyholder$,
       this.activeContract$,
@@ -167,6 +179,16 @@ export class SettingsComponent implements OnInit, OnDestroy {
           contract.min_approvals !== newThreshold
         )
       })
+    )
+
+    this.tezosNodes$ = this.store$
+      .select(getTezosNodes)
+      .pipe(isNotNullOrUndefined())
+    this.canUpdateSelectedTezosNode$ = combineLatest([
+      this.store$.select(getSelectedTezosNode).pipe(isNotNullOrUndefined()),
+      this.tezosNodesForm.valueChanges,
+    ]).pipe(
+      map(([selectedNode]) => selectedNode.id !== this.tezosNodesForm.value)
     )
 
     this.openUpdateKeyholdersOperationRequests$ = this.store$.select(
@@ -240,6 +262,12 @@ export class SettingsComponent implements OnInit, OnDestroy {
       }
     )
     this.subscriptions.push(thresholdSub)
+    const tezosNodesSub = this.store$
+      .select(getSelectedTezosNode)
+      .subscribe((selectedNode) =>
+        this.tezosNodesForm.patchValue(selectedNode?.id ?? '')
+      )
+    this.subscriptions.push(tezosNodesSub)
   }
 
   ngOnInit(): void {}
@@ -324,6 +352,21 @@ export class SettingsComponent implements OnInit, OnDestroy {
     )
   }
 
+  private get ledgerHash(): string | null {
+    if (this.ledgerHashControl.value === undefined) {
+      return null
+    }
+    const ledgerHash = this.ledgerHashControl.value
+    if (typeof ledgerHash !== 'string') {
+      return null
+    }
+    const ledgerHashTrimmed = ledgerHash.trim()
+    if (ledgerHashTrimmed.length === 0) {
+      return null
+    }
+    return ledgerHashTrimmed
+  }
+
   public updateContract() {
     combineLatest([
       this.activeContract$,
@@ -345,12 +388,26 @@ export class SettingsComponent implements OnInit, OnDestroy {
           amount: null,
           threshold,
           proposed_keyholders: proposedKeyholders.sort(),
+          ledger_hash: this.ledgerHash,
         }
         this.store$.dispatch(
           actions.submitOperationRequest({ newOperationRequest })
         )
       })
     this.reset()
+  }
+
+  public updateSelectedTezosNode() {
+    this.tezosNodes$.pipe(take(1)).subscribe((tezosNodes) => {
+      let newSelectedNode = tezosNodes.find(
+        (node) => node.id === this.tezosNodesForm.value
+      )
+      if (newSelectedNode !== undefined) {
+        this.store$.dispatch(
+          actions.selectTezosNode({ tezosNode: newSelectedNode })
+        )
+      }
+    })
   }
 
   public toggleKeyholder(keyholder: User) {
@@ -377,6 +434,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
       )
       this.thresholdControl.setValue(contract.min_approvals)
     })
+  }
+
+  public getHostname(node: TezosNode): string {
+    return new URL(node.url).hostname
   }
 
   public ngOnDestroy(): void {
