@@ -39,4 +39,5 @@ export interface NewOperationRequest {
   threshold: number | null
   proposed_keyholders: string[] | null
   kind: string
+  ledger_hash: string | null
 }

@@ -56,7 +56,7 @@ export class AppEffects {
     this.actions$.pipe(
       ofType(actions.setupBeacon),
       switchMap(() =>
-        from(this.beaconService.setupBeaconWallet()).pipe(
+        from(this.beaconService.activeAccount()).pipe(
           map((accountInfo) => {
             if (accountInfo !== undefined) {
               return actions.connectWalletSucceeded({ accountInfo })
@@ -320,6 +320,44 @@ export class AppEffects {
           catchError((error) => of(actions.loadBalanceFailed(error)))
         )
       )
+    )
+  )
+
+  loadTezosNodes$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadTezosNodes),
+      switchMap(() => this.apiService.getTezosNodes()),
+      map((response) => actions.loadTezosNodesSucceeded({ response })),
+      catchError((errorResponse: HttpErrorResponse) =>
+        of(actions.loadTezosNodesFailed({ errorResponse }))
+      )
+    )
+  )
+
+  loadTezosNodesFailed$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadTezosNodesFailed),
+      switchMap((value) => of(actions.handleHttpErrorResponse(value)))
+    )
+  )
+
+  selectTezosNode$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.selectTezosNode),
+      switchMap(({ tezosNode }) =>
+        from(this.apiService.selectTezosNode(tezosNode))
+      ),
+      map((response) => actions.selectTezosNodeSucceeded({ response })),
+      catchError((errorResponse: HttpErrorResponse) =>
+        of(actions.selectTezosNodeFailed({ errorResponse }))
+      )
+    )
+  )
+
+  selectTezosNodeSucceeded$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.selectTezosNodeSucceeded),
+      map(() => actions.loadTezosNodes())
     )
   )
 
@@ -1212,11 +1250,9 @@ export class AppEffects {
   setActiveContractSucceeded$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.setActiveContractSucceeded),
-      switchMap(({ contract }) => [
-        // actions.loadBalance(),
-        actions.loadContractNonce({ contractId: contract.id }),
-        // actions.loadRedeemAddress({ contract }),
-      ])
+      map(({ contract }) =>
+        actions.loadContractNonce({ contractId: contract.id })
+      )
     )
   )
 

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core'
 import {
   AccountInfo,
-  Network,
+  NetworkType,
   OperationResponseOutput,
   PermissionScope,
   RequestOperationInput,
@@ -18,8 +18,14 @@ import { BeaconWallet } from '@taquito/beacon-wallet'
 
 import { RpcClient } from '@taquito/rpc'
 import { Uint8ArrayConsumer } from '@taquito/local-forging'
-import { environment } from 'src/environments/environment'
 import { Contract, ContractKind } from '../api/interfaces/contract'
+import { Store } from '@ngrx/store'
+import * as fromRoot from '../../reducers/index'
+import { forkJoin, from, Observable } from 'rxjs'
+import { getSelectedTezosNode } from 'src/app/app.selectors'
+import { map, switchMap, take } from 'rxjs/operators'
+import { isNotNullOrUndefined } from 'src/app/app.operators'
+
 const MichelsonCodec = require('@taquito/local-forging/dist/lib/michelson/codec')
 const Codec = require('@taquito/local-forging/dist/lib/codec')
 
@@ -31,30 +37,23 @@ export class BeaconService {
   public contractInstance: WalletContract | undefined
   public scopes: PermissionScope[] | undefined
 
-  public wallet: BeaconWallet
-  public network: Network
-  public rpcURL: string
-  public tezos: TezosToolkit
+  public wallet: BeaconWallet = new BeaconWallet({ name: 'Foundry' })
+  public tezos: Observable<TezosToolkit>
+  private rpcClient: Observable<RpcClient>
 
-  constructor() {
-    this.rpcURL = environment.nodeUrl
-    this.network = {
-      type: environment.tezosNetworktype,
-      rpcUrl: environment.nodeUrl,
-    }
-
-    this.tezos = new TezosToolkit(this.rpcURL)
-    this.wallet = new BeaconWallet({ name: 'Foundry' })
-  }
-
-  async setupBeaconWallet(): Promise<AccountInfo | undefined> {
-    try {
-      this.tezos.setWalletProvider(this.wallet)
-      return await this.wallet.client.getActiveAccount()
-    } catch (error) {
-      console.error('Setting up BeaconWallet failed: ', error)
-      return undefined
-    }
+  constructor(private readonly store$: Store<fromRoot.State>) {
+    this.tezos = this.store$.select(getSelectedTezosNode).pipe(
+      isNotNullOrUndefined(),
+      map((node) => {
+        const tezos = new TezosToolkit(node.url)
+        tezos.setWalletProvider(this.wallet)
+        return tezos
+      })
+    )
+    this.rpcClient = this.store$.select(getSelectedTezosNode).pipe(
+      isNotNullOrUndefined(),
+      map((node) => new RpcClient(node.url))
+    )
   }
 
   async activeAccount(): Promise<AccountInfo | undefined> {
@@ -62,7 +61,13 @@ export class BeaconService {
   }
 
   async requestPermission(): Promise<AccountInfo | undefined> {
-    await this.wallet.requestPermissions({ network: this.network })
+    const node = await this.store$
+      .select(getSelectedTezosNode)
+      .pipe(isNotNullOrUndefined(), take(1))
+      .toPromise()
+    await this.wallet.requestPermissions({
+      network: { rpcUrl: node!.url, type: node!.network as NetworkType },
+    })
     return this.wallet.client.getActiveAccount()
   }
 
@@ -71,7 +76,8 @@ export class BeaconService {
     receivingAddress: string,
     contract: Contract
   ): Promise<void> {
-    let contractInstance = await this.tezos.wallet.at(contract.pkh)
+    let tezos = await this.tezos.pipe(take(1)).toPromise()
+    let contractInstance = await tezos.wallet.at(contract.pkh)
     const pkhSrc = await this.wallet.getPKH()
 
     let operation: TransactionWalletOperation
@@ -129,11 +135,11 @@ export class BeaconService {
   ): Promise<BigNumber | undefined> {
     if (contract.kind === ContractKind.FA1) {
       return await this.getFA1Balance(contract, address).catch(
-        (error) => new BigNumber(0)
+        (_error) => new BigNumber(0)
       )
     } else if (contract.kind === ContractKind.FA2) {
       return await this.getFA2Balance(contract, address).catch(
-        (error) => new BigNumber(0)
+        (_error) => new BigNumber(0)
       )
     }
   }
@@ -159,7 +165,8 @@ export class BeaconService {
     if (promise) {
       return promise
     }
-    const storagePromise = this.tezos.wallet
+    const tezos = await this.tezos.pipe(take(1)).toPromise()
+    const storagePromise = tezos.wallet
       .at(contract.pkh)
       .then((contractInstance) => {
         return contractInstance
@@ -174,7 +181,7 @@ export class BeaconService {
 
   private async fetchPackedData(
     cacheKey: string,
-    upackedData: any,
+    data: any,
     dataType: any
   ): Promise<{
     packed: string
@@ -188,10 +195,10 @@ export class BeaconService {
     if (promise) {
       return promise
     }
-    const client = new RpcClient(this.rpcURL)
+    const client = await this.rpcClient.pipe(take(1)).toPromise()
     const packDataPromise = client
       .packData({
-        data: upackedData,
+        data: data,
         type: dataType,
       })
       .finally(() => this.pendingRequests.delete(cacheKey))
@@ -225,7 +232,7 @@ export class BeaconService {
   }
 
   private async getFA1Balance(contract: Contract, userAddress: string) {
-    const client = new RpcClient(this.rpcURL)
+    const client = await this.rpcClient.pipe(take(1)).toPromise()
 
     const packedData = await this.fetchPackedData(
       `${contract.pkh}-ledger-${userAddress}`,

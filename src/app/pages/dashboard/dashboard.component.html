@@ -148,33 +148,55 @@
               </div>
             </div>
 
-            <label>Enter amount to mint</label>
-            <div class="input-group input-group__two-items">
-              <div class="input-group-prepend">
-                <span class="input-group-text">
-                  <img
-                    width="32px"
-                    height="32px"
-                    [src]="activeContractImagePath$ | async"
-                    class="mr-2"
-                  />
-                  {{ activeContract.symbol }}
-                </span>
+            <div class="mb-3">
+              <label>Enter amount to mint</label>
+              <div class="input-group input-group__two-items">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">
+                    <img
+                      width="32px"
+                      height="32px"
+                      [src]="activeContractImagePath$ | async"
+                      class="mr-2"
+                    />
+                    {{ activeContract.symbol }}
+                  </span>
+                </div>
+                <input
+                  [formControl]="amountControl"
+                  type="text"
+                  class="form-control"
+                  placeholder="0.0"
+                  aria-label="Amount"
+                  [ngClass]="{
+                    'is-invalid':
+                      amountControl.errors &&
+                      (amountControl.touched || amountControl.dirty)
+                  }"
+                />
+                <div class="invalid-feedback px-3 py-2">
+                  <strong>Invalid Amount</strong>
+                </div>
               </div>
-              <input
-                [formControl]="amountControl"
-                type="text"
-                class="form-control"
-                placeholder="0.0"
-                aria-label="Amount"
-                [ngClass]="{
-                  'is-invalid':
-                    amountControl.errors &&
-                    (amountControl.touched || amountControl.dirty)
-                }"
-              />
-              <div class="invalid-feedback px-3 py-2">
-                <strong>Invalid Amount</strong>
+            </div>
+
+            <div class="mb-3">
+              <label>Expected ledger hash (optional)</label>
+              <div class="input-group input-group__two-items">
+                <input
+                  [formControl]="ledgerHashControl"
+                  type="text"
+                  class="form-control"
+                  aria-label="Ledger Hash"
+                  [ngClass]="{
+                    'is-invalid':
+                      ledgerHashControl.errors &&
+                      (ledgerHashControl.touched || ledgerHashControl.dirty)
+                  }"
+                />
+                <div class="invalid-feedback px-3 py-2">
+                  <strong>Invalid ledger hash</strong>
+                </div>
               </div>
             </div>
           </div>
@@ -210,8 +232,8 @@
           (selectTab)="onSelect($event)"
         >
           <div class="my-5">
-            <label>Balance on burn address</label>
             <ng-container *ngIf="redeemAddress$ | async as address">
+              <label>Balance on burn address</label>
               <h3>
                 <span *ngIf="redeemAddressBalance$ | async as balance">
                   {{
@@ -236,42 +258,65 @@
                   width="14px"
               /></a>
             </ng-container>
-            <label class="pt-3">Enter amount to burn</label>
-            <div class="input-group">
-              <div class="input-group-prepend">
-                <span class="input-group-text">
-                  <img
-                    width="32px"
-                    height="32px"
-                    [src]="activeContractImagePath$ | async"
-                    class="mr-2"
-                  />
-                  {{ activeContract.symbol }}
+
+            <div class="mb-3">
+              <label class="pt-3">Enter amount to burn</label>
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">
+                    <img
+                      width="32px"
+                      height="32px"
+                      [src]="activeContractImagePath$ | async"
+                      class="mr-2"
+                    />
+                    {{ activeContract.symbol }}
+                  </span>
+                </div>
+                <input
+                  [formControl]="amountBurnControl"
+                  type="text"
+                  class="form-control"
+                  placeholder="0.0"
+                  aria-label="Amount"
+                  [ngClass]="{
+                    'is-invalid':
+                      amountBurnControl.errors &&
+                      (amountBurnControl.touched || amountBurnControl.dirty)
+                  }"
+                />
+                <span class="input-group-prepend">
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    (click)="setMaxBurnableValue()"
+                  >
+                    Max
+                  </button>
                 </span>
+                <div class="invalid-feedback px-3 py-2">
+                  <strong>Invalid Amount</strong>
+                </div>
               </div>
-              <input
-                [formControl]="amountBurnControl"
-                type="text"
-                class="form-control"
-                placeholder="0.0"
-                aria-label="Amount"
-                [ngClass]="{
-                  'is-invalid':
-                    amountBurnControl.errors &&
-                    (amountBurnControl.touched || amountBurnControl.dirty)
-                }"
-              />
-              <span class="input-group-prepend">
-                <button
-                  type="button"
-                  class="btn btn-primary"
-                  (click)="setMaxBurnableValue()"
-                >
-                  Max
-                </button>
-              </span>
-              <div class="invalid-feedback px-3 py-2">
-                <strong>Invalid Amount</strong>
+            </div>
+
+            <div class="mb-3">
+              <label>Expected ledger hash (optional)</label>
+              <div class="input-group input-group__two-items">
+                <input
+                  [formControl]="ledgerHashControl"
+                  type="text"
+                  class="form-control"
+                  aria-label="Ledger Hash"
+                  [ngClass]="{
+                    'is-invalid':
+                      ledgerHashControl.errors &&
+                      (ledgerHashControl.touched || ledgerHashControl.dirty)
+                  }"
+                />
+                <div class="invalid-feedback px-3 py-2">
+                  <strong>Invalid ledger hash</strong>
+                </div>
               </div>
             </div>
           </div>

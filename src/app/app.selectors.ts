@@ -7,6 +7,12 @@ export const getActiveContract = createSelector(
   (state) => state.activeContract
 )
 
+export const getSelectedTezosNode = createSelector(selectApp, (state) =>
+  state.nodes?.find((node) => node.selected)
+)
+
+export const getTezosNodes = createSelector(selectApp, (state) => state.nodes)
+
 export const getContracts = createSelector(
   selectApp,
   (state) => state.contracts
@@ -49,6 +55,10 @@ export const getGatekeepers = createSelector(getUsers, (users) =>
   users.filter((user) => user.kind === UserKind.GATEKEEPER)
 )
 
+export const getAdmins = createSelector(getUsers, (users) =>
+  users.filter((user) => user.kind === UserKind.ADMIN)
+)
+
 export const isGatekeeper = createSelector(
   getActiveContract,
   getSessionUser,
@@ -70,6 +80,17 @@ export const isKeyholder = createSelector(
     user.roles.some(
       (role) =>
         role.contract_id === contract.id && role.kind === UserKind.KEYHOLDER
+    )
+)
+
+export const isAdmin = createSelector(
+  getActiveContract,
+  getSessionUser,
+  (contract, user) =>
+    contract !== undefined &&
+    user !== undefined &&
+    user.roles.some(
+      (role) => role.contract_id === contract.id && role.kind === UserKind.ADMIN
     )
 )
 

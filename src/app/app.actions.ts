@@ -26,6 +26,7 @@ import {
 } from './services/api/interfaces/auth'
 import { Tab } from './pages/dashboard/tab'
 import { ErrorDescription } from './components/error-item/error-description'
+import { TezosNode } from './services/api/interfaces/nodes'
 
 const featureName = 'App'
 
@@ -185,6 +186,29 @@ export const loadBalanceSucceeded = createAction(
 export const loadBalanceFailed = createAction(
   `[${featureName}] Load Balance of Connected Wallet Failed`,
   props<{ error: any }>()
+)
+
+export const loadTezosNodes = createAction(`[${featureName}] Load Tezos Nodes `)
+export const loadTezosNodesSucceeded = createAction(
+  `[${featureName}] Load Tezos Nodes Succeeded`,
+  props<{ response: TezosNode[] }>()
+)
+export const loadTezosNodesFailed = createAction(
+  `[${featureName}] Load Tezos Nodes Failed`,
+  props<{ errorResponse: HttpErrorResponse }>()
+)
+
+export const selectTezosNode = createAction(
+  `[${featureName}] Select Tezos Node`,
+  props<{ tezosNode: TezosNode }>()
+)
+export const selectTezosNodeSucceeded = createAction(
+  `[${featureName}] Select Tezos Node Succeeded`,
+  props<{ response: TezosNode }>()
+)
+export const selectTezosNodeFailed = createAction(
+  `[${featureName}] Select Tezos Node Succeeded`,
+  props<{ errorResponse: HttpErrorResponse }>()
 )
 
 export const loadContracts = createAction(`[${featureName}] Load Contracts `)
