@@ -240,7 +240,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       Validators.required,
       Validators.minLength(36),
       Validators.maxLength(36),
-      Validators.pattern('^tz1[\\d|a-zA-Z]{33}'),
+      Validators.pattern('^(tz1|tz2|tz3|KT1)[1-9A-Za-z]{33}'),
     ])
 
     this.amountControl = new FormControl(null, [
