@@ -17,6 +17,7 @@ import {
 import { SessionUser } from './services/api/interfaces/auth'
 import { Tab } from './pages/dashboard/tab'
 import { ErrorDescription } from './components/error-item/error-description'
+import { TezosNode } from './services/api/interfaces/nodes'
 
 interface Busy {
   activeAccount: boolean
@@ -35,6 +36,7 @@ export interface State {
   sessionUser: SessionUser | undefined
   canSignIn: boolean | undefined
   activeAccount: AccountInfo | undefined
+  nodes: TezosNode[] | undefined
   contracts: Contract[]
   activeContract: Contract | undefined
   contractNonces: Map<string, number>
@@ -76,6 +78,7 @@ export const initialState: State = {
   sessionUser: undefined,
   canSignIn: undefined,
   activeAccount: undefined,
+  nodes: undefined,
   contracts: [],
   activeContract: undefined,
   contractNonces: new Map<string, number>(),
@@ -205,7 +208,14 @@ export const reducer = createReducer(
       balance: false,
     },
   })),
-
+  on(actions.loadTezosNodesSucceeded, (state, { response }) => ({
+    ...state,
+    nodes: response,
+  })),
+  on(actions.loadTezosNodesFailed, (state) => ({
+    ...state,
+    nodes: undefined,
+  })),
   on(actions.loadContracts, (state) => ({
     ...state,
     busy: {

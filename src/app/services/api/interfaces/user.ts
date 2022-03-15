@@ -6,6 +6,7 @@ export enum UserState {
 export enum UserKind {
   GATEKEEPER = 'gatekeeper',
   KEYHOLDER = 'keyholder',
+  ADMIN = 'admin',
 }
 
 export interface User {
