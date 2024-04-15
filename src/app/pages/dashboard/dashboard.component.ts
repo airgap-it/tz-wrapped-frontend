@@ -689,7 +689,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   onSelect(event: any): void {
-    this.router.navigate(['/', `${event.heading.toLowerCase()}`])
+    const path = event.heading.toLowerCase().split(' ').join('-')
+    this.router.navigate(['/', path])
     this.store$.dispatch(actions.selectTab({ tab: event.id }))
   }
 
