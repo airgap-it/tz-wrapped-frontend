@@ -18,15 +18,30 @@ import * as actions from './app.actions'
 import {
   getActiveAccount,
   getActiveContract,
+  getApprovedAcceptOwnershipOperationRequestCurrentPage,
+  getApprovedAddOperatorOperationRequestCurrentPage,
   getApprovedBurnOperationRequestCurrentPage,
   getApprovedMintOperationRequestCurrentPage,
+  getApprovedRemoveOperatorOperationRequestCurrentPage,
+  getApprovedSetRedeemAddressOperationRequestCurrentPage,
+  getApprovedTransferOwnershipOperationRequestCurrentPage,
   getApprovedUpdateKeyholdersOperationRequestCurrentPage,
   getCanSignIn,
+  getInjectedAcceptOwnershipOperationRequestCurrentPage,
+  getInjectedAddOperatorOperationRequestCurrentPage,
   getInjectedBurnOperationRequestCurrentPage,
   getInjectedMintOperationRequestCurrentPage,
+  getInjectedRemoveOperatorOperationRequestCurrentPage,
+  getInjectedSetRedeemAddressOperationRequestCurrentPage,
+  getInjectedTransferOwnershipOperationRequestCurrentPage,
   getInjectedUpdateKeyholdersOperationRequestCurrentPage,
+  getOpenAcceptOwnershipOperationRequestCurrentPage,
+  getOpenAddOperatorOperationRequestCurrentPage,
   getOpenBurnOperationRequestCurrentPage,
   getOpenMintOperationRequestCurrentPage,
+  getOpenRemoveOperatorOperationRequestCurrentPage,
+  getOpenSetRedeemAddressOperationRequestCurrentPage,
+  getOpenTransferOwnershipOperationRequestCurrentPage,
   getOpenUpdateKeyholdersOperationRequestCurrentPage,
   getRedeemAddress,
 } from './app.selectors'
@@ -483,6 +498,50 @@ export class AppEffects {
           } else {
             return actions.loadInjectedBurnOperationRequests(params)
           }
+        } else if (kind === OperationRequestKind.ADD_OPERATOR) {
+          if (state === OperationRequestState.OPEN) {
+            return actions.loadOpenAddOperatorOperationRequests(params)
+          } else if (state === OperationRequestState.APPROVED) {
+            return actions.loadApprovedAddOperatorOperationRequests(params)
+          } else {
+            return actions.loadInjectedAddOperatorOperationRequests(params)
+          }
+        } else if (kind === OperationRequestKind.REMOVE_OPERATOR) {
+          if (state === OperationRequestState.OPEN) {
+            return actions.loadOpenRemoveOperatorOperationRequests(params)
+          } else if (state === OperationRequestState.APPROVED) {
+            return actions.loadApprovedRemoveOperatorOperationRequests(params)
+          } else {
+            return actions.loadInjectedRemoveOperatorOperationRequests(params)
+          }
+        } else if (kind === OperationRequestKind.SET_REDEEM_ADDRESS) {
+          if (state === OperationRequestState.OPEN) {
+            return actions.loadOpenSetRedeemAddressOperationRequests(params)
+          } else if (state === OperationRequestState.APPROVED) {
+            return actions.loadApprovedSetRedeemAddressOperationRequests(params)
+          } else {
+            return actions.loadInjectedSetRedeemAddressOperationRequests(params)
+          }
+        } else if (kind === OperationRequestKind.TRANSFER_OWNERSHIP) {
+          if (state === OperationRequestState.OPEN) {
+            return actions.loadOpenTransferOwnershipOperationRequests(params)
+          } else if (state === OperationRequestState.APPROVED) {
+            return actions.loadApprovedTransferOwnershipOperationRequests(
+              params
+            )
+          } else {
+            return actions.loadInjectedTransferOwnershipOperationRequests(
+              params
+            )
+          }
+        } else if (kind === OperationRequestKind.ACCEPT_OWNERSHIP) {
+          if (state === OperationRequestState.OPEN) {
+            return actions.loadOpenAcceptOwnershipOperationRequests(params)
+          } else if (state === OperationRequestState.APPROVED) {
+            return actions.loadApprovedAcceptOwnershipOperationRequests(params)
+          } else {
+            return actions.loadInjectedAcceptOwnershipOperationRequests(params)
+          }
         } else {
           if (state === OperationRequestState.OPEN) {
             return actions.loadOpenUpdateKeyholdersOperationRequests(params)
@@ -495,6 +554,8 @@ export class AppEffects {
       })
     )
   )
+
+  /// Mint
 
   loadMintOperationRequests$ = createEffect(() =>
     this.actions$.pipe(
@@ -636,6 +697,8 @@ export class AppEffects {
     )
   )
 
+  /// Burn
+
   loadBurnOperationRequests$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.loadBurnOperationRequests),
@@ -775,6 +838,814 @@ export class AppEffects {
       map((value) => actions.handleHttpErrorResponse(value))
     )
   )
+
+  /// Add Operator
+
+  loadAddOperatorOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadAddOperatorOperationRequests),
+      switchMap(() =>
+        from([
+          actions.loadOpenAddOperatorOperationRequests({}),
+          actions.loadApprovedAddOperatorOperationRequests({}),
+          actions.loadInjectedAddOperatorOperationRequests({}),
+        ])
+      )
+    )
+  )
+
+  loadOpenAddOperatorOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadOpenAddOperatorOperationRequests),
+      withLatestFrom(
+        this.store$.select(getOpenAddOperatorOperationRequestCurrentPage),
+        this.store$.select(getActiveContract)
+      ),
+      filter(([, , contract]) => contract !== undefined),
+      map(([{ page }, currentPage, contract]) => ({
+        page,
+        currentPage,
+        contract: contract!,
+      })),
+      switchMap(({ page, currentPage, contract }) =>
+        this.apiService
+          .getOperationRequests(
+            contract.id,
+            OperationRequestKind.ADD_OPERATOR,
+            OperationRequestState.OPEN,
+            page ?? currentPage
+          )
+          .pipe(
+            map((response) => {
+              if (response.total_pages === 0 && response.page > 1) {
+                return actions.loadOpenAddOperatorOperationRequests({
+                  page: response.page - 1,
+                })
+              }
+              return actions.loadOpenAddOperatorOperationRequestsSucceeded({
+                response,
+              })
+            }),
+            catchError((errorResponse) =>
+              of(
+                actions.loadAddOperatorOperationRequestsFailed({
+                  errorResponse,
+                })
+              )
+            )
+          )
+      )
+    )
+  )
+
+  loadApprovedAddOperatorOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadApprovedAddOperatorOperationRequests),
+      withLatestFrom(
+        this.store$.select(getApprovedAddOperatorOperationRequestCurrentPage),
+        this.store$.select(getActiveContract)
+      ),
+      filter(([, , contract]) => contract !== undefined),
+      map(([{ page }, currentPage, contract]) => ({
+        page,
+        currentPage,
+        contract: contract!,
+      })),
+      switchMap(({ page, currentPage, contract }) =>
+        this.apiService
+          .getOperationRequests(
+            contract.id,
+            OperationRequestKind.ADD_OPERATOR,
+            OperationRequestState.APPROVED,
+            page ?? currentPage
+          )
+          .pipe(
+            map((response) => {
+              if (response.total_pages === 0 && response.page > 1) {
+                return actions.loadApprovedAddOperatorOperationRequests({
+                  page: response.page - 1,
+                })
+              }
+              return actions.loadApprovedAddOperatorOperationRequestsSucceeded({
+                response,
+              })
+            }),
+            catchError((errorResponse) =>
+              of(
+                actions.loadAddOperatorOperationRequestsFailed({
+                  errorResponse,
+                })
+              )
+            )
+          )
+      )
+    )
+  )
+
+  loadInjectedAddOperatorOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadInjectedAddOperatorOperationRequests),
+      withLatestFrom(
+        this.store$.select(getInjectedAddOperatorOperationRequestCurrentPage),
+        this.store$.select(getActiveContract)
+      ),
+      filter(([, , contract]) => contract !== undefined),
+      map(([{ page }, currentPage, contract]) => ({
+        page,
+        currentPage,
+        contract: contract!,
+      })),
+      switchMap(({ page, currentPage, contract }) =>
+        this.apiService
+          .getOperationRequests(
+            contract.id,
+            OperationRequestKind.ADD_OPERATOR,
+            OperationRequestState.INJECTED,
+            page ?? currentPage
+          )
+          .pipe(
+            map((response) => {
+              if (response.total_pages === 0 && response.page > 1) {
+                return actions.loadInjectedAddOperatorOperationRequests({
+                  page: response.page - 1,
+                })
+              }
+              return actions.loadInjectedAddOperatorOperationRequestsSucceeded({
+                response,
+              })
+            }),
+            catchError((errorResponse) =>
+              of(
+                actions.loadAddOperatorOperationRequestsFailed({
+                  errorResponse,
+                })
+              )
+            )
+          )
+      )
+    )
+  )
+
+  loadAddOperatorOperationRequestsFailed$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadAddOperatorOperationRequestsFailed),
+      map((value) => actions.handleHttpErrorResponse(value))
+    )
+  )
+
+  /// Remove Operator
+
+  loadRemoveOperatorOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadRemoveOperatorOperationRequests),
+      switchMap(() =>
+        from([
+          actions.loadOpenRemoveOperatorOperationRequests({}),
+          actions.loadApprovedRemoveOperatorOperationRequests({}),
+          actions.loadInjectedRemoveOperatorOperationRequests({}),
+        ])
+      )
+    )
+  )
+
+  loadOpenRemoveOperatorOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadOpenRemoveOperatorOperationRequests),
+      withLatestFrom(
+        this.store$.select(getOpenRemoveOperatorOperationRequestCurrentPage),
+        this.store$.select(getActiveContract)
+      ),
+      filter(([, , contract]) => contract !== undefined),
+      map(([{ page }, currentPage, contract]) => ({
+        page,
+        currentPage,
+        contract: contract!,
+      })),
+      switchMap(({ page, currentPage, contract }) =>
+        this.apiService
+          .getOperationRequests(
+            contract.id,
+            OperationRequestKind.REMOVE_OPERATOR,
+            OperationRequestState.OPEN,
+            page ?? currentPage
+          )
+          .pipe(
+            map((response) => {
+              if (response.total_pages === 0 && response.page > 1) {
+                return actions.loadOpenRemoveOperatorOperationRequests({
+                  page: response.page - 1,
+                })
+              }
+              return actions.loadOpenRemoveOperatorOperationRequestsSucceeded({
+                response,
+              })
+            }),
+            catchError((errorResponse) =>
+              of(
+                actions.loadRemoveOperatorOperationRequestsFailed({
+                  errorResponse,
+                })
+              )
+            )
+          )
+      )
+    )
+  )
+
+  loadApprovedRemoveOperatorOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadApprovedRemoveOperatorOperationRequests),
+      withLatestFrom(
+        this.store$.select(
+          getApprovedRemoveOperatorOperationRequestCurrentPage
+        ),
+        this.store$.select(getActiveContract)
+      ),
+      filter(([, , contract]) => contract !== undefined),
+      map(([{ page }, currentPage, contract]) => ({
+        page,
+        currentPage,
+        contract: contract!,
+      })),
+      switchMap(({ page, currentPage, contract }) =>
+        this.apiService
+          .getOperationRequests(
+            contract.id,
+            OperationRequestKind.REMOVE_OPERATOR,
+            OperationRequestState.APPROVED,
+            page ?? currentPage
+          )
+          .pipe(
+            map((response) => {
+              if (response.total_pages === 0 && response.page > 1) {
+                return actions.loadApprovedRemoveOperatorOperationRequests({
+                  page: response.page - 1,
+                })
+              }
+              return actions.loadApprovedRemoveOperatorOperationRequestsSucceeded(
+                {
+                  response,
+                }
+              )
+            }),
+            catchError((errorResponse) =>
+              of(
+                actions.loadRemoveOperatorOperationRequestsFailed({
+                  errorResponse,
+                })
+              )
+            )
+          )
+      )
+    )
+  )
+
+  loadInjectedRemoveOperatorOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadInjectedRemoveOperatorOperationRequests),
+      withLatestFrom(
+        this.store$.select(
+          getInjectedRemoveOperatorOperationRequestCurrentPage
+        ),
+        this.store$.select(getActiveContract)
+      ),
+      filter(([, , contract]) => contract !== undefined),
+      map(([{ page }, currentPage, contract]) => ({
+        page,
+        currentPage,
+        contract: contract!,
+      })),
+      switchMap(({ page, currentPage, contract }) =>
+        this.apiService
+          .getOperationRequests(
+            contract.id,
+            OperationRequestKind.REMOVE_OPERATOR,
+            OperationRequestState.INJECTED,
+            page ?? currentPage
+          )
+          .pipe(
+            map((response) => {
+              if (response.total_pages === 0 && response.page > 1) {
+                return actions.loadInjectedRemoveOperatorOperationRequests({
+                  page: response.page - 1,
+                })
+              }
+              return actions.loadInjectedRemoveOperatorOperationRequestsSucceeded(
+                {
+                  response,
+                }
+              )
+            }),
+            catchError((errorResponse) =>
+              of(
+                actions.loadRemoveOperatorOperationRequestsFailed({
+                  errorResponse,
+                })
+              )
+            )
+          )
+      )
+    )
+  )
+
+  loadRemoveOperatorOperationRequestsFailed$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadRemoveOperatorOperationRequestsFailed),
+      map((value) => actions.handleHttpErrorResponse(value))
+    )
+  )
+
+  /// Set Redeem Address
+
+  loadSetRedeemAddressOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadSetRedeemAddressOperationRequests),
+      switchMap(() =>
+        from([
+          actions.loadOpenSetRedeemAddressOperationRequests({}),
+          actions.loadApprovedSetRedeemAddressOperationRequests({}),
+          actions.loadInjectedSetRedeemAddressOperationRequests({}),
+        ])
+      )
+    )
+  )
+
+  loadOpenSetRedeemAddressOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadOpenSetRedeemAddressOperationRequests),
+      withLatestFrom(
+        this.store$.select(getOpenSetRedeemAddressOperationRequestCurrentPage),
+        this.store$.select(getActiveContract)
+      ),
+      filter(([, , contract]) => contract !== undefined),
+      map(([{ page }, currentPage, contract]) => ({
+        page,
+        currentPage,
+        contract: contract!,
+      })),
+      switchMap(({ page, currentPage, contract }) =>
+        this.apiService
+          .getOperationRequests(
+            contract.id,
+            OperationRequestKind.SET_REDEEM_ADDRESS,
+            OperationRequestState.OPEN,
+            page ?? currentPage
+          )
+          .pipe(
+            map((response) => {
+              if (response.total_pages === 0 && response.page > 1) {
+                return actions.loadOpenSetRedeemAddressOperationRequests({
+                  page: response.page - 1,
+                })
+              }
+              return actions.loadOpenSetRedeemAddressOperationRequestsSucceeded(
+                {
+                  response,
+                }
+              )
+            }),
+            catchError((errorResponse) =>
+              of(
+                actions.loadSetRedeemAddressOperationRequestsFailed({
+                  errorResponse,
+                })
+              )
+            )
+          )
+      )
+    )
+  )
+
+  loadApprovedSetRedeemAddressOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadApprovedSetRedeemAddressOperationRequests),
+      withLatestFrom(
+        this.store$.select(
+          getApprovedSetRedeemAddressOperationRequestCurrentPage
+        ),
+        this.store$.select(getActiveContract)
+      ),
+      filter(([, , contract]) => contract !== undefined),
+      map(([{ page }, currentPage, contract]) => ({
+        page,
+        currentPage,
+        contract: contract!,
+      })),
+      switchMap(({ page, currentPage, contract }) =>
+        this.apiService
+          .getOperationRequests(
+            contract.id,
+            OperationRequestKind.SET_REDEEM_ADDRESS,
+            OperationRequestState.APPROVED,
+            page ?? currentPage
+          )
+          .pipe(
+            map((response) => {
+              if (response.total_pages === 0 && response.page > 1) {
+                return actions.loadApprovedSetRedeemAddressOperationRequests({
+                  page: response.page - 1,
+                })
+              }
+              return actions.loadApprovedSetRedeemAddressOperationRequestsSucceeded(
+                {
+                  response,
+                }
+              )
+            }),
+            catchError((errorResponse) =>
+              of(
+                actions.loadSetRedeemAddressOperationRequestsFailed({
+                  errorResponse,
+                })
+              )
+            )
+          )
+      )
+    )
+  )
+
+  loadInjectedSetRedeemAddressOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadInjectedSetRedeemAddressOperationRequests),
+      withLatestFrom(
+        this.store$.select(
+          getInjectedSetRedeemAddressOperationRequestCurrentPage
+        ),
+        this.store$.select(getActiveContract)
+      ),
+      filter(([, , contract]) => contract !== undefined),
+      map(([{ page }, currentPage, contract]) => ({
+        page,
+        currentPage,
+        contract: contract!,
+      })),
+      switchMap(({ page, currentPage, contract }) =>
+        this.apiService
+          .getOperationRequests(
+            contract.id,
+            OperationRequestKind.SET_REDEEM_ADDRESS,
+            OperationRequestState.INJECTED,
+            page ?? currentPage
+          )
+          .pipe(
+            map((response) => {
+              if (response.total_pages === 0 && response.page > 1) {
+                return actions.loadInjectedSetRedeemAddressOperationRequests({
+                  page: response.page - 1,
+                })
+              }
+              return actions.loadInjectedSetRedeemAddressOperationRequestsSucceeded(
+                {
+                  response,
+                }
+              )
+            }),
+            catchError((errorResponse) =>
+              of(
+                actions.loadSetRedeemAddressOperationRequestsFailed({
+                  errorResponse,
+                })
+              )
+            )
+          )
+      )
+    )
+  )
+
+  loadSetRedeemAddressOperationRequestsFailed$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadSetRedeemAddressOperationRequestsFailed),
+      map((value) => actions.handleHttpErrorResponse(value))
+    )
+  )
+
+  /// Transfer Ownership
+
+  loadTransferOwnershipOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadTransferOwnershipOperationRequests),
+      switchMap(() =>
+        from([
+          actions.loadOpenTransferOwnershipOperationRequests({}),
+          actions.loadApprovedTransferOwnershipOperationRequests({}),
+          actions.loadInjectedTransferOwnershipOperationRequests({}),
+        ])
+      )
+    )
+  )
+
+  loadOpenTransferOwnershipOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadOpenTransferOwnershipOperationRequests),
+      withLatestFrom(
+        this.store$.select(getOpenTransferOwnershipOperationRequestCurrentPage),
+        this.store$.select(getActiveContract)
+      ),
+      filter(([, , contract]) => contract !== undefined),
+      map(([{ page }, currentPage, contract]) => ({
+        page,
+        currentPage,
+        contract: contract!,
+      })),
+      switchMap(({ page, currentPage, contract }) =>
+        this.apiService
+          .getOperationRequests(
+            contract.id,
+            OperationRequestKind.TRANSFER_OWNERSHIP,
+            OperationRequestState.OPEN,
+            page ?? currentPage
+          )
+          .pipe(
+            map((response) => {
+              if (response.total_pages === 0 && response.page > 1) {
+                return actions.loadOpenTransferOwnershipOperationRequests({
+                  page: response.page - 1,
+                })
+              }
+              return actions.loadOpenTransferOwnershipOperationRequestsSucceeded(
+                {
+                  response,
+                }
+              )
+            }),
+            catchError((errorResponse) =>
+              of(
+                actions.loadTransferOwnershipOperationRequestsFailed({
+                  errorResponse,
+                })
+              )
+            )
+          )
+      )
+    )
+  )
+
+  loadApprovedTransferOwnershipOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadApprovedTransferOwnershipOperationRequests),
+      withLatestFrom(
+        this.store$.select(
+          getApprovedTransferOwnershipOperationRequestCurrentPage
+        ),
+        this.store$.select(getActiveContract)
+      ),
+      filter(([, , contract]) => contract !== undefined),
+      map(([{ page }, currentPage, contract]) => ({
+        page,
+        currentPage,
+        contract: contract!,
+      })),
+      switchMap(({ page, currentPage, contract }) =>
+        this.apiService
+          .getOperationRequests(
+            contract.id,
+            OperationRequestKind.TRANSFER_OWNERSHIP,
+            OperationRequestState.APPROVED,
+            page ?? currentPage
+          )
+          .pipe(
+            map((response) => {
+              if (response.total_pages === 0 && response.page > 1) {
+                return actions.loadApprovedTransferOwnershipOperationRequests({
+                  page: response.page - 1,
+                })
+              }
+              return actions.loadApprovedTransferOwnershipOperationRequestsSucceeded(
+                {
+                  response,
+                }
+              )
+            }),
+            catchError((errorResponse) =>
+              of(
+                actions.loadTransferOwnershipOperationRequestsFailed({
+                  errorResponse,
+                })
+              )
+            )
+          )
+      )
+    )
+  )
+
+  loadInjectedTransferOwnershipOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadInjectedTransferOwnershipOperationRequests),
+      withLatestFrom(
+        this.store$.select(
+          getInjectedTransferOwnershipOperationRequestCurrentPage
+        ),
+        this.store$.select(getActiveContract)
+      ),
+      filter(([, , contract]) => contract !== undefined),
+      map(([{ page }, currentPage, contract]) => ({
+        page,
+        currentPage,
+        contract: contract!,
+      })),
+      switchMap(({ page, currentPage, contract }) =>
+        this.apiService
+          .getOperationRequests(
+            contract.id,
+            OperationRequestKind.TRANSFER_OWNERSHIP,
+            OperationRequestState.INJECTED,
+            page ?? currentPage
+          )
+          .pipe(
+            map((response) => {
+              if (response.total_pages === 0 && response.page > 1) {
+                return actions.loadInjectedTransferOwnershipOperationRequests({
+                  page: response.page - 1,
+                })
+              }
+              return actions.loadInjectedTransferOwnershipOperationRequestsSucceeded(
+                {
+                  response,
+                }
+              )
+            }),
+            catchError((errorResponse) =>
+              of(
+                actions.loadTransferOwnershipOperationRequestsFailed({
+                  errorResponse,
+                })
+              )
+            )
+          )
+      )
+    )
+  )
+
+  loadTransferOwnershipOperationRequestsFailed$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadTransferOwnershipOperationRequestsFailed),
+      map((value) => actions.handleHttpErrorResponse(value))
+    )
+  )
+
+  /// Accept Ownership
+
+  loadAcceptOwnershipOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadAcceptOwnershipOperationRequests),
+      switchMap(() =>
+        from([
+          actions.loadOpenAcceptOwnershipOperationRequests({}),
+          actions.loadApprovedAcceptOwnershipOperationRequests({}),
+          actions.loadInjectedAcceptOwnershipOperationRequests({}),
+        ])
+      )
+    )
+  )
+
+  loadOpenAcceptOwnershipOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadOpenAcceptOwnershipOperationRequests),
+      withLatestFrom(
+        this.store$.select(getOpenAcceptOwnershipOperationRequestCurrentPage),
+        this.store$.select(getActiveContract)
+      ),
+      filter(([, , contract]) => contract !== undefined),
+      map(([{ page }, currentPage, contract]) => ({
+        page,
+        currentPage,
+        contract: contract!,
+      })),
+      switchMap(({ page, currentPage, contract }) =>
+        this.apiService
+          .getOperationRequests(
+            contract.id,
+            OperationRequestKind.ACCEPT_OWNERSHIP,
+            OperationRequestState.OPEN,
+            page ?? currentPage
+          )
+          .pipe(
+            map((response) => {
+              if (response.total_pages === 0 && response.page > 1) {
+                return actions.loadOpenAcceptOwnershipOperationRequests({
+                  page: response.page - 1,
+                })
+              }
+              return actions.loadOpenAcceptOwnershipOperationRequestsSucceeded({
+                response,
+              })
+            }),
+            catchError((errorResponse) =>
+              of(
+                actions.loadAcceptOwnershipOperationRequestsFailed({
+                  errorResponse,
+                })
+              )
+            )
+          )
+      )
+    )
+  )
+
+  loadApprovedAcceptOwnershipOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadApprovedAcceptOwnershipOperationRequests),
+      withLatestFrom(
+        this.store$.select(
+          getApprovedAcceptOwnershipOperationRequestCurrentPage
+        ),
+        this.store$.select(getActiveContract)
+      ),
+      filter(([, , contract]) => contract !== undefined),
+      map(([{ page }, currentPage, contract]) => ({
+        page,
+        currentPage,
+        contract: contract!,
+      })),
+      switchMap(({ page, currentPage, contract }) =>
+        this.apiService
+          .getOperationRequests(
+            contract.id,
+            OperationRequestKind.ACCEPT_OWNERSHIP,
+            OperationRequestState.APPROVED,
+            page ?? currentPage
+          )
+          .pipe(
+            map((response) => {
+              if (response.total_pages === 0 && response.page > 1) {
+                return actions.loadApprovedAcceptOwnershipOperationRequests({
+                  page: response.page - 1,
+                })
+              }
+              return actions.loadApprovedAcceptOwnershipOperationRequestsSucceeded(
+                {
+                  response,
+                }
+              )
+            }),
+            catchError((errorResponse) =>
+              of(
+                actions.loadAcceptOwnershipOperationRequestsFailed({
+                  errorResponse,
+                })
+              )
+            )
+          )
+      )
+    )
+  )
+
+  loadInjectedAcceptOwnershipOperationRequests$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadInjectedAcceptOwnershipOperationRequests),
+      withLatestFrom(
+        this.store$.select(
+          getInjectedAcceptOwnershipOperationRequestCurrentPage
+        ),
+        this.store$.select(getActiveContract)
+      ),
+      filter(([, , contract]) => contract !== undefined),
+      map(([{ page }, currentPage, contract]) => ({
+        page,
+        currentPage,
+        contract: contract!,
+      })),
+      switchMap(({ page, currentPage, contract }) =>
+        this.apiService
+          .getOperationRequests(
+            contract.id,
+            OperationRequestKind.ACCEPT_OWNERSHIP,
+            OperationRequestState.INJECTED,
+            page ?? currentPage
+          )
+          .pipe(
+            map((response) => {
+              if (response.total_pages === 0 && response.page > 1) {
+                return actions.loadInjectedAcceptOwnershipOperationRequests({
+                  page: response.page - 1,
+                })
+              }
+              return actions.loadInjectedAcceptOwnershipOperationRequestsSucceeded(
+                {
+                  response,
+                }
+              )
+            }),
+            catchError((errorResponse) =>
+              of(
+                actions.loadAcceptOwnershipOperationRequestsFailed({
+                  errorResponse,
+                })
+              )
+            )
+          )
+      )
+    )
+  )
+
+  loadAcceptOwnershipOperationRequestsFailed$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadAcceptOwnershipOperationRequestsFailed),
+      map((value) => actions.handleHttpErrorResponse(value))
+    )
+  )
+
+  ///
 
   loadUpdateKeyholdersOperationRequests$ = createEffect(() =>
     this.actions$.pipe(
@@ -992,6 +1863,26 @@ export class AppEffects {
           return actions.loadOpenMintOperationRequests({})
         } else if (operationRequest.kind === OperationRequestKind.BURN) {
           return actions.loadOpenBurnOperationRequests({})
+        } else if (
+          operationRequest.kind === OperationRequestKind.ADD_OPERATOR
+        ) {
+          return actions.loadOpenAddOperatorOperationRequests({})
+        } else if (
+          operationRequest.kind === OperationRequestKind.REMOVE_OPERATOR
+        ) {
+          return actions.loadOpenRemoveOperatorOperationRequests({})
+        } else if (
+          operationRequest.kind === OperationRequestKind.SET_REDEEM_ADDRESS
+        ) {
+          return actions.loadOpenSetRedeemAddressOperationRequests({})
+        } else if (
+          operationRequest.kind === OperationRequestKind.TRANSFER_OWNERSHIP
+        ) {
+          return actions.loadOpenTransferOwnershipOperationRequests({})
+        } else if (
+          operationRequest.kind === OperationRequestKind.ACCEPT_OWNERSHIP
+        ) {
+          return actions.loadOpenAcceptOwnershipOperationRequests({})
         } else {
           return actions.loadOpenUpdateKeyholdersOperationRequests({})
         }
@@ -1094,6 +1985,26 @@ export class AppEffects {
           return actions.loadMintOperationRequests()
         } else if (operationRequest.kind === OperationRequestKind.BURN) {
           return actions.loadBurnOperationRequests()
+        } else if (
+          operationRequest.kind === OperationRequestKind.ADD_OPERATOR
+        ) {
+          return actions.loadAddOperatorOperationRequests()
+        } else if (
+          operationRequest.kind === OperationRequestKind.REMOVE_OPERATOR
+        ) {
+          return actions.loadRemoveOperatorOperationRequests()
+        } else if (
+          operationRequest.kind === OperationRequestKind.SET_REDEEM_ADDRESS
+        ) {
+          return actions.loadSetRedeemAddressOperationRequests()
+        } else if (
+          operationRequest.kind === OperationRequestKind.TRANSFER_OWNERSHIP
+        ) {
+          return actions.loadTransferOwnershipOperationRequests()
+        } else if (
+          operationRequest.kind === OperationRequestKind.ACCEPT_OWNERSHIP
+        ) {
+          return actions.loadAcceptOwnershipOperationRequests()
         } else {
           return actions.loadUpdateKeyholdersOperationRequests()
         }
@@ -1218,6 +2129,26 @@ export class AppEffects {
           return actions.loadMintOperationRequests()
         } else if (operationRequest.kind === OperationRequestKind.BURN) {
           return actions.loadBurnOperationRequests()
+        } else if (
+          operationRequest.kind === OperationRequestKind.ADD_OPERATOR
+        ) {
+          return actions.loadAddOperatorOperationRequests()
+        } else if (
+          operationRequest.kind === OperationRequestKind.REMOVE_OPERATOR
+        ) {
+          return actions.loadRemoveOperatorOperationRequests()
+        } else if (
+          operationRequest.kind === OperationRequestKind.SET_REDEEM_ADDRESS
+        ) {
+          return actions.loadSetRedeemAddressOperationRequests()
+        } else if (
+          operationRequest.kind === OperationRequestKind.TRANSFER_OWNERSHIP
+        ) {
+          return actions.loadTransferOwnershipOperationRequests()
+        } else if (
+          operationRequest.kind === OperationRequestKind.ACCEPT_OWNERSHIP
+        ) {
+          return actions.loadAcceptOwnershipOperationRequests()
         } else {
           return actions.loadUpdateKeyholdersOperationRequests()
         }
@@ -1301,7 +2232,12 @@ export class AppEffects {
       switchMap(() => [
         actions.loadMintOperationRequests(),
         actions.loadBurnOperationRequests(),
+        actions.loadAddOperatorOperationRequests(),
+        actions.loadRemoveOperatorOperationRequests(),
+        actions.loadSetRedeemAddressOperationRequests(),
         actions.loadUpdateKeyholdersOperationRequests(),
+        actions.loadTransferOwnershipOperationRequests(),
+        actions.loadAcceptOwnershipOperationRequests(),
       ])
     )
   )

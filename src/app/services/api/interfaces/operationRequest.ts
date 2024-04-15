@@ -6,6 +6,11 @@ export enum OperationRequestKind {
   MINT = 'mint',
   BURN = 'burn',
   UPDATE_KEYHOLDERS = 'update_keyholders',
+  ADD_OPERATOR = 'add_operator',
+  REMOVE_OPERATOR = 'remove_operator',
+  SET_REDEEM_ADDRESS = 'set_redeem_address',
+  TRANSFER_OWNERSHIP = 'transfer_ownership',
+  ACCEPT_OWNERSHIP = 'accept_ownership',
 }
 
 export enum OperationRequestState {

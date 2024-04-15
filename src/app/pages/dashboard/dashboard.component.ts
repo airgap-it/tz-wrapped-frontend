@@ -40,6 +40,26 @@ import {
   isGatekeeper,
   isKeyholder,
   getGatekeepers,
+  getBusyAddOperatorOperationRequests,
+  getBusyRemoveOperatorOperationRequests,
+  getBusySetRedeenAddressOperationRequests,
+  getOpenAddOperatorOperationRequests,
+  getApprovedAddOperatorOperationRequests,
+  getInjectedAddOperatorOperationRequests,
+  getOpenRemoveOperatorOperationRequests,
+  getApprovedRemoveOperatorOperationRequests,
+  getInjectedRemoveOperatorOperationRequests,
+  getOpenSetRedeemAddressOperationRequests,
+  getApprovedSetRedeemAddressOperationRequests,
+  getInjectedSetRedeemAddressOperationRequests,
+  getOpenTransferOwnershipOperationRequests,
+  getApprovedTransferOwnershipOperationRequests,
+  getInjectedTransferOwnershipOperationRequests,
+  getOpenAcceptOwnershipOperationRequests,
+  getApprovedAcceptOwnershipOperationRequests,
+  getInjectedAcceptOwnershipOperationRequests,
+  getBusyTransferOwnershipOperationRequests,
+  getBusyAcceptOwnershipOperationRequests,
 } from 'src/app/app.selectors'
 import { Tab } from './tab'
 import { isNotNullOrUndefined } from 'src/app/app.operators'
@@ -85,6 +105,56 @@ export class DashboardComponent implements OnInit, OnDestroy {
     PagedResponse<OperationRequest> | undefined
   >
 
+  public openAddOperatorOperationRequests$: Observable<
+    PagedResponse<OperationRequest> | undefined
+  >
+  public approvedAddOperatorOperationRequests$: Observable<
+    PagedResponse<OperationRequest> | undefined
+  >
+  public injectedAddOperatorOperationRequests$: Observable<
+    PagedResponse<OperationRequest> | undefined
+  >
+
+  public openRemoveOperatorOperationRequests$: Observable<
+    PagedResponse<OperationRequest> | undefined
+  >
+  public approvedRemoveOperatorOperationRequests$: Observable<
+    PagedResponse<OperationRequest> | undefined
+  >
+  public injectedRemoveOperatorOperationRequests$: Observable<
+    PagedResponse<OperationRequest> | undefined
+  >
+
+  public openSetRedeemAddressOperationRequests$: Observable<
+    PagedResponse<OperationRequest> | undefined
+  >
+  public approvedSetRedeemAddressOperationRequests$: Observable<
+    PagedResponse<OperationRequest> | undefined
+  >
+  public injectedSetRedeemAddressOperationRequests$: Observable<
+    PagedResponse<OperationRequest> | undefined
+  >
+
+  public openTransferOwnershipOperationRequests$: Observable<
+    PagedResponse<OperationRequest> | undefined
+  >
+  public approvedTransferOwnershipOperationRequests$: Observable<
+    PagedResponse<OperationRequest> | undefined
+  >
+  public injectedTransferOwnershipOperationRequests$: Observable<
+    PagedResponse<OperationRequest> | undefined
+  >
+
+  public openAcceptOwnershipOperationRequests$: Observable<
+    PagedResponse<OperationRequest> | undefined
+  >
+  public approvedAcceptOwnershipOperationRequests$: Observable<
+    PagedResponse<OperationRequest> | undefined
+  >
+  public injectedAcceptOwnershipOperationRequests$: Observable<
+    PagedResponse<OperationRequest> | undefined
+  >
+
   public users$: Observable<User[]>
   public keyholders$: Observable<User[]>
 
@@ -92,6 +162,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   public isKeyholder$: Observable<boolean>
   public canMint$: Observable<boolean>
   public canBurn$: Observable<boolean>
+  public canAddOperator$: Observable<boolean>
+  public canRemoveOperator$: Observable<boolean>
+  public canSetRedeemAddress$: Observable<boolean>
+  public canTransferOwnership$: Observable<boolean>
+  public canAcceptOwnership$: Observable<boolean>
   public balance$: Observable<BigNumber | undefined>
   public activeContract$: Observable<Contract>
   public activeContractImagePath$: Observable<string>
@@ -101,8 +176,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private subscriptions: Subscription[] = []
 
-  public busyMintOpeartionRequests$: Observable<boolean>
-  public busyBurnOpeartionRequests$: Observable<boolean>
+  public busyMintOperationRequests$: Observable<boolean>
+  public busyBurnOperationRequests$: Observable<boolean>
+  public busyAddOperatorOperationRequests$: Observable<boolean>
+  public busyRemoveOperatorOperationRequests$: Observable<boolean>
+  public busySetRedeemAddressOperationRequests$: Observable<boolean>
+  public busyTransferOwnershipOperationRequests$: Observable<boolean>
+  public busyAcceptOwnershipOperationRequests$: Observable<boolean>
 
   public gatekeepers$: Observable<User[]>
   public formGroup: FormGroup
@@ -149,6 +229,56 @@ export class DashboardComponent implements OnInit, OnDestroy {
       getInjectedBurnOperationRequests
     )
 
+    this.openAddOperatorOperationRequests$ = this.store$.select(
+      getOpenAddOperatorOperationRequests
+    )
+    this.approvedAddOperatorOperationRequests$ = this.store$.select(
+      getApprovedAddOperatorOperationRequests
+    )
+    this.injectedAddOperatorOperationRequests$ = this.store$.select(
+      getInjectedAddOperatorOperationRequests
+    )
+
+    this.openRemoveOperatorOperationRequests$ = this.store$.select(
+      getOpenRemoveOperatorOperationRequests
+    )
+    this.approvedRemoveOperatorOperationRequests$ = this.store$.select(
+      getApprovedRemoveOperatorOperationRequests
+    )
+    this.injectedRemoveOperatorOperationRequests$ = this.store$.select(
+      getInjectedRemoveOperatorOperationRequests
+    )
+
+    this.openSetRedeemAddressOperationRequests$ = this.store$.select(
+      getOpenSetRedeemAddressOperationRequests
+    )
+    this.approvedSetRedeemAddressOperationRequests$ = this.store$.select(
+      getApprovedSetRedeemAddressOperationRequests
+    )
+    this.injectedSetRedeemAddressOperationRequests$ = this.store$.select(
+      getInjectedSetRedeemAddressOperationRequests
+    )
+
+    this.openTransferOwnershipOperationRequests$ = this.store$.select(
+      getOpenTransferOwnershipOperationRequests
+    )
+    this.approvedTransferOwnershipOperationRequests$ = this.store$.select(
+      getApprovedTransferOwnershipOperationRequests
+    )
+    this.injectedTransferOwnershipOperationRequests$ = this.store$.select(
+      getInjectedTransferOwnershipOperationRequests
+    )
+
+    this.openAcceptOwnershipOperationRequests$ = this.store$.select(
+      getOpenAcceptOwnershipOperationRequests
+    )
+    this.approvedAcceptOwnershipOperationRequests$ = this.store$.select(
+      getApprovedAcceptOwnershipOperationRequests
+    )
+    this.injectedAcceptOwnershipOperationRequests$ = this.store$.select(
+      getInjectedAcceptOwnershipOperationRequests
+    )
+
     this.users$ = this.store$.select(getUsers)
     this.keyholders$ = this.store$.select(getKeyholders)
     this.address$ = this.store$.select(getAddress)
@@ -174,15 +304,84 @@ export class DashboardComponent implements OnInit, OnDestroy {
           contract.capabilities.includes(OperationRequestKind.BURN)
       )
     )
+    this.canAddOperator$ = combineLatest([
+      this.activeContract$,
+      this.store$.select(getSessionUser),
+    ]).pipe(
+      map(
+        ([contract, sessionUser]) =>
+          sessionUser !== undefined &&
+          contract.capabilities.includes(OperationRequestKind.ADD_OPERATOR)
+      )
+    )
+    this.canRemoveOperator$ = combineLatest([
+      this.activeContract$,
+      this.store$.select(getSessionUser),
+    ]).pipe(
+      map(
+        ([contract, sessionUser]) =>
+          sessionUser !== undefined &&
+          contract.capabilities.includes(OperationRequestKind.REMOVE_OPERATOR)
+      )
+    )
+    this.canSetRedeemAddress$ = combineLatest([
+      this.activeContract$,
+      this.store$.select(getSessionUser),
+    ]).pipe(
+      map(
+        ([contract, sessionUser]) =>
+          sessionUser !== undefined &&
+          contract.capabilities.includes(
+            OperationRequestKind.SET_REDEEM_ADDRESS
+          )
+      )
+    )
+    this.canTransferOwnership$ = combineLatest([
+      this.activeContract$,
+      this.store$.select(getSessionUser),
+    ]).pipe(
+      map(
+        ([contract, sessionUser]) =>
+          sessionUser !== undefined &&
+          contract.capabilities.includes(
+            OperationRequestKind.TRANSFER_OWNERSHIP
+          )
+      )
+    )
+    this.canAcceptOwnership$ = combineLatest([
+      this.activeContract$,
+      this.store$.select(getSessionUser),
+    ]).pipe(
+      map(
+        ([contract, sessionUser]) =>
+          sessionUser !== undefined &&
+          contract.capabilities.includes(OperationRequestKind.ACCEPT_OWNERSHIP)
+      )
+    )
     this.balance$ = this.store$.select(getBalance)
 
     this.redeemAddress$ = this.store$.select(getRedeemAddress)
     this.redeemAddressBalance$ = this.store$.select(getRedeemAddressBalance)
-    this.busyMintOpeartionRequests$ = this.store$.select(
+    this.busyMintOperationRequests$ = this.store$.select(
       getBusyMintOperationRequests
     )
-    this.busyBurnOpeartionRequests$ = this.store$.select(
+    this.busyBurnOperationRequests$ = this.store$.select(
       getBusyBurnOperationRequests
+    )
+    this.busyAddOperatorOperationRequests$ = this.store$.select(
+      getBusyAddOperatorOperationRequests
+    )
+    this.busyRemoveOperatorOperationRequests$ = this.store$.select(
+      getBusyRemoveOperatorOperationRequests
+    )
+    this.busySetRedeemAddressOperationRequests$ = this.store$.select(
+      getBusySetRedeenAddressOperationRequests
+    )
+    this.busyTransferOwnershipOperationRequests$ = this.store$.select(
+      getBusyTransferOwnershipOperationRequests
+    )
+    this.busyAcceptOwnershipOperationRequests$ = this.store$.select(
+      getBusyAcceptOwnershipOperationRequests
     )
     this.gatekeepers$ = this.store$.select(getGatekeepers)
     this.subscriptions.push(
@@ -201,6 +400,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.store$.dispatch(actions.loadUsers({ contractId: contract.id }))
           this.store$.dispatch(actions.loadMintOperationRequests())
           this.store$.dispatch(actions.loadBurnOperationRequests())
+          this.store$.dispatch(actions.loadAddOperatorOperationRequests())
+          this.store$.dispatch(actions.loadRemoveOperatorOperationRequests())
+          this.store$.dispatch(actions.loadSetRedeemAddressOperationRequests())
+          this.store$.dispatch(actions.loadTransferOwnershipOperationRequests())
+          this.store$.dispatch(actions.loadAcceptOwnershipOperationRequests())
         })
     )
     this.subscriptions.push(
@@ -227,13 +431,31 @@ export class DashboardComponent implements OnInit, OnDestroy {
       combineLatest([
         this.canMint$,
         this.canBurn$,
+        this.canAddOperator$,
+        this.canRemoveOperator$,
+        this.canSetRedeemAddress$,
         this.selectedTab$,
-      ]).subscribe(([canMint, canBurn, tab]) => {
-        if ((!canMint && tab == Tab.MINT) || (!canBurn && tab == Tab.BURN)) {
-          this.router.navigate(['/', 'transfer'])
-          this.store$.dispatch(actions.selectTab({ tab: Tab.TRANSFER }))
+      ]).subscribe(
+        ([
+          canMint,
+          canBurn,
+          canAddOperator,
+          canRemoveOperator,
+          canSetRedeemAddress,
+          tab,
+        ]) => {
+          if (
+            (!canMint && tab == Tab.MINT) ||
+            (!canBurn && tab == Tab.BURN) ||
+            (!canAddOperator && tab == Tab.ADD_OPERATOR) ||
+            (!canRemoveOperator && tab == Tab.REMOVE_OPERATOR) ||
+            (!canSetRedeemAddress && tab == Tab.SET_REDEEM_ADDRESS)
+          ) {
+            this.router.navigate(['/', 'transfer'])
+            this.store$.dispatch(actions.selectTab({ tab: Tab.TRANSFER }))
+          }
         }
-      })
+      )
     )
 
     this.receivingAddressControl = new FormControl('', [
@@ -296,6 +518,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.store$.dispatch(actions.selectTab({ tab: Tab.MINT }))
       } else if (params.tab === 'burn') {
         this.store$.dispatch(actions.selectTab({ tab: Tab.BURN }))
+      } else if (params.tab === 'add-operator') {
+        this.store$.dispatch(actions.selectTab({ tab: Tab.ADD_OPERATOR }))
+      } else if (params.tab === 'remove-operator') {
+        this.store$.dispatch(actions.selectTab({ tab: Tab.REMOVE_OPERATOR }))
+      } else if (params.tab === 'set-redeem-address') {
+        this.store$.dispatch(actions.selectTab({ tab: Tab.SET_REDEEM_ADDRESS }))
       } else {
         this.store$.dispatch(actions.selectTab({ tab: Tab.TRANSFER }))
       }
@@ -364,15 +592,63 @@ export class DashboardComponent implements OnInit, OnDestroy {
     )
   }
 
+  addOperator() {
+    this.submitOperationRequest(
+      OperationRequestKind.ADD_OPERATOR,
+      null,
+      this.ledgerHash
+    )
+  }
+
+  removeOperator() {
+    this.submitOperationRequest(
+      OperationRequestKind.REMOVE_OPERATOR,
+      null,
+      this.ledgerHash
+    )
+  }
+
+  setRedeemAddress() {
+    this.submitOperationRequest(
+      OperationRequestKind.SET_REDEEM_ADDRESS,
+      null,
+      this.ledgerHash
+    )
+  }
+
+  transferOwnership() {
+    this.submitOperationRequest(
+      OperationRequestKind.TRANSFER_OWNERSHIP,
+      null,
+      this.ledgerHash
+    )
+  }
+
+  acceptOwnership() {
+    this.submitOperationRequest(
+      OperationRequestKind.ACCEPT_OWNERSHIP,
+      null,
+      this.ledgerHash
+    )
+  }
+
   private submitOperationRequest(
     kind: OperationRequestKind,
-    value: string,
+    value: string | null,
     ledgerHash: string | null
   ) {
     let targetAddress: string | null = null
     if (kind === OperationRequestKind.MINT) {
       targetAddress = this.formGroup.get('gatekeeperForm')!.value
 
+      validateAddress(targetAddress)
+    } else if (
+      kind === OperationRequestKind.ADD_OPERATOR ||
+      kind === OperationRequestKind.REMOVE_OPERATOR ||
+      kind === OperationRequestKind.SET_REDEEM_ADDRESS ||
+      kind === OperationRequestKind.TRANSFER_OWNERSHIP
+    ) {
+      targetAddress = this.receivingAddressControl.value
       validateAddress(targetAddress)
     }
     this.activeContract$.pipe(take(1)).subscribe((contract) => {
@@ -381,10 +657,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
           newOperationRequest: {
             contract_id: contract.id,
             kind,
-            amount: convertAmountToBigNumber(
-              value,
-              contract.decimals
-            ).toFixed(),
+            amount:
+              value !== null
+                ? convertAmountToBigNumber(value, contract.decimals).toFixed()
+                : null,
             target_address: targetAddress,
             threshold: null,
             proposed_keyholders: null,
@@ -413,7 +689,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   onSelect(event: any): void {
-    this.router.navigate(['/', `${event.heading.toLowerCase()}`])
+    const path = event.heading.toLowerCase().split(' ').join('-')
+    this.router.navigate(['/', path])
     this.store$.dispatch(actions.selectTab({ tab: event.id }))
   }
 
