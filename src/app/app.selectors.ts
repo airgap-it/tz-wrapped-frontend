@@ -158,6 +158,182 @@ export const getInjectedBurnOperationRequestCurrentPage = createSelector(
   (state) => state.injectedBurnOperationRequests?.page
 )
 
+export const getOpenAddOperatorOperationRequests = createSelector(
+  selectApp,
+  (state) => {
+    return state.openAddOperatorOperationRequests
+  }
+)
+
+export const getOpenAddOperatorOperationRequestCurrentPage = createSelector(
+  selectApp,
+  (state) => {
+    return state.openAddOperatorOperationRequests?.page
+  }
+)
+
+export const getApprovedAddOperatorOperationRequests = createSelector(
+  selectApp,
+  (state) => state.approvedAddOperatorOperationRequests
+)
+
+export const getApprovedAddOperatorOperationRequestCurrentPage = createSelector(
+  selectApp,
+  (state) => state.approvedAddOperatorOperationRequests?.page
+)
+
+export const getInjectedAddOperatorOperationRequests = createSelector(
+  selectApp,
+  (state) => state.injectedAddOperatorOperationRequests
+)
+
+export const getInjectedAddOperatorOperationRequestCurrentPage = createSelector(
+  selectApp,
+  (state) => state.injectedAddOperatorOperationRequests?.page
+)
+
+export const getOpenRemoveOperatorOperationRequests = createSelector(
+  selectApp,
+  (state) => {
+    return state.openRemoveOperatorOperationRequests
+  }
+)
+
+export const getOpenRemoveOperatorOperationRequestCurrentPage = createSelector(
+  selectApp,
+  (state) => {
+    return state.openRemoveOperatorOperationRequests?.page
+  }
+)
+
+export const getApprovedRemoveOperatorOperationRequests = createSelector(
+  selectApp,
+  (state) => state.approvedRemoveOperatorOperationRequests
+)
+
+export const getApprovedRemoveOperatorOperationRequestCurrentPage = createSelector(
+  selectApp,
+  (state) => state.approvedRemoveOperatorOperationRequests?.page
+)
+
+export const getInjectedRemoveOperatorOperationRequests = createSelector(
+  selectApp,
+  (state) => state.injectedRemoveOperatorOperationRequests
+)
+
+export const getInjectedRemoveOperatorOperationRequestCurrentPage = createSelector(
+  selectApp,
+  (state) => state.injectedRemoveOperatorOperationRequests?.page
+)
+
+///
+
+export const getOpenSetRedeemAddressOperationRequests = createSelector(
+  selectApp,
+  (state) => {
+    return state.openSetRedeemAddressOperationRequests
+  }
+)
+
+export const getOpenSetRedeemAddressOperationRequestCurrentPage = createSelector(
+  selectApp,
+  (state) => {
+    return state.openSetRedeemAddressOperationRequests?.page
+  }
+)
+
+export const getApprovedSetRedeemAddressOperationRequests = createSelector(
+  selectApp,
+  (state) => state.approvedSetRedeemAddressOperationRequests
+)
+
+export const getApprovedSetRedeemAddressOperationRequestCurrentPage = createSelector(
+  selectApp,
+  (state) => state.approvedSetRedeemAddressOperationRequests?.page
+)
+
+export const getInjectedSetRedeemAddressOperationRequests = createSelector(
+  selectApp,
+  (state) => state.injectedSetRedeemAddressOperationRequests
+)
+
+export const getInjectedSetRedeemAddressOperationRequestCurrentPage = createSelector(
+  selectApp,
+  (state) => state.injectedSetRedeemAddressOperationRequests?.page
+)
+
+///
+
+export const getOpenTransferOwnershipOperationRequests = createSelector(
+  selectApp,
+  (state) => {
+    return state.openTransferOwnershipOperationRequests
+  }
+)
+
+export const getOpenTransferOwnershipOperationRequestCurrentPage = createSelector(
+  selectApp,
+  (state) => {
+    return state.openTransferOwnershipOperationRequests?.page
+  }
+)
+
+export const getApprovedTransferOwnershipOperationRequests = createSelector(
+  selectApp,
+  (state) => state.approvedTransferOwnershipOperationRequests
+)
+
+export const getApprovedTransferOwnershipOperationRequestCurrentPage = createSelector(
+  selectApp,
+  (state) => state.approvedTransferOwnershipOperationRequests?.page
+)
+
+export const getInjectedTransferOwnershipOperationRequests = createSelector(
+  selectApp,
+  (state) => state.injectedTransferOwnershipOperationRequests
+)
+
+export const getInjectedTransferOwnershipOperationRequestCurrentPage = createSelector(
+  selectApp,
+  (state) => state.injectedTransferOwnershipOperationRequests?.page
+)
+
+///
+
+export const getOpenAcceptOwnershipOperationRequests = createSelector(
+  selectApp,
+  (state) => {
+    return state.openAcceptOwnershipOperationRequests
+  }
+)
+
+export const getOpenAcceptOwnershipOperationRequestCurrentPage = createSelector(
+  selectApp,
+  (state) => {
+    return state.openAcceptOwnershipOperationRequests?.page
+  }
+)
+
+export const getApprovedAcceptOwnershipOperationRequests = createSelector(
+  selectApp,
+  (state) => state.approvedAcceptOwnershipOperationRequests
+)
+
+export const getApprovedAcceptOwnershipOperationRequestCurrentPage = createSelector(
+  selectApp,
+  (state) => state.approvedAcceptOwnershipOperationRequests?.page
+)
+
+export const getInjectedAcceptOwnershipOperationRequests = createSelector(
+  selectApp,
+  (state) => state.injectedAcceptOwnershipOperationRequests
+)
+
+export const getInjectedAcceptOwnershipOperationRequestCurrentPage = createSelector(
+  selectApp,
+  (state) => state.injectedAcceptOwnershipOperationRequests?.page
+)
+
 export const getOpenUpdateKeyholdersOperationRequests = createSelector(
   selectApp,
   (state) => {
@@ -227,6 +403,31 @@ export const getBusyMintOperationRequests = createSelector(
 export const getBusyBurnOperationRequests = createSelector(
   selectApp,
   (state) => state.busy.burnOperationRequests
+)
+
+export const getBusyAddOperatorOperationRequests = createSelector(
+  selectApp,
+  (state) => state.busy.addOperatorOperationRequests
+)
+
+export const getBusyRemoveOperatorOperationRequests = createSelector(
+  selectApp,
+  (state) => state.busy.removeOperatorOperationRequests
+)
+
+export const getBusySetRedeenAddressOperationRequests = createSelector(
+  selectApp,
+  (state) => state.busy.setRedeemAddressOperationRequests
+)
+
+export const getBusyTransferOwnershipOperationRequests = createSelector(
+  selectApp,
+  (state) => state.busy.transferOwnershipOperationRequests
+)
+
+export const getBusyAcceptOwnershipOperationRequests = createSelector(
+  selectApp,
+  (state) => state.busy.acceptOwnershipOperationRequests
 )
 
 export const getBusyUpdateKeyholdersOperationRequests = createSelector(

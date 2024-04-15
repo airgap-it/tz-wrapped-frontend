@@ -13,6 +13,17 @@
     "target": "es2015",
     "module": "es2020",
     "lib": ["es2018", "dom"],
-    "strict": true
+    "strict": true,
+    "paths": {
+      "@angular/*": ["./node_modules/@angular/*"],
+      "crypto": ["./node_modules/crypto-browserify"],
+      "http": ["./node_modules/stream-http"],
+      "https": ["./node_modules/https-browserify"],
+      "path": ["./node_modules/path-browserify"],
+      "stream": ["./node_modules/stream-browserify"],
+      "url": ["./node_modules/url"],
+      "zlib": ["./node_modules/browserify-zlib"],
+      "os": ["./node_modules/os-browserify/browser"]
+    }
   }
 }
