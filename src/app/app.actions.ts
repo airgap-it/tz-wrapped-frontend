@@ -234,6 +234,8 @@ export const loadUsersFailed = createAction(
   props<{ errorResponse: HttpErrorResponse }>()
 )
 
+/// Mint
+
 export const loadMintOperationRequests = createAction(
   `[${featureName}] Load Mint Operation Requests`
 )
@@ -269,6 +271,8 @@ export const loadMintOperationRequestsFailed = createAction(
   props<{ errorResponse: HttpErrorResponse }>()
 )
 
+/// Burn
+
 export const loadBurnOperationRequests = createAction(
   `[${featureName}] Load Burn Operation Requests`
 )
@@ -303,6 +307,193 @@ export const loadBurnOperationRequestsFailed = createAction(
   `[${featureName}] Load Burn Operation Requests Failed`,
   props<{ errorResponse: HttpErrorResponse }>()
 )
+
+/// Add Operator
+
+export const loadAddOperatorOperationRequests = createAction(
+  `[${featureName}] Load AddOperator Operation Requests`
+)
+
+export const loadOpenAddOperatorOperationRequests = createAction(
+  `[${featureName}] Load Open AddOperator Operation Requests`,
+  props<{ page?: number }>()
+)
+export const loadApprovedAddOperatorOperationRequests = createAction(
+  `[${featureName}] Load Approved AddOperator Operation Requests`,
+  props<{ page?: number }>()
+)
+export const loadInjectedAddOperatorOperationRequests = createAction(
+  `[${featureName}] Load Injected AddOperator Operation Requests`,
+  props<{ page?: number }>()
+)
+
+export const loadOpenAddOperatorOperationRequestsSucceeded = createAction(
+  `[${featureName}] Load Open AddOperator Operation Requests Succeeded`,
+  props<{ response: PagedResponse<OperationRequest> }>()
+)
+export const loadApprovedAddOperatorOperationRequestsSucceeded = createAction(
+  `[${featureName}] Load Approved AddOperator Operation Requests Succeeded`,
+  props<{ response: PagedResponse<OperationRequest> }>()
+)
+export const loadInjectedAddOperatorOperationRequestsSucceeded = createAction(
+  `[${featureName}] Load Injected AddOperator Operation Requests Succeeded`,
+  props<{ response: PagedResponse<OperationRequest> }>()
+)
+
+export const loadAddOperatorOperationRequestsFailed = createAction(
+  `[${featureName}] Load AddOperator Operation Requests Failed`,
+  props<{ errorResponse: HttpErrorResponse }>()
+)
+
+/// Remove Operator
+
+export const loadRemoveOperatorOperationRequests = createAction(
+  `[${featureName}] Load RemoveOperator Operation Requests`
+)
+
+export const loadOpenRemoveOperatorOperationRequests = createAction(
+  `[${featureName}] Load Open RemoveOperator Operation Requests`,
+  props<{ page?: number }>()
+)
+export const loadApprovedRemoveOperatorOperationRequests = createAction(
+  `[${featureName}] Load Approved RemoveOperator Operation Requests`,
+  props<{ page?: number }>()
+)
+export const loadInjectedRemoveOperatorOperationRequests = createAction(
+  `[${featureName}] Load Injected RemoveOperator Operation Requests`,
+  props<{ page?: number }>()
+)
+
+export const loadOpenRemoveOperatorOperationRequestsSucceeded = createAction(
+  `[${featureName}] Load Open RemoveOperator Operation Requests Succeeded`,
+  props<{ response: PagedResponse<OperationRequest> }>()
+)
+export const loadApprovedRemoveOperatorOperationRequestsSucceeded = createAction(
+  `[${featureName}] Load Approved RemoveOperator Operation Requests Succeeded`,
+  props<{ response: PagedResponse<OperationRequest> }>()
+)
+export const loadInjectedRemoveOperatorOperationRequestsSucceeded = createAction(
+  `[${featureName}] Load Injected RemoveOperator Operation Requests Succeeded`,
+  props<{ response: PagedResponse<OperationRequest> }>()
+)
+
+export const loadRemoveOperatorOperationRequestsFailed = createAction(
+  `[${featureName}] Load RemoveOperator Operation Requests Failed`,
+  props<{ errorResponse: HttpErrorResponse }>()
+)
+
+/// Set Redeem Address
+
+export const loadSetRedeemAddressOperationRequests = createAction(
+  `[${featureName}] Load SetRedeemAddress Operation Requests`
+)
+
+export const loadOpenSetRedeemAddressOperationRequests = createAction(
+  `[${featureName}] Load Open SetRedeemAddress Operation Requests`,
+  props<{ page?: number }>()
+)
+export const loadApprovedSetRedeemAddressOperationRequests = createAction(
+  `[${featureName}] Load Approved SetRedeemAddress Operation Requests`,
+  props<{ page?: number }>()
+)
+export const loadInjectedSetRedeemAddressOperationRequests = createAction(
+  `[${featureName}] Load Injected SetRedeemAddress Operation Requests`,
+  props<{ page?: number }>()
+)
+
+export const loadOpenSetRedeemAddressOperationRequestsSucceeded = createAction(
+  `[${featureName}] Load Open SetRedeemAddress Operation Requests Succeeded`,
+  props<{ response: PagedResponse<OperationRequest> }>()
+)
+export const loadApprovedSetRedeemAddressOperationRequestsSucceeded = createAction(
+  `[${featureName}] Load Approved SetRedeemAddress Operation Requests Succeeded`,
+  props<{ response: PagedResponse<OperationRequest> }>()
+)
+export const loadInjectedSetRedeemAddressOperationRequestsSucceeded = createAction(
+  `[${featureName}] Load Injected SetRedeemAddress Operation Requests Succeeded`,
+  props<{ response: PagedResponse<OperationRequest> }>()
+)
+
+export const loadSetRedeemAddressOperationRequestsFailed = createAction(
+  `[${featureName}] Load SetRedeemAddress Operation Requests Failed`,
+  props<{ errorResponse: HttpErrorResponse }>()
+)
+
+/// Transfer Ownership
+
+export const loadTransferOwnershipOperationRequests = createAction(
+  `[${featureName}] Load TransferOwnership Operation Requests`
+)
+
+export const loadOpenTransferOwnershipOperationRequests = createAction(
+  `[${featureName}] Load Open TransferOwnership Operation Requests`,
+  props<{ page?: number }>()
+)
+export const loadApprovedTransferOwnershipOperationRequests = createAction(
+  `[${featureName}] Load Approved TransferOwnership Operation Requests`,
+  props<{ page?: number }>()
+)
+export const loadInjectedTransferOwnershipOperationRequests = createAction(
+  `[${featureName}] Load Injected TransferOwnership Operation Requests`,
+  props<{ page?: number }>()
+)
+
+export const loadOpenTransferOwnershipOperationRequestsSucceeded = createAction(
+  `[${featureName}] Load Open TransferOwnership Operation Requests Succeeded`,
+  props<{ response: PagedResponse<OperationRequest> }>()
+)
+export const loadApprovedTransferOwnershipOperationRequestsSucceeded = createAction(
+  `[${featureName}] Load Approved TransferOwnership Operation Requests Succeeded`,
+  props<{ response: PagedResponse<OperationRequest> }>()
+)
+export const loadInjectedTransferOwnershipOperationRequestsSucceeded = createAction(
+  `[${featureName}] Load Injected TransferOwnership Operation Requests Succeeded`,
+  props<{ response: PagedResponse<OperationRequest> }>()
+)
+
+export const loadTransferOwnershipOperationRequestsFailed = createAction(
+  `[${featureName}] Load TransferOwnership Operation Requests Failed`,
+  props<{ errorResponse: HttpErrorResponse }>()
+)
+
+/// Accept Ownership
+
+export const loadAcceptOwnershipOperationRequests = createAction(
+  `[${featureName}] Load AcceptOwnership Operation Requests`
+)
+
+export const loadOpenAcceptOwnershipOperationRequests = createAction(
+  `[${featureName}] Load Open AcceptOwnership Operation Requests`,
+  props<{ page?: number }>()
+)
+export const loadApprovedAcceptOwnershipOperationRequests = createAction(
+  `[${featureName}] Load Approved AcceptOwnership Operation Requests`,
+  props<{ page?: number }>()
+)
+export const loadInjectedAcceptOwnershipOperationRequests = createAction(
+  `[${featureName}] Load Injected AcceptOwnership Operation Requests`,
+  props<{ page?: number }>()
+)
+
+export const loadOpenAcceptOwnershipOperationRequestsSucceeded = createAction(
+  `[${featureName}] Load Open AcceptOwnership Operation Requests Succeeded`,
+  props<{ response: PagedResponse<OperationRequest> }>()
+)
+export const loadApprovedAcceptOwnershipOperationRequestsSucceeded = createAction(
+  `[${featureName}] Load Approved AcceptOwnership Operation Requests Succeeded`,
+  props<{ response: PagedResponse<OperationRequest> }>()
+)
+export const loadInjectedAcceptOwnershipOperationRequestsSucceeded = createAction(
+  `[${featureName}] Load Injected AcceptOwnership Operation Requests Succeeded`,
+  props<{ response: PagedResponse<OperationRequest> }>()
+)
+
+export const loadAcceptOwnershipOperationRequestsFailed = createAction(
+  `[${featureName}] Load AcceptOwnership Operation Requests Failed`,
+  props<{ errorResponse: HttpErrorResponse }>()
+)
+
+///
 
 export const loadUpdateKeyholdersOperationRequests = createAction(
   `[${featureName}] Load Update Keyholders Operation Requests`

@@ -2,6 +2,7 @@
   <div class="card-body">
     <div>
       <tabset *ngIf="selectedTab$ | async as selectedTab">
+        <!-- TRANSFER -->
         <tab
           heading="Transfer"
           id="tab-transfer"
@@ -106,6 +107,7 @@
             </button>
           </ng-template>
         </tab>
+        <!-- MINT -->
         <tab
           *ngIf="canMint$ | async"
           heading="Mint"
@@ -208,12 +210,12 @@
               (click)="mint()"
               [disabled]="
                 amountControl.invalid ||
-                (busyMintOpeartionRequests$ | async) ||
+                (busyMintOperationRequests$ | async) ||
                 !(isGatekeeper$ | async) ||
                 !formGroup.valid
               "
             >
-              <ng-container *ngIf="busyMintOpeartionRequests$ | async"
+              <ng-container *ngIf="busyMintOperationRequests$ | async"
                 ><span
                   class="spinner-border spinner-border-sm mr-1"
                   role="status"
@@ -224,6 +226,7 @@
             </button>
           </ng-container>
         </tab>
+        <!-- BURN -->
         <tab
           *ngIf="canBurn$ | async"
           heading="Burn"
@@ -328,11 +331,11 @@
               (click)="burn()"
               [disabled]="
                 amountBurnControl.invalid ||
-                (busyBurnOpeartionRequests$ | async) ||
+                (busyBurnOperationRequests$ | async) ||
                 !(isGatekeeper$ | async)
               "
             >
-              <ng-container *ngIf="busyBurnOpeartionRequests$ | async"
+              <ng-container *ngIf="busyBurnOperationRequests$ | async"
                 ><span
                   class="spinner-border spinner-border-sm mr-1"
                   role="status"
@@ -342,6 +345,400 @@
               Request Burn
             </button>
           </ng-container>
+        </tab>
+        <!-- ADD OPERATOR -->
+        <tab
+          *ngIf="canAddOperator$ | async"
+          heading="Add Operator"
+          id="tab-add-operator"
+          [active]="selectedTab === 'tab-add-operator'"
+          (selectTab)="onSelect($event)"
+        >
+          <div class="my-5">
+            <label>Address</label>
+            <div class="form-group mb-3">
+              <input
+                [formControl]="receivingAddressControl"
+                type="text"
+                class="form-control"
+                placeholder="tz1.."
+                aria-label="Address"
+                [ngClass]="{
+                  'is-invalid':
+                    receivingAddressControl.errors &&
+                    (receivingAddressControl.touched ||
+                      receivingAddressControl.dirty)
+                }"
+              />
+              <div class="invalid-feedback px-3 py-2 px-3 py-2">
+                <strong>Invalid Address</strong>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label>Expected ledger hash (optional)</label>
+              <div class="input-group input-group__two-items">
+                <input
+                  [formControl]="ledgerHashControl"
+                  type="text"
+                  class="form-control"
+                  aria-label="Ledger Hash"
+                  [ngClass]="{
+                    'is-invalid':
+                      ledgerHashControl.errors &&
+                      (ledgerHashControl.touched || ledgerHashControl.dirty)
+                  }"
+                />
+                <div class="invalid-feedback px-3 py-2">
+                  <strong>Invalid ledger hash</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <ng-container *ngIf="address$ | async as address; else connectButton">
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              (click)="addOperator()"
+              [disabled]="
+                receivingAddressControl.invalid ||
+                (busyAddOperatorOperationRequests$ | async) ||
+                !(isGatekeeper$ | async)
+              "
+            >
+              <ng-container *ngIf="busyAddOperatorOperationRequests$ | async"
+                ><span
+                  class="spinner-border spinner-border-sm mr-1"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+              </ng-container>
+              Add Operator
+            </button>
+          </ng-container>
+
+          <ng-template #connectButton>
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              (click)="connectWallet()"
+            >
+              Connect Wallet
+            </button>
+          </ng-template>
+        </tab>
+        <!-- REMOVE OPERATOR -->
+        <tab
+          *ngIf="canRemoveOperator$ | async"
+          heading="Remove Operator"
+          id="tab-remove-operator"
+          [active]="selectedTab === 'tab-remove-operator'"
+          (selectTab)="onSelect($event)"
+        >
+          <div class="my-5">
+            <label>Address</label>
+            <div class="form-group mb-3">
+              <input
+                [formControl]="receivingAddressControl"
+                type="text"
+                class="form-control"
+                placeholder="tz1.."
+                aria-label="Address"
+                [ngClass]="{
+                  'is-invalid':
+                    receivingAddressControl.errors &&
+                    (receivingAddressControl.touched ||
+                      receivingAddressControl.dirty)
+                }"
+              />
+              <div class="invalid-feedback px-3 py-2 px-3 py-2">
+                <strong>Invalid Address</strong>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label>Expected ledger hash (optional)</label>
+              <div class="input-group input-group__two-items">
+                <input
+                  [formControl]="ledgerHashControl"
+                  type="text"
+                  class="form-control"
+                  aria-label="Ledger Hash"
+                  [ngClass]="{
+                    'is-invalid':
+                      ledgerHashControl.errors &&
+                      (ledgerHashControl.touched || ledgerHashControl.dirty)
+                  }"
+                />
+                <div class="invalid-feedback px-3 py-2">
+                  <strong>Invalid ledger hash</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <ng-container *ngIf="address$ | async as address; else connectButton">
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              (click)="removeOperator()"
+              [disabled]="
+                receivingAddressControl.invalid ||
+                (busyRemoveOperatorOperationRequests$ | async) ||
+                !(isGatekeeper$ | async)
+              "
+            >
+              <ng-container *ngIf="busyRemoveOperatorOperationRequests$ | async"
+                ><span
+                  class="spinner-border spinner-border-sm mr-1"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+              </ng-container>
+              Remove Operator
+            </button>
+          </ng-container>
+
+          <ng-template #connectButton>
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              (click)="connectWallet()"
+            >
+              Connect Wallet
+            </button>
+          </ng-template>
+        </tab>
+        <!-- SET REDEEM ADDRESS -->
+        <tab
+          *ngIf="canSetRedeemAddress$ | async"
+          heading="Set Redeem Address"
+          id="tab-set-redeem-address"
+          [active]="selectedTab === 'tab-set-redeem-address'"
+          (selectTab)="onSelect($event)"
+        >
+          <div class="my-5">
+            <label>Address</label>
+            <div class="form-group mb-3">
+              <input
+                [formControl]="receivingAddressControl"
+                type="text"
+                class="form-control"
+                placeholder="tz1.."
+                aria-label="Address"
+                [ngClass]="{
+                  'is-invalid':
+                    receivingAddressControl.errors &&
+                    (receivingAddressControl.touched ||
+                      receivingAddressControl.dirty)
+                }"
+              />
+              <div class="invalid-feedback px-3 py-2 px-3 py-2">
+                <strong>Invalid Address</strong>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label>Expected ledger hash (optional)</label>
+              <div class="input-group input-group__two-items">
+                <input
+                  [formControl]="ledgerHashControl"
+                  type="text"
+                  class="form-control"
+                  aria-label="Ledger Hash"
+                  [ngClass]="{
+                    'is-invalid':
+                      ledgerHashControl.errors &&
+                      (ledgerHashControl.touched || ledgerHashControl.dirty)
+                  }"
+                />
+                <div class="invalid-feedback px-3 py-2">
+                  <strong>Invalid ledger hash</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <ng-container *ngIf="address$ | async as address; else connectButton">
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              (click)="setRedeemAddress()"
+              [disabled]="
+                receivingAddressControl.invalid ||
+                (busySetRedeemAddressOperationRequests$ | async) ||
+                !(isGatekeeper$ | async)
+              "
+            >
+              <ng-container
+                *ngIf="busySetRedeemAddressOperationRequests$ | async"
+                ><span
+                  class="spinner-border spinner-border-sm mr-1"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+              </ng-container>
+              Set Redeem Address
+            </button>
+          </ng-container>
+
+          <ng-template #connectButton>
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              (click)="connectWallet()"
+            >
+              Connect Wallet
+            </button>
+          </ng-template>
+        </tab>
+
+        <!-- Transfer Ownership -->
+        <tab
+          *ngIf="canTransferOwnership$ | async"
+          heading="Transfer Ownership"
+          id="tab-transfer-ownership"
+          [active]="selectedTab === 'tab-transfer-ownership'"
+          (selectTab)="onSelect($event)"
+        >
+          <div class="my-5">
+            <label>Address</label>
+            <div class="form-group mb-3">
+              <input
+                [formControl]="receivingAddressControl"
+                type="text"
+                class="form-control"
+                placeholder="tz1.."
+                aria-label="Address"
+                [ngClass]="{
+                  'is-invalid':
+                    receivingAddressControl.errors &&
+                    (receivingAddressControl.touched ||
+                      receivingAddressControl.dirty)
+                }"
+              />
+              <div class="invalid-feedback px-3 py-2 px-3 py-2">
+                <strong>Invalid Address</strong>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label>Expected ledger hash (optional)</label>
+              <div class="input-group input-group__two-items">
+                <input
+                  [formControl]="ledgerHashControl"
+                  type="text"
+                  class="form-control"
+                  aria-label="Ledger Hash"
+                  [ngClass]="{
+                    'is-invalid':
+                      ledgerHashControl.errors &&
+                      (ledgerHashControl.touched || ledgerHashControl.dirty)
+                  }"
+                />
+                <div class="invalid-feedback px-3 py-2">
+                  <strong>Invalid ledger hash</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <ng-container *ngIf="address$ | async as address; else connectButton">
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              (click)="transferOwnership()"
+              [disabled]="
+                receivingAddressControl.invalid ||
+                (busyTransferOwnershipOperationRequests$ | async) ||
+                !(isGatekeeper$ | async)
+              "
+            >
+              <ng-container
+                *ngIf="busyTransferOwnershipOperationRequests$ | async"
+                ><span
+                  class="spinner-border spinner-border-sm mr-1"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+              </ng-container>
+              Transfer Ownership
+            </button>
+          </ng-container>
+
+          <ng-template #connectButton>
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              (click)="connectWallet()"
+            >
+              Connect Wallet
+            </button>
+          </ng-template>
+        </tab>
+
+        <!-- Accept Ownership -->
+        <tab
+          *ngIf="canAcceptOwnership$ | async"
+          heading="Accept Ownership"
+          id="tab-accept-ownership"
+          [active]="selectedTab === 'tab-accept-ownership'"
+          (selectTab)="onSelect($event)"
+        >
+          <div class="my-5">
+            <div class="mb-3">
+              <label>Expected ledger hash (optional)</label>
+              <div class="input-group input-group__two-items">
+                <input
+                  [formControl]="ledgerHashControl"
+                  type="text"
+                  class="form-control"
+                  aria-label="Ledger Hash"
+                  [ngClass]="{
+                    'is-invalid':
+                      ledgerHashControl.errors &&
+                      (ledgerHashControl.touched || ledgerHashControl.dirty)
+                  }"
+                />
+                <div class="invalid-feedback px-3 py-2">
+                  <strong>Invalid ledger hash</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <ng-container *ngIf="address$ | async as address; else connectButton">
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              (click)="acceptOwnership()"
+              [disabled]="
+                (busyAcceptOwnershipOperationRequests$ | async) ||
+                !(isGatekeeper$ | async)
+              "
+            >
+              <ng-container
+                *ngIf="busyAcceptOwnershipOperationRequests$ | async"
+                ><span
+                  class="spinner-border spinner-border-sm mr-1"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+              </ng-container>
+              Accept Ownership
+            </button>
+          </ng-container>
+
+          <ng-template #connectButton>
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              (click)="connectWallet()"
+            >
+              Connect Wallet
+            </button>
+          </ng-template>
         </tab>
       </tabset>
     </div>
@@ -381,6 +778,105 @@
       [openOperationRequestList]="openBurnOperationRequests$ | async"
       [approvedOperationRequestList]="approvedBurnOperationRequests$ | async"
       [injectedOperationRequestList]="injectedBurnOperationRequests$ | async"
+    >
+    </operation-request-group>
+  </ng-container>
+  <ng-container
+    *ngIf="
+      (userType.isGatekeeper || userType.isKeyholder) &&
+      (selectedTab$ | async) === 'tab-add-operator'
+    "
+  >
+    <operation-request-group
+      name="Add Operator"
+      [kind]="'add_operator'"
+      [openOperationRequestList]="openAddOperatorOperationRequests$ | async"
+      [approvedOperationRequestList]="
+        approvedAddOperatorOperationRequests$ | async
+      "
+      [injectedOperationRequestList]="
+        injectedAddOperatorOperationRequests$ | async
+      "
+    >
+    </operation-request-group>
+  </ng-container>
+  <ng-container
+    *ngIf="
+      (userType.isGatekeeper || userType.isKeyholder) &&
+      (selectedTab$ | async) === 'tab-remove-operator'
+    "
+  >
+    <operation-request-group
+      name="Remove Operator"
+      [kind]="'remove_operator'"
+      [openOperationRequestList]="openRemoveOperatorOperationRequests$ | async"
+      [approvedOperationRequestList]="
+        approvedRemoveOperatorOperationRequests$ | async
+      "
+      [injectedOperationRequestList]="
+        injectedRemoveOperatorOperationRequests$ | async
+      "
+    >
+    </operation-request-group>
+  </ng-container>
+  <ng-container
+    *ngIf="
+      (userType.isGatekeeper || userType.isKeyholder) &&
+      (selectedTab$ | async) === 'tab-set-redeem-address'
+    "
+  >
+    <operation-request-group
+      name="Set Redeem Address"
+      [kind]="'set_redeem_address'"
+      [openOperationRequestList]="
+        openSetRedeemAddressOperationRequests$ | async
+      "
+      [approvedOperationRequestList]="
+        approvedSetRedeemAddressOperationRequests$ | async
+      "
+      [injectedOperationRequestList]="
+        injectedSetRedeemAddressOperationRequests$ | async
+      "
+    >
+    </operation-request-group>
+  </ng-container>
+  <ng-container
+    *ngIf="
+      (userType.isGatekeeper || userType.isKeyholder) &&
+      (selectedTab$ | async) === 'tab-transfer-ownership'
+    "
+  >
+    <operation-request-group
+      name="Transfer Ownership"
+      [kind]="'transfer_ownership'"
+      [openOperationRequestList]="
+        openTransferOwnershipOperationRequests$ | async
+      "
+      [approvedOperationRequestList]="
+        approvedTransferOwnershipOperationRequests$ | async
+      "
+      [injectedOperationRequestList]="
+        injectedTransferOwnershipOperationRequests$ | async
+      "
+    >
+    </operation-request-group>
+  </ng-container>
+  <ng-container
+    *ngIf="
+      (userType.isGatekeeper || userType.isKeyholder) &&
+      (selectedTab$ | async) === 'tab-accept-ownership'
+    "
+  >
+    <operation-request-group
+      name="Accept Ownership"
+      [kind]="'accept_ownership'"
+      [openOperationRequestList]="openAcceptOwnershipOperationRequests$ | async"
+      [approvedOperationRequestList]="
+        approvedAcceptOwnershipOperationRequests$ | async
+      "
+      [injectedOperationRequestList]="
+        injectedAcceptOwnershipOperationRequests$ | async
+      "
     >
     </operation-request-group>
   </ng-container>

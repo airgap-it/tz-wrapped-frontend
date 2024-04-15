@@ -24,6 +24,11 @@ interface Busy {
   balance: boolean
   mintOperationRequests: boolean
   burnOperationRequests: boolean
+  addOperatorOperationRequests: boolean
+  removeOperatorOperationRequests: boolean
+  setRedeemAddressOperationRequests: boolean
+  transferOwnershipOperationRequests: boolean
+  acceptOwnershipOperationRequests: boolean
   updateKeyholdersOperationRequests: boolean
   contracts: boolean
   users: boolean
@@ -51,6 +56,54 @@ export interface State {
   openBurnOperationRequests: PagedResponse<OperationRequest> | undefined
   approvedBurnOperationRequests: PagedResponse<OperationRequest> | undefined
   injectedBurnOperationRequests: PagedResponse<OperationRequest> | undefined
+
+  openAddOperatorOperationRequests: PagedResponse<OperationRequest> | undefined
+  approvedAddOperatorOperationRequests:
+    | PagedResponse<OperationRequest>
+    | undefined
+  injectedAddOperatorOperationRequests:
+    | PagedResponse<OperationRequest>
+    | undefined
+
+  openRemoveOperatorOperationRequests:
+    | PagedResponse<OperationRequest>
+    | undefined
+  approvedRemoveOperatorOperationRequests:
+    | PagedResponse<OperationRequest>
+    | undefined
+  injectedRemoveOperatorOperationRequests:
+    | PagedResponse<OperationRequest>
+    | undefined
+
+  openSetRedeemAddressOperationRequests:
+    | PagedResponse<OperationRequest>
+    | undefined
+  approvedSetRedeemAddressOperationRequests:
+    | PagedResponse<OperationRequest>
+    | undefined
+  injectedSetRedeemAddressOperationRequests:
+    | PagedResponse<OperationRequest>
+    | undefined
+
+  openTransferOwnershipOperationRequests:
+    | PagedResponse<OperationRequest>
+    | undefined
+  approvedTransferOwnershipOperationRequests:
+    | PagedResponse<OperationRequest>
+    | undefined
+  injectedTransferOwnershipOperationRequests:
+    | PagedResponse<OperationRequest>
+    | undefined
+
+  openAcceptOwnershipOperationRequests:
+    | PagedResponse<OperationRequest>
+    | undefined
+  approvedAcceptOwnershipOperationRequests:
+    | PagedResponse<OperationRequest>
+    | undefined
+  injectedAcceptOwnershipOperationRequests:
+    | PagedResponse<OperationRequest>
+    | undefined
 
   openUpdateKeyholdersOperationRequests:
     | PagedResponse<OperationRequest>
@@ -94,6 +147,26 @@ export const initialState: State = {
   approvedBurnOperationRequests: undefined,
   injectedBurnOperationRequests: undefined,
 
+  openAddOperatorOperationRequests: undefined,
+  approvedAddOperatorOperationRequests: undefined,
+  injectedAddOperatorOperationRequests: undefined,
+
+  openRemoveOperatorOperationRequests: undefined,
+  approvedRemoveOperatorOperationRequests: undefined,
+  injectedRemoveOperatorOperationRequests: undefined,
+
+  openSetRedeemAddressOperationRequests: undefined,
+  approvedSetRedeemAddressOperationRequests: undefined,
+  injectedSetRedeemAddressOperationRequests: undefined,
+
+  openTransferOwnershipOperationRequests: undefined,
+  approvedTransferOwnershipOperationRequests: undefined,
+  injectedTransferOwnershipOperationRequests: undefined,
+
+  openAcceptOwnershipOperationRequests: undefined,
+  approvedAcceptOwnershipOperationRequests: undefined,
+  injectedAcceptOwnershipOperationRequests: undefined,
+
   openUpdateKeyholdersOperationRequests: undefined,
   approvedUpdateKeyholdersOperationRequests: undefined,
   injectedUpdateKeyholdersOperationRequests: undefined,
@@ -111,6 +184,11 @@ export const initialState: State = {
     balance: false,
     mintOperationRequests: false,
     burnOperationRequests: false,
+    addOperatorOperationRequests: false,
+    removeOperatorOperationRequests: false,
+    setRedeemAddressOperationRequests: false,
+    transferOwnershipOperationRequests: false,
+    acceptOwnershipOperationRequests: false,
     updateKeyholdersOperationRequests: false,
     contracts: false,
     users: false,
@@ -262,6 +340,7 @@ export const reducer = createReducer(
       users: false,
     },
   })),
+  /// BURN
   on(actions.loadBurnOperationRequests, (state) => ({
     ...state,
     busy: {
@@ -306,6 +385,7 @@ export const reducer = createReducer(
       burnOperationRequests: false,
     },
   })),
+  /// MINT
   on(actions.loadMintOperationRequests, (state) => ({
     ...state,
     busy: {
@@ -352,6 +432,254 @@ export const reducer = createReducer(
       mintOperationRequests: false,
     },
   })),
+  /// ADD OPERATOR
+  on(actions.loadAddOperatorOperationRequests, (state) => ({
+    ...state,
+    busy: {
+      ...state.busy,
+      addOperatorOperationRequests: true,
+    },
+  })),
+  on(
+    actions.loadOpenAddOperatorOperationRequestsSucceeded,
+    (state, { response }) => ({
+      ...state,
+      openAddOperatorOperationRequests: response,
+
+      busy: {
+        ...state.busy,
+        addOperatorOperationRequests: false,
+      },
+    })
+  ),
+  on(
+    actions.loadApprovedAddOperatorOperationRequestsSucceeded,
+    (state, { response }) => ({
+      ...state,
+      approvedAddOperatorOperationRequests: response,
+      busy: {
+        ...state.busy,
+        addOperatorOperationRequests: false,
+      },
+    })
+  ),
+  on(
+    actions.loadInjectedAddOperatorOperationRequestsSucceeded,
+    (state, { response }) => ({
+      ...state,
+      injectedAddOperatorOperationRequests: response,
+      busy: {
+        ...state.busy,
+        addOperatorOperationRequests: false,
+      },
+    })
+  ),
+
+  on(actions.loadAddOperatorOperationRequestsFailed, (state) => ({
+    ...state,
+    busy: {
+      ...state.busy,
+      addOperatorOperationRequests: false,
+    },
+  })),
+  /// REMOVE OPERATOR
+  on(actions.loadRemoveOperatorOperationRequests, (state) => ({
+    ...state,
+    busy: {
+      ...state.busy,
+      removeOperatorOperationRequests: true,
+    },
+  })),
+  on(
+    actions.loadOpenRemoveOperatorOperationRequestsSucceeded,
+    (state, { response }) => ({
+      ...state,
+      openRemoveOperatorOperationRequests: response,
+
+      busy: {
+        ...state.busy,
+        removeOperatorOperationRequests: false,
+      },
+    })
+  ),
+  on(
+    actions.loadApprovedRemoveOperatorOperationRequestsSucceeded,
+    (state, { response }) => ({
+      ...state,
+      approvedRemoveOperatorOperationRequests: response,
+      busy: {
+        ...state.busy,
+        removeOperatorOperationRequests: false,
+      },
+    })
+  ),
+  on(
+    actions.loadInjectedRemoveOperatorOperationRequestsSucceeded,
+    (state, { response }) => ({
+      ...state,
+      injectedRemoveOperatorOperationRequests: response,
+      busy: {
+        ...state.busy,
+        removeOperatorOperationRequests: false,
+      },
+    })
+  ),
+
+  on(actions.loadRemoveOperatorOperationRequestsFailed, (state) => ({
+    ...state,
+    busy: {
+      ...state.busy,
+      removeOperatorOperationRequests: false,
+    },
+  })),
+  /// SET REDEEM ADDRESS
+  on(actions.loadSetRedeemAddressOperationRequests, (state) => ({
+    ...state,
+    busy: {
+      ...state.busy,
+      setRedeemAddressOperationRequests: true,
+    },
+  })),
+  on(
+    actions.loadOpenSetRedeemAddressOperationRequestsSucceeded,
+    (state, { response }) => ({
+      ...state,
+      openSetRedeemAddressOperationRequests: response,
+
+      busy: {
+        ...state.busy,
+        setRedeemAddressOperationRequests: false,
+      },
+    })
+  ),
+  on(
+    actions.loadApprovedSetRedeemAddressOperationRequestsSucceeded,
+    (state, { response }) => ({
+      ...state,
+      approvedSetRedeemAddressOperationRequests: response,
+      busy: {
+        ...state.busy,
+        setRedeemAddressOperationRequests: false,
+      },
+    })
+  ),
+  on(
+    actions.loadInjectedSetRedeemAddressOperationRequestsSucceeded,
+    (state, { response }) => ({
+      ...state,
+      injectedSetRedeemAddressOperationRequests: response,
+      busy: {
+        ...state.busy,
+        setRedeemAddressOperationRequests: false,
+      },
+    })
+  ),
+  on(actions.loadSetRedeemAddressOperationRequestsFailed, (state) => ({
+    ...state,
+    busy: {
+      ...state.busy,
+      setRedeemAddressOperationRequests: false,
+    },
+  })),
+  /// TRANSFER OWNERSHIP
+  on(actions.loadTransferOwnershipOperationRequests, (state) => ({
+    ...state,
+    busy: {
+      ...state.busy,
+      transferOwnershipOperationRequests: true,
+    },
+  })),
+  on(
+    actions.loadOpenTransferOwnershipOperationRequestsSucceeded,
+    (state, { response }) => ({
+      ...state,
+      openTransferOwnershipOperationRequests: response,
+
+      busy: {
+        ...state.busy,
+        transferOwnershipOperationRequests: false,
+      },
+    })
+  ),
+  on(
+    actions.loadApprovedTransferOwnershipOperationRequestsSucceeded,
+    (state, { response }) => ({
+      ...state,
+      approvedTransferOwnershipOperationRequests: response,
+      busy: {
+        ...state.busy,
+        transferOwnershipOperationRequests: false,
+      },
+    })
+  ),
+  on(
+    actions.loadInjectedTransferOwnershipOperationRequestsSucceeded,
+    (state, { response }) => ({
+      ...state,
+      injectedTransferOwnershipOperationRequests: response,
+      busy: {
+        ...state.busy,
+        transferOwnershipOperationRequests: false,
+      },
+    })
+  ),
+  on(actions.loadTransferOwnershipOperationRequestsFailed, (state) => ({
+    ...state,
+    busy: {
+      ...state.busy,
+      transferOwnershipOperationRequests: false,
+    },
+  })),
+  /// ACCEPT OWNERSHIP
+  on(actions.loadAcceptOwnershipOperationRequests, (state) => ({
+    ...state,
+    busy: {
+      ...state.busy,
+      acceptOwnershipOperationRequests: true,
+    },
+  })),
+  on(
+    actions.loadOpenAcceptOwnershipOperationRequestsSucceeded,
+    (state, { response }) => ({
+      ...state,
+      openAcceptOwnershipOperationRequests: response,
+
+      busy: {
+        ...state.busy,
+        acceptOwnershipOperationRequests: false,
+      },
+    })
+  ),
+  on(
+    actions.loadApprovedAcceptOwnershipOperationRequestsSucceeded,
+    (state, { response }) => ({
+      ...state,
+      approvedAcceptOwnershipOperationRequests: response,
+      busy: {
+        ...state.busy,
+        acceptOwnershipOperationRequests: false,
+      },
+    })
+  ),
+  on(
+    actions.loadInjectedAcceptOwnershipOperationRequestsSucceeded,
+    (state, { response }) => ({
+      ...state,
+      injectedAcceptOwnershipOperationRequests: response,
+      busy: {
+        ...state.busy,
+        acceptOwnershipOperationRequests: false,
+      },
+    })
+  ),
+  on(actions.loadAcceptOwnershipOperationRequestsFailed, (state) => ({
+    ...state,
+    busy: {
+      ...state.busy,
+      acceptOwnershipOperationRequests: false,
+    },
+  })),
+
   on(actions.loadUpdateKeyholdersOperationRequests, (state) => ({
     ...state,
     busy: {
@@ -545,6 +873,21 @@ export const reducer = createReducer(
       burnOperationRequests:
         newOperationRequest.kind === OperationRequestKind.BURN ||
         state.busy.burnOperationRequests,
+      addOperatorOperationRequests:
+        newOperationRequest.kind === OperationRequestKind.ADD_OPERATOR ||
+        state.busy.addOperatorOperationRequests,
+      removeOperatorOperationRequests:
+        newOperationRequest.kind === OperationRequestKind.REMOVE_OPERATOR ||
+        state.busy.removeOperatorOperationRequests,
+      setRedeemAddressOperationRequests:
+        newOperationRequest.kind === OperationRequestKind.SET_REDEEM_ADDRESS ||
+        state.busy.setRedeemAddressOperationRequests,
+      transferOwnershipOperationRequests:
+        newOperationRequest.kind === OperationRequestKind.TRANSFER_OWNERSHIP ||
+        state.busy.transferOwnershipOperationRequests,
+      acceptOwnershipOperationRequests:
+        newOperationRequest.kind === OperationRequestKind.ACCEPT_OWNERSHIP ||
+        state.busy.acceptOwnershipOperationRequests,
       updateKeyholdersOperationRequests:
         newOperationRequest.kind === OperationRequestKind.UPDATE_KEYHOLDERS ||
         state.busy.updateKeyholdersOperationRequests,
@@ -562,6 +905,23 @@ export const reducer = createReducer(
         burnOperationRequests:
           newOperationRequest.kind !== OperationRequestKind.BURN &&
           state.busy.burnOperationRequests,
+        addOperatorOperationRequests:
+          newOperationRequest.kind !== OperationRequestKind.ADD_OPERATOR &&
+          state.busy.addOperatorOperationRequests,
+        removeOperatorOperationRequests:
+          newOperationRequest.kind !== OperationRequestKind.REMOVE_OPERATOR &&
+          state.busy.removeOperatorOperationRequests,
+        setRedeemAddressOperationRequests:
+          newOperationRequest.kind !==
+            OperationRequestKind.SET_REDEEM_ADDRESS &&
+          state.busy.setRedeemAddressOperationRequests,
+        transferOwnershipOperationRequests:
+          newOperationRequest.kind ===
+            OperationRequestKind.TRANSFER_OWNERSHIP ||
+          state.busy.transferOwnershipOperationRequests,
+        acceptOwnershipOperationRequests:
+          newOperationRequest.kind === OperationRequestKind.ACCEPT_OWNERSHIP ||
+          state.busy.acceptOwnershipOperationRequests,
         updateKeyholdersOperationRequests:
           newOperationRequest.kind !== OperationRequestKind.UPDATE_KEYHOLDERS &&
           state.busy.updateKeyholdersOperationRequests,
