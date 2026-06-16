@@ -1,166 +1,77 @@
-image: docker:latest
 variables:
-  GIT_SUBMODULE_STRATEGY: recursive
-  DEV_GOOGLE_TAG: eu.gcr.io/papers-dev-kubernetes/tz-wrapped-frontend-dev:$CI_COMMIT_SHA
-  PROD_GOOGLE_TAG: eu.gcr.io/papers-kubernetes/tz-wrapped-frontend:$CI_COMMIT_SHA
-  TEST_TAG: tz_wrapped_frontend_test_$CI_COMMIT_SHA
-  DEV_GOOGLE_TAG_LATEST: eu.gcr.io/papers-dev-kubernetes/tz-wrapped-frontend-dev:latest
-  PROD_GOOGLE_TAG_LATEST: eu.gcr.io/papers-kubernetes/tz-wrapped-frontend:latest
+  NAMESPACE: tz-wrapped-frontend
 
 stages:
   - build
-  - test
-  #   - qa
-  - build_serve
-  - publish
   - deploy
 
 build:
   stage: build
-  script:
-    - docker build --target angular-build -t $TEST_TAG .
-  tags:
-    - docker
-
-build_serve_dev:
-  stage: build_serve
-  script:
-    - docker build --build-arg RUN_ENV=development -t $DEV_GOOGLE_TAG .
-  only:
-    - develop
-  tags:
-    - docker
-
-build_serve_prod:
-  stage: build_serve
-  script:
-    - docker build --build-arg RUN_ENV=production -t $PROD_GOOGLE_TAG .
-  only:
-    - master
-  tags:
-    - docker
-
-test:
-  allow_failure: false
-  stage: test
-  script:
-    - docker run --name unit-$CI_COMMIT_SHA $TEST_TAG npm run test-ci
-    - docker run --name lint-$CI_COMMIT_SHA $TEST_TAG npm run lint-ci
-    - docker cp unit-$CI_COMMIT_SHA:/app/coverage/dapp-frontend/report-lcov/lcov.info lcov.info
-    - docker cp lint-$CI_COMMIT_SHA:/app/lintReport.json lintReport.json
-  after_script:
-    - docker rm -f unit-$CI_COMMIT_SHA || true
-    - docker rm -f lint-$CI_COMMIT_SHA || true
-  tags:
-    - docker
-  artifacts:
-    paths:
-      - lcov.info
-      - lintReport.json
-
-# qa:
-#   allow_failure: false
-#   stage: qa
-#   script:
-#     - docker create --name qa-$CI_PIPELINE_ID $TEST_TAG npm run sonar-scanner -- -X
-#       -Dsonar.typescript.lcov.reportPaths=lcov.info
-#       -Dsonar.typescript.tslint.reportPaths=lintReport.json
-#       -Dsonar.test.inclusions=**/*.spec.ts
-#       -Dsonar.tests=src/
-#       -Dsonar.exclusions=**/node_modules/**,**/*.spec.ts
-#       -Dsonar.sources=src/
-#       -Dsonar.host.url=$SONAR_URL
-#       -Dsonar.login=$SONAR_LOGIN
-#       -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA
-#       -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME
-#       -Dsonar.gitlab.project_id=$CI_PROJECT_ID
-#       -Dsonar.branch.name=$CI_BUILD_REF_NAME
-#     - docker cp lcov.info qa-$CI_PIPELINE_ID:/app/lcov.info
-#     - docker cp lintReport.json qa-$CI_PIPELINE_ID:/app/lintReport.json
-#     - docker start -a qa-$CI_PIPELINE_ID
-#   after_script:
-#     - docker rm -f qa-$CI_PIPELINE_ID || true
-#   tags:
-#     - docker
-
-publish_dev:
-  stage: publish
-  needs: ['build_serve_dev']
-  image: google/cloud-sdk
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_TLS_CERTDIR: '/certs'
   before_script:
-    - echo $GCLOUD_GOOGLE_KEY_DEV > key.json
-    - gcloud auth activate-service-account $GCLOUD_ACCOUNT_DEV --key-file key.json
-    - gcloud config set project $GCLOUD_PROJECT_DEV
-    - gcloud config set account $GCLOUD_ACCOUNT_DEV
-    - gcloud config set compute/zone $GCLOUD_ZONE
-    - gcloud auth configure-docker
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker tag $DEV_GOOGLE_TAG $DEV_GOOGLE_TAG_LATEST
-    - docker push $DEV_GOOGLE_TAG
-    - docker push $DEV_GOOGLE_TAG_LATEST
-  only:
-    - develop
+    - docker build --build-arg RUN_ENV=production -t $CI_REGISTRY_IMAGE/$NAMESPACE:$CI_COMMIT_SHA -t $CI_REGISTRY_IMAGE/$NAMESPACE:latest .
+    - docker push $CI_REGISTRY_IMAGE/$NAMESPACE:$CI_COMMIT_SHA
+    - docker push $CI_REGISTRY_IMAGE/$NAMESPACE:latest
   tags:
     - docker
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master"
 
-publish_prod:
-  stage: publish
-  needs: ['build_serve_prod']
-  image: google/cloud-sdk
-  before_script:
-    - echo $GCLOUD_GOOGLE_KEY > key.json
-    - gcloud auth activate-service-account $GCLOUD_ACCOUNT --key-file key.json
-    - gcloud config set project $GCLOUD_PROJECT
-    - gcloud config set account $GCLOUD_ACCOUNT
-    - gcloud config set compute/zone $GCLOUD_ZONE
-    - gcloud auth configure-docker
+# Branches other than master: just verify the image builds (no push, no deploy).
+build-branch:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_TLS_CERTDIR: '/certs'
   script:
-    - docker tag $PROD_GOOGLE_TAG $PROD_GOOGLE_TAG_LATEST
-    - docker push $PROD_GOOGLE_TAG
-    - docker push $PROD_GOOGLE_TAG_LATEST
-  only:
-    - master
+    - docker build -t $CI_REGISTRY_IMAGE/$NAMESPACE:$CI_COMMIT_SHA .
   tags:
     - docker
+  rules:
+    - if: $CI_COMMIT_BRANCH != "master"
 
-k8s-deploy-development:
+deploy-ondemand:
   stage: deploy
-  when: manual
-  image: google/cloud-sdk
+  image: alpine:latest
   before_script:
-    - echo $GCLOUD_GOOGLE_KEY_DEV > key.json
-    - gcloud auth activate-service-account $GCLOUD_ACCOUNT_DEV --key-file key.json
-    - gcloud config set project $GCLOUD_PROJECT_DEV
-    - gcloud config set account $GCLOUD_ACCOUNT_DEV
-    - gcloud config set compute/zone $GCLOUD_ZONE
-    - gcloud container clusters get-credentials papers-cluster-development
+    - apk add --no-cache openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | base64 -d | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan -p 60022 -H $DEPLOY_SERVER >> ~/.ssh/known_hosts
   script:
-    - sed -i "s|_TO_BE_REPLACED_BY_IMAGE_TAG_|"$DEV_GOOGLE_TAG"|g" k8s/foundry/common/frontend/deployment.yaml
-    - kubectl apply -f k8s/foundry/common/namespace.yaml
-    - kubectl apply -f k8s/foundry/development/ --recursive
-    - kubectl apply -f k8s/foundry/common/ --recursive
-  only:
-    - develop
-  tags:
-    - docker
-
-k8s-deploy-production:
-  stage: deploy
+    - |
+      echo "Copying $DEPLOY_COMPOSE_FILE to $DEPLOY_SERVER:$DOCKER_COMPOSE_PATH/docker-compose.yml"
+      scp -P 60022 "$DEPLOY_COMPOSE_FILE" "$DEPLOY_USER@$DEPLOY_SERVER:$DOCKER_COMPOSE_PATH/docker-compose.yml"
+    - |
+      ssh -p 60022 $DEPLOY_USER@$DEPLOY_SERVER "
+        sudo -u papers bash -c '
+          cd $DOCKER_COMPOSE_PATH &&
+          sed -i \"s|^IMAGE_TAG=.*|IMAGE_TAG=$IMAGE_TAG|\" .env &&
+          docker compose -f docker-compose.yml pull &&
+          docker compose -f docker-compose.yml up -d &&
+          sleep 10 &&
+          docker compose -f docker-compose.yml ps -a
+        '
+        echo \"Deployment completed successfully\"
+      "
+  environment:
+    name: production
+  variables:
+    IMAGE_TAG: $CI_COMMIT_SHA
+    DEPLOY_SERVER: papers-ov-6.papers.tech
+    DEPLOY_USER: papers
+    DOCKER_COMPOSE_PATH: /home/papers/$NAMESPACE
+    DEPLOY_COMPOSE_FILE: docker-compose.prd.yml
   when: manual
-  image: google/cloud-sdk
-  before_script:
-    - echo $GCLOUD_GOOGLE_KEY > key.json
-    - gcloud auth activate-service-account $GCLOUD_ACCOUNT --key-file key.json
-    - gcloud config set account $GCLOUD_ACCOUNT
-    - gcloud config set project $GCLOUD_PROJECT
-    - gcloud config set compute/zone $GCLOUD_ZONE
-    - gcloud container clusters get-credentials papers-cluster-production
-  script:
-    - sed -i "s|_TO_BE_REPLACED_BY_IMAGE_TAG_|"$PROD_GOOGLE_TAG"|g" k8s/foundry/common/frontend/deployment.yaml
-    - kubectl apply -f k8s/foundry/common/namespace.yaml
-    - kubectl apply -f k8s/foundry/production/ --recursive
-    - kubectl apply -f k8s/foundry/common/ --recursive
-  only:
-    - master
-  tags:
-    - docker
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master"
