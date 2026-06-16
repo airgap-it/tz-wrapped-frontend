@@ -1,0 +1,38 @@
+# Production deployment via docker-compose (replaces the k8s/ manifests).
+#
+# This is a pure static frontend: the Dockerfile builds the Angular app and
+# bundles it into an nginx:1-alpine image (see Dockerfile + nginx.conf).
+# No backend / db / redis here — just the one nginx container serving the
+# compiled SPA.
+#
+# Usage:
+#   cp .env.prd.example .env.prd     # fill in real values (see comments there)
+#   docker compose -f docker-compose.prd.yml --env-file .env.prd up -d
+#
+# TLS / routing (tz-wrapped-frontend.prod.gke.papers.tech, foundry.wrappedtz.io)
+# is handled by an EXTERNAL reverse proxy. The container's nginx is exposed on
+# the host port ${HOST_PORT}; point the reverse proxy at it.
+
+services:
+  frontend:
+    # CI tags the image as $CI_REGISTRY_IMAGE/$NAMESPACE — compose appends the
+    # namespace path to IMAGE_REGISTRY (= $CI_REGISTRY_IMAGE).
+    image: ${IMAGE_REGISTRY}/tz-wrapped-frontend:${IMAGE_TAG:-latest}
+    restart: always
+    ports:
+      - '${HOST_PORT}:80'
+    # nginx static serving is light; modest caps (k8s had no explicit requests).
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.01'
+          memory: 16M
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://localhost:80/ || exit 1']
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
